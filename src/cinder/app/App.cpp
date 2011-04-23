@@ -144,6 +144,7 @@ void App::privateFileDrop__( const FileDropEvent &event )
 
 void App::privateSetup__()
 {
+	mTimeline.stepTo( getElapsedSeconds() );
 	setup();
 }
 
@@ -151,6 +152,8 @@ void App::privateUpdate__()
 {
 	update();
 	mFrameCount++;
+
+	mTimeline.stepTo( getElapsedSeconds() );
 
 	double now = mTimer.getSeconds();
 	if( now > mFpsLastSampleTime + mFpsSampleInterval ) {
