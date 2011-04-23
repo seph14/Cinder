@@ -13,48 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
     </Filter>
-    <Filter Include="Blocks">
-      <UniqueIdentifier>{934163df-5997-401c-b5be-30722e841b40}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Blocks\tween">
-      <UniqueIdentifier>{0da80c9e-db7e-40d8-b246-88383f4c39eb}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\BasicTweenApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\include\Cue.cpp">
-      <Filter>Blocks\tween</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\include\Timeline.cpp">
-      <Filter>Blocks\tween</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\include\TimelineItem.cpp">
-      <Filter>Blocks\tween</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\include\Tween.cpp">
-      <Filter>Blocks\tween</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Resources.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\Choreograph.h">
-      <Filter>Blocks\tween</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\Cue.h">
-      <Filter>Blocks\tween</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\Timeline.h">
-      <Filter>Blocks\tween</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\TimelineItem.h">
-      <Filter>Blocks\tween</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\Tween.h">
-      <Filter>Blocks\tween</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
