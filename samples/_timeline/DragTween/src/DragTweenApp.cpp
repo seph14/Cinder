@@ -1,4 +1,4 @@
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
 #include "cinder/gl/gl.h"
 #include "cinder/Easing.h"
 #include "cinder/Timeline.h"
@@ -35,8 +35,9 @@ class Circle {
 	TweenRef<Vec2f>		mDragTween;
 };
 
-class DragTweenApp : public AppBasic {
+class DragTweenApp : public AppNative {
   public:
+    void prepareSettings( Settings *settings ) { settings->enableMultiTouch( false ); }
 	void setup();
 	void mouseDown( MouseEvent event );
 	void mouseDrag( MouseEvent event );
@@ -105,4 +106,4 @@ void DragTweenApp::draw()
 }
 
 
-CINDER_APP_BASIC( DragTweenApp, RendererGl )
+CINDER_APP_NATIVE( DragTweenApp, RendererGl )
