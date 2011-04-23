@@ -22,8 +22,8 @@
  POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "TimelineItem.h"
-#include "Timeline.h"
+#include "cinder/TimelineItem.h"
+#include "cinder/Timeline.h"
 
 #include "cinder/CinderMath.h"
 

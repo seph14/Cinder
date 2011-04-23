@@ -22,7 +22,7 @@
  POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Tween.h"
+#include "cinder/Tween.h"
 
 namespace cinder {
 
