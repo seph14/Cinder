@@ -8,8 +8,6 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-Timeline gTimeline;
-
 class Circle {
   public:
 	Circle( Color color, float radius, Vec2f initialPos, Vec2f homePos )
@@ -28,7 +26,7 @@ class Circle {
 	
 	void dragRelease() {
 		// tween back home
-		mDragTween = gTimeline.apply( &mPos, mHomePos, 1.0f, EaseOutBack( 3 ) );
+		mDragTween = app::getTimeline().apply( &mPos, mHomePos, 1.0f, EaseOutBack( 3 ) );
 	}
 	
 	Color				mColor;
@@ -43,7 +41,6 @@ class DragTweenApp : public AppBasic {
 	void mouseDown( MouseEvent event );
 	void mouseDrag( MouseEvent event );
 	void mouseUp( MouseEvent event );
-	void update();
 	void draw();
 	
 	// never use a vector with tweens
@@ -53,16 +50,14 @@ class DragTweenApp : public AppBasic {
 
 void DragTweenApp::setup()
 {
-	gTimeline.stepTo( getElapsedSeconds() );
-
 	// setup the initial animation
 	const size_t numCircles = 35;
 	for( size_t c = 0; c < numCircles; ++c ) {
 		float angle = c / (float)numCircles * 4 * M_PI;
 		Vec2f pos = getWindowCenter() + ( 50 + c / (float)numCircles * 200 ) * Vec2f( cos( angle ), sin( angle ) );
 		mCircles.push_back( Circle( Color( CM_HSV, c / (float)numCircles, 1, 1 ), 0, getWindowCenter(), pos ) );
-		gTimeline.append( &mCircles.back().mPos, pos, 0.5f, EaseOutAtan( 10 ) )->delay( -0.45f );
-		gTimeline.append( &mCircles.back().mRadius, 30.0f, 0.5f, EaseOutAtan( 10 ) )->delay( -0.5f );
+		getTimeline().append( &mCircles.back().mPos, pos, 0.5f, EaseOutAtan( 10 ) )->delay( -0.45f );
+		getTimeline().append( &mCircles.back().mRadius, 30.0f, 0.5f, EaseOutAtan( 10 ) )->delay( -0.5f );
 	}
 	
 	mCurrentDragCircle = 0;
@@ -97,11 +92,6 @@ void DragTweenApp::mouseUp( MouseEvent event )
 		mCurrentDragCircle->dragRelease();
 		
 	mCurrentDragCircle = 0;
-}
-
-void DragTweenApp::update()
-{
-	gTimeline.stepTo( getElapsedSeconds() );
 }
 
 void DragTweenApp::draw()
