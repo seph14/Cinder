@@ -22,7 +22,7 @@
  POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "Timeline.h"
+#include "cinder/Timeline.h"
 
 #include <vector>
 
