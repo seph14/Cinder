@@ -310,6 +310,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\cinder\Timeline.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\cinder\TimelineItem.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\cinder\Timer.cpp"
 				>
 			</File>
@@ -319,6 +327,10 @@
 			</File>
 			<File
 				RelativePath="..\src\cinder\TriMesh.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\cinder\Tween.cpp"
 				>
 			</File>
 			<File
@@ -896,6 +908,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\include\cinder\Timeline.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\cinder\TimelineItem.h"
+				>
+			</File>
+			<File
 				RelativePath="..\include\cinder\Timer.h"
 				>
 			</File>
@@ -905,6 +925,10 @@
 			</File>
 			<File
 				RelativePath="..\include\cinder\TriMesh.h"
+				>
+			</File>
+			<File
+				RelativePath="..\include\cinder\Tween.h"
 				>
 			</File>
 			<File
