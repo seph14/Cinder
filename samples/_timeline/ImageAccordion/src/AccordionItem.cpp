@@ -28,7 +28,7 @@ AccordionItem::AccordionItem( Timeline &timeline, float x, float y, float height
 	std::string boldFont( "Arial-BoldMT" );
 #else
 	std::string normalFont( "Arial" );
-	std::string boldFont( "Arial Bold" );
+	std::string boldFont( "ArialBold" );
 #endif
 	
 	mAnimEase = EaseOutAtan(25);
