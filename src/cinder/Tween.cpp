@@ -24,11 +24,32 @@
 
 #include "cinder/Tween.h"
 
+using namespace std;
+
 namespace cinder {
 
 TweenBase::TweenBase( void *target, bool copyStartValue, float startTime, float duration, EaseFn easeFunction )
 	: TimelineItem( 0, target, startTime, duration ), mCopyStartValue( copyStartValue ), mEaseFunction( easeFunction )
 {
+}
+
+TweenScope::~TweenScope()
+{
+	for( list<weak_ptr<TimelineItem> >::iterator itemIt = mItems.begin(); itemIt != mItems.end(); ++itemIt ) {
+		TimelineItemRef item = itemIt->lock();
+		if( item )
+			item->removeSelf();
+	}
+}
+
+void TweenScope::operator+=( TimelineItemRef item )
+{
+	add( item );
+}
+
+void TweenScope::add( TimelineItemRef item )
+{
+	mItems.push_back( item );
 }
 
 } // namespace cinder

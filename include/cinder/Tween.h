@@ -31,6 +31,9 @@
 #include "cinder/Easing.h"
 #include "cinder/Function.h"
 
+#include <list>
+#include <boost/utility.hpp>
+
 namespace cinder {
 
 
@@ -188,5 +191,16 @@ class Tween : public TweenBase {
 
 typedef std::shared_ptr<TweenBase>	TweenBaseRef;
 
+class TweenScope : boost::noncopyable {
+  public:
+	TweenScope() {}
+	~TweenScope();
+	
+	void operator+=( TimelineItemRef item );
+	void add( TimelineItemRef item );
+
+  private:
+	std::list<std::weak_ptr<TimelineItem> >		mItems;
+};
 
 } //namespace cinder
