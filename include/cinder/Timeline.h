@@ -159,6 +159,8 @@ class Timeline : public TimelineItem {
 	TimelineItemRef		findLast( void *target );
 	//! Removes the TimelineItem \a item from the Timeline. Safe to use from callback fn's.
 	void				remove( TimelineItemRef item );
+	//! Removes all TimelineItems whose target matches \a target
+	void				removeTarget( void *target );
 	
 	//! Remove all tweens from the Timeline. Do not call from callback fn's.
 	void clear();
@@ -181,6 +183,7 @@ class Timeline : public TimelineItem {
 	virtual void update( float absTime );
 	virtual void complete() {}
 
+	void						eraseMarked();
 	void						calculateDuration();
 
 	bool						mDefaultAutoRemove;

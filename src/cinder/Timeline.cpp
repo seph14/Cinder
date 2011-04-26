@@ -49,19 +49,8 @@ void Timeline::step( float timestep )
 void Timeline::stepTo( float absoluteTime )
 {	
 	mCurrentTime = absoluteTime;
-
-	// remove all items which have been marked for removal	
-	bool needRecalc = false;
-	for( s_iter iter = mItems.begin(); iter != mItems.end(); ) {
-		if( (*iter)->mMarkedForRemoval ) {
-			iter = mItems.erase( iter );
-			needRecalc = true;
-		}
-		else
-			++iter;
-	}
-	if( needRecalc )
-		calculateDuration();	
+	
+	eraseMarked();
 	
 	// we need to cache the end(). If a tween's update() fn or similar were to manipulate
 	// the list of items by adding new ones, we'll have invalidated our iterator.
@@ -72,6 +61,8 @@ void Timeline::stepTo( float absoluteTime )
 		if( (*iter)->isComplete() && (*iter)->getAutoRemove() )
 			(*iter)->mMarkedForRemoval = true;
 	}
+	
+	eraseMarked();	
 }
 
 CueRef Timeline::add( std::function<void ()> action, float atTime )
@@ -129,6 +120,24 @@ void Timeline::insert( TimelineItemRef item )
 	calculateDuration();
 }
 
+// remove all items which have been marked for removal
+void Timeline::eraseMarked()
+{
+	bool needRecalc = false;
+	for( s_iter iter = mItems.begin(); iter != mItems.end(); ) {
+		if( (*iter)->mMarkedForRemoval ) {
+			iter = mItems.erase( iter );
+			needRecalc = true;
+		}
+		else
+			++iter;
+	}
+	
+	if( needRecalc )
+		calculateDuration();
+}	
+
+
 void Timeline::calculateDuration()
 {
 	float duration = 0;
@@ -171,6 +180,19 @@ void Timeline::remove( TimelineItemRef item )
 	s_iter iter = std::find( mItems.begin(), mItems.end(), item );
 	if( iter != mItems.end() )
 		(*iter)->mMarkedForRemoval = true;
+}
+
+//! Removes all TimelineItems whose target matches \a target
+void Timeline::removeTarget( void *target )
+{
+	for( s_iter iter = mItems.begin(); iter != mItems.end();  ) {
+		if( (*iter)->getTarget() == target )
+			iter = mItems.erase( iter );
+		else
+			++iter;
+	}
+	
+	calculateDuration();
 }
 
 void Timeline::reset( bool unsetStarted )
