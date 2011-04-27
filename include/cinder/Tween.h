@@ -191,12 +191,14 @@ class Tween : public TweenBase {
 
 typedef std::shared_ptr<TweenBase>	TweenBaseRef;
 
-class TweenScope : boost::noncopyable {
+class TweenScope {
   public:
 	TweenScope() {}
+	TweenScope( const TweenScope &rhs ) {}	// do nothing for copy; these are our tweens alone
+	TweenScope& operator=( const TweenScope &rhs ) { return *this; }	// do nothing for copy; these are our tweens alone	
 	~TweenScope();
 	
-	void operator+=( TimelineItemRef item );
+	TweenScope& operator+=( TimelineItemRef item );
 	void add( TimelineItemRef item );
 
   private:

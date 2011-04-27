@@ -42,9 +42,10 @@ TweenScope::~TweenScope()
 	}
 }
 
-void TweenScope::operator+=( TimelineItemRef item )
+TweenScope& TweenScope::operator+=( TimelineItemRef item )
 {
 	add( item );
+	return *this;
 }
 
 void TweenScope::add( TimelineItemRef item )
