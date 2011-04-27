@@ -23,7 +23,7 @@ float round( float n )
 AccordionItem::AccordionItem( Timeline &timeline, float x, float y, float height, float contractedWidth, float expandedWidth, gl::Texture image, string title, string subtitle ) 
 	: mTimeline(timeline), mX(x), mY(y), mWidth(contractedWidth), mHeight(height), mExpandedWidth(expandedWidth), mImage(image), mTitle(title), mSubtitle(subtitle)
 {
-#if defined( CINDER_COCOA_TOUCH )
+#if defined( CINDER_COCOA )
 	std::string normalFont( "Arial" );
 	std::string boldFont( "Arial-BoldMT" );
 #else
