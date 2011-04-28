@@ -134,7 +134,7 @@ class Tween : public TweenBase {
 
 	TweenRef<T>		startFn( StartFn startFunction ) { mStartFunction = startFunction; return getThisRef(); }
 	TweenRef<T>		updateFn( UpdateFn updateFunction ) { mUpdateFunction = updateFunction; return getThisRef(); }
-	TweenRef<T>		completionFn( CompletionFn completionFunction ) { mCompletionFunction = completionFn; return getThisRef(); }	
+	TweenRef<T>		completionFn( CompletionFn completionFunction ) { mCompletionFunction = completionFunction; return getThisRef(); }	
 	
 	//! Returns whether the tween will copy its target's value upon starting
 	bool	isCopyStartValue() { return mCopyStartValue; }
