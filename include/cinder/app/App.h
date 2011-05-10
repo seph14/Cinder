@@ -305,7 +305,7 @@ class App {
 	std::ostream&	console();
 	
 	//! Returns a reference to the App's Timeline
-	Timeline&		getTimeline() { return mTimeline; }
+	Timeline&		timeline() { return mTimeline; }
 
 	/** \return a copy of the window's contents as a Surface8u **/
 	Surface	copyWindowSurface();
@@ -450,7 +450,7 @@ inline std::string		getSaveFilePath( const std::string &initialPath = "", std::v
 inline std::ostream&	console() { return App::get()->console(); }
 
 //! Returns a reference to the active App's Timeline
-inline Timeline&	getTimeline() { return App::get()->getTimeline(); }
+inline Timeline&	timeline() { return App::get()->timeline(); }
 
 //! Returns a copy of the window's contents as a Surface8u
 inline Surface	copyWindowSurface() { return App::get()->copyWindowSurface(); }

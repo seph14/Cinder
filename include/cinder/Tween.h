@@ -205,4 +205,22 @@ class TweenScope {
 	std::list<std::weak_ptr<TimelineItem> >		mItems;
 };
 
+template<typename T>
+class ValueTween : public Tween<T> {
+  public:
+	ValueTween( T startValue, T endValue, float startTime, float duration, EaseFn easeFunction = easeNone, typename Tween<T>::LerpFn lerpFunction = &tweenLerp<T> )
+		: Tween<T>( &mValue, startValue, endValue, startTime, duration, easeFunction, lerpFunction ), mValue( startValue )
+	{
+	}
+	
+	virtual void update( float relativeTime )
+	{
+		Tween<T>::update( relativeTime );
+	}	
+	
+	T		getValue() const { return mValue; }
+	
+	T		mValue;
+};
+
 } //namespace cinder
