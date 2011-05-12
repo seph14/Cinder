@@ -21,12 +21,12 @@ class Circle {
 
 	void startDrag() {
 		if( mDragTween ) // if we're heading somewhere, stop going there and start listening to the drag
-			mDragTween->removeSelf();
+			mDragTween->cancel();
 	}
 	
 	void dragRelease() {
 		// tween back home
-		mDragTween = app::getTimeline().apply( &mPos, mHomePos, 1.0f, EaseOutBack( 3 ) );
+		mDragTween = app::timeline().apply( &mPos, mHomePos, 1.0f, EaseOutBack( 3 ) );
 	}
 	
 	Color				mColor;
@@ -57,8 +57,8 @@ void DragTweenApp::setup()
 		float angle = c / (float)numCircles * 4 * M_PI;
 		Vec2f pos = getWindowCenter() + ( 50 + c / (float)numCircles * 200 ) * Vec2f( cos( angle ), sin( angle ) );
 		mCircles.push_back( Circle( Color( CM_HSV, c / (float)numCircles, 1, 1 ), 0, getWindowCenter(), pos ) );
-		getTimeline().append( &mCircles.back().mPos, pos, 0.5f, EaseOutAtan( 10 ) )->delay( -0.45f );
-		getTimeline().append( &mCircles.back().mRadius, 30.0f, 0.5f, EaseOutAtan( 10 ) )->delay( -0.5f );
+		timeline().append( &mCircles.back().mPos, pos, 0.5f, EaseOutAtan( 10 ) )->delay( -0.45f );
+		timeline().append( &mCircles.back().mRadius, 30.0f, 0.5f, EaseOutAtan( 10 ) )->delay( -0.5f );
 	}
 	
 	mCurrentDragCircle = 0;

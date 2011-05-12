@@ -62,7 +62,7 @@ void ImageAccordionApp::setup()
 	
 	float xPos = 0;
 	
-	mItems.push_back( AccordionItem( getTimeline(), 
+	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
 									mItemHeight, 
@@ -72,7 +72,7 @@ void ImageAccordionApp::setup()
 									string("Disney World at Sunset"),
 									string("© Trey Ratcliff") ) );
 	xPos += mItemRelaxedWidth;
-	mItems.push_back( AccordionItem( getTimeline(), 
+	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
 									mItemHeight, 
@@ -82,7 +82,7 @@ void ImageAccordionApp::setup()
 									string("Lost Hindu Temple in the Jungle Mist"),
 									string("© Trey Ratcliff") ) );
 	xPos += mItemRelaxedWidth;
-	mItems.push_back( AccordionItem( getTimeline(), 
+	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
 									mItemHeight, 
@@ -92,7 +92,7 @@ void ImageAccordionApp::setup()
 									string("Icelandic Horse in the Wild"),
 									string("© Trey Ratcliff") ) );
 	xPos += mItemRelaxedWidth;
-	mItems.push_back( AccordionItem( getTimeline(), 
+	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
 									mItemHeight, 
@@ -102,7 +102,7 @@ void ImageAccordionApp::setup()
 									string("Taj Mahal"),
 									string("© Trey Ratcliff") ) );
 	xPos += mItemRelaxedWidth;
-	mItems.push_back( AccordionItem( getTimeline(), 
+	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
 									mItemHeight, 
@@ -112,7 +112,7 @@ void ImageAccordionApp::setup()
 									string("The Li River"),
 									string("© Trey Ratcliff") ) );
 	xPos += mItemRelaxedWidth;
-	mItems.push_back( AccordionItem( getTimeline(), 
+	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
 									mItemHeight, 
@@ -122,7 +122,7 @@ void ImageAccordionApp::setup()
 									string("The End of the World"),
 									string("© Trey Ratcliff") ) );
 	xPos += mItemRelaxedWidth;
-	mItems.push_back( AccordionItem( getTimeline(), 
+	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
 									mItemHeight, 
@@ -132,7 +132,7 @@ void ImageAccordionApp::setup()
 									string("Fourth on Lake Austin"),
 									string("© Trey Ratcliff") ) );
 	xPos += mItemRelaxedWidth;
-	mItems.push_back( AccordionItem( getTimeline(), 
+	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
 									mItemHeight, 
