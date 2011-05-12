@@ -197,6 +197,21 @@ class Cue : public TimelineItem {
 
 	void					setFn( std::function<void ()> fn ) { mFunction = fn; }
 	std::function<void ()>	getFn() const { return mFunction; }
+
+	// these override their equivalents in TimelineItem so that we can return a CueRef instead of TimelineItemRef
+	//! Pushes back the tween's start time by \a amt. Returns a reference to \a this
+	CueRef startTime( float newTime ) { setStartTime( newTime ); return getThisRef(); }
+	//! Pushes back the tween's start time by \a amt. Returns a reference to \a this
+	CueRef delay( float amt ) { setStartTime( mStartTime + amt ); return getThisRef(); }
+	//! Sets the tween's duration to \a newDuration. Returns a reference to \a this
+	CueRef duration( float newDuration ) { setDuration( newDuration ); return getThisRef(); }			
+	//! Sets whether the item will remove itself from the Timeline when it is complete
+	CueRef autoRemove( bool autoRmv = true ) { setAutoRemove( autoRmv ); return getThisRef(); }
+	//! Sets whether the item starts over when it is complete
+	CueRef loop( bool doLoop = true ) { setLoop( doLoop ); return getThisRef(); }
+
+	//! Returns a CueRef to \a this
+	CueRef getThisRef() { return CueRef( std::static_pointer_cast<Cue>( shared_from_this() ) ); }
 	
   protected:
 	virtual void				reverse() { /* no-op */ }

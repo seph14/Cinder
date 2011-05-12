@@ -149,7 +149,7 @@ class Tween : public TweenBase {
 	//! Sets whether the item will remove itself from the Timeline when it is complete
 	TweenRef<T> autoRemove( bool autoRmv = true ) { setAutoRemove( autoRmv ); return getThisRef(); }
 	//! Sets whether the item starts over when it is complete
-	TimelineItemRef loop( bool doLoop = true ) { setLoop( doLoop ); return getThisRef(); }
+	TweenRef<T> loop( bool doLoop = true ) { setLoop( doLoop ); return getThisRef(); }
 	
 	//! Returns a TweenRef<T> to \a this
 	TweenRef<T> getThisRef(){ return TweenRef<T>( std::static_pointer_cast<Tween<T> >( shared_from_this() ) ); }
