@@ -65,9 +65,9 @@ void Timeline::stepTo( float absoluteTime )
 	eraseMarked();	
 }
 
-CueRef Timeline::add( std::function<void ()> action, float atTime )
+CueRef Timeline::add( std::function<void ()> action )
 {
-	CueRef newCue( new Cue( action, atTime ) );
+	CueRef newCue( new Cue( action, getCurrentTime() ) );
 	newCue->setAutoRemove( mDefaultAutoRemove );
 	insert( newCue );
 	return newCue;

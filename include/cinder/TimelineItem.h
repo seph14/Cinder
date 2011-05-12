@@ -77,7 +77,7 @@ namespace cinder
 
 
 		//! Removes the item from its parent Timeline
-		void removeSelf();
+		void cancel();
 		//! Marks the item as not completed, and if \a unsetStarted, marks the item as not started
 		virtual void reset( bool unsetStarted = false ) { if( unsetStarted ) mHasStarted = false; mComplete = false; }
 		

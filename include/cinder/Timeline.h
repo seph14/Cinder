@@ -52,8 +52,8 @@ class Timeline : public TimelineItem {
 	//! Returns the timeline's most recent current time
 	float	getCurrentTime() const { return mCurrentTime; }
 	
-	//! add a cue to the Timeline add the start-time \a atTime
-	CueRef add( std::function<void ()> action, float atTime );
+	//! add a cue to the Timeline at the current time. Use TimelineItem::delay() to offset the start time
+	CueRef add( std::function<void ()> action );
 	
 	//! Create a new tween and adds it to the timeline's current time
 	template<typename T>

@@ -38,7 +38,7 @@ TweenScope::~TweenScope()
 	for( list<weak_ptr<TimelineItem> >::iterator itemIt = mItems.begin(); itemIt != mItems.end(); ++itemIt ) {
 		TimelineItemRef item = itemIt->lock();
 		if( item )
-			item->removeSelf();
+			item->cancel();
 	}
 }
 

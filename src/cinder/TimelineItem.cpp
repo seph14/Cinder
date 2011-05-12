@@ -41,7 +41,7 @@ TimelineItem::TimelineItem( Timeline *parent, void *target, float startTime, flo
 {
 }
 
-void TimelineItem::removeSelf()
+void TimelineItem::cancel()
 {
 	mMarkedForRemoval = true;
 }
