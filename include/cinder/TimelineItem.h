@@ -109,6 +109,8 @@ namespace cinder
 		//! Converts time from absolute to absolute based on item's looping attributes
 		float	loopTime( float absTime );
 
+		static bool refIsMarkedForRemoval( const TimelineItemRef &item ) { return item->mMarkedForRemoval; }
+
 		class Timeline	*mParent;
 		
 		void	*mTarget;

@@ -123,26 +123,19 @@ void Timeline::insert( TimelineItemRef item )
 // remove all items which have been marked for removal
 void Timeline::eraseMarked()
 {
-	bool needRecalc = false;
-	for( s_iter iter = mItems.begin(); iter != mItems.end(); ) {
-		if( (*iter)->mMarkedForRemoval ) {
-			iter = mItems.erase( iter );
-			needRecalc = true;
-		}
-		else
-			++iter;
-	}
-	
-	if( needRecalc )
+	s_iter result = std::remove_if( mItems.begin(), mItems.end(), TimelineItem::refIsMarkedForRemoval );
+	if( result != mItems.end() ) {
+		mItems.erase( result, mItems.end() );
 		calculateDuration();
+	}
 }	
-
 
 void Timeline::calculateDuration()
 {
 	float duration = 0;
 	for( s_iter iter = mItems.begin(); iter != mItems.end(); ++iter ) {
-		duration = std::max( (*iter)->getEndTime(), duration );
+		if( ! (*iter)->mMarkedForRemoval )
+			duration = std::max( (*iter)->getEndTime(), duration );
 	}
 	
 	setDuration( duration );
@@ -152,7 +145,7 @@ TimelineItemRef Timeline::find( void *target )
 {
 	s_iter iter = mItems.begin();
 	while( iter != mItems.end() ) {
-		if( (*iter)->getTarget() == target )
+		if( ( ! (*iter)->mMarkedForRemoval ) && ( (*iter)->getTarget() == target ) )
 			return *iter;
 		++iter;
 	}

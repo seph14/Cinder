@@ -175,6 +175,8 @@ class Timeline : public TimelineItem {
 	//! Call this to notify the Timeline if the \a item's start-time or duration has changed
 	void	itemTimeChanged( TimelineItem *item );
 
+	//! Explicitly remove all items which have been marked for deletion. Not generally necessary except in advanced performance usage.
+	void		eraseMarked();
   protected:
 	virtual void reverse();
 	virtual TimelineItemRef cloneReverse() const;
@@ -183,7 +185,6 @@ class Timeline : public TimelineItem {
 	virtual void update( float absTime );
 	virtual void complete() {}
 
-	void						eraseMarked();
 	void						calculateDuration();
 
 	bool						mDefaultAutoRemove;

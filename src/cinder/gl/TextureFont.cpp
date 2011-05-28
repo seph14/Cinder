@@ -255,7 +255,7 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 
 	glEnableClientState( GL_VERTEX_ARRAY );
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-
+	const float scale = options.getScale();
 	for( size_t texIdx = 0; texIdx < mTextures.size(); ++texIdx ) {
 		vector<float> verts, texCoords;
 		const gl::Texture &curTex = mTextures[texIdx];
@@ -281,8 +281,9 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 			Rectf destRect( glyphInfo.mTexCoords );
 			Rectf srcCoords = curTex.getAreaTexCoords( glyphInfo.mTexCoords );
 			destRect -= destRect.getUpperLeft();
-			destRect += glyphIt->second;
-			destRect += Vec2f( floor( glyphInfo.mOriginOffset.x + 0.5f ), floor( glyphInfo.mOriginOffset.y ) );
+			destRect.scale( scale );
+			destRect += glyphIt->second * scale;
+			destRect += Vec2f( floor( glyphInfo.mOriginOffset.x + 0.5f ), floor( glyphInfo.mOriginOffset.y ) ) * scale;
 			destRect += Vec2f( baseline.x, baseline.y - mFont.getAscent() );
 			if( options.getPixelSnap() )
 				destRect -= Vec2f( destRect.x1 - floor( destRect.x1 ), destRect.y1 - floor( destRect.y1 ) );				
@@ -319,7 +320,7 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 	ClientBoolState vertexArrayState( GL_VERTEX_ARRAY );
 	ClientBoolState texCoordArrayState( GL_TEXTURE_COORD_ARRAY );	
 	gl::enable( mTextures[0].getTarget() );
-
+	const float scale = options.getScale();
 	glEnableClientState( GL_VERTEX_ARRAY );
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 	for( size_t texIdx = 0; texIdx < mTextures.size(); ++texIdx ) {
@@ -346,12 +347,13 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 			Rectf srcTexCoords = curTex.getAreaTexCoords( glyphInfo.mTexCoords );
 			Rectf destRect( glyphInfo.mTexCoords );
 			destRect -= destRect.getUpperLeft();
-			destRect += glyphIt->second;
-			destRect += Vec2f( floor( glyphInfo.mOriginOffset.x + 0.5f ), floor( glyphInfo.mOriginOffset.y ) );
+			destRect.scale( scale );
+			destRect += glyphIt->second * scale;
+			destRect += Vec2f( floor( glyphInfo.mOriginOffset.x + 0.5f ), floor( glyphInfo.mOriginOffset.y ) ) * scale;
 			destRect += Vec2f( offset.x, offset.y );
 			if( options.getPixelSnap() )
 				destRect -= Vec2f( destRect.x1 - floor( destRect.x1 ), destRect.y1 - floor( destRect.y1 ) );				
-			
+
 			// clip
 			Rectf clipped( destRect );
 			if( options.getClipHorizontal() ) {
