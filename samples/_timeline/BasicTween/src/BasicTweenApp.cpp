@@ -21,9 +21,9 @@ void BasicTweenApp::setup()
 void BasicTweenApp::mouseDown( MouseEvent event )
 {
 	// the call to apply() replaces any existing tweens on mBlackPos with this new one
-	getTimeline().apply( &mBlackPos, (Vec2f)event.getPos(), 2.0f, EaseInCubic() );
+	timeline().apply( &mBlackPos, (Vec2f)event.getPos(), 2.0f, EaseInCubic() );
 	// the call to appendTarget() ensures that any other tweens on mWhitePos will complete before this new one begins
-	getTimeline().appendTarget( &mWhitePos, (Vec2f)event.getPos(), 3.0f, EaseOutQuint() );
+	timeline().appendTarget( &mWhitePos, (Vec2f)event.getPos(), 3.0f, EaseOutQuint() );
 }
 
 void BasicTweenApp::draw()

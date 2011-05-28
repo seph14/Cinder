@@ -68,7 +68,7 @@ void CustomCallbackApp::setup()
 
 void CustomCallbackApp::mouseDown( MouseEvent event )
 {
-	TweenRef<Vec2f> tween = getTimeline().apply( &mCircle.mPos, Vec2f( event.getPos() ), 2.0f, EaseInOutCubic() );
+	TweenRef<Vec2f> tween = timeline().apply( &mCircle.mPos, Vec2f( event.getPos() ), 2.0f, EaseInOutCubic() );
 	tween->setStartFn( ColorToGreenFunctor( &gBackgroundColor ) );
 	tween->setUpdateFn( std::bind( &Circle::posUpdate, &mCircle ) );	
 	tween->setCompletionFn( setBackgroundToBlue );	

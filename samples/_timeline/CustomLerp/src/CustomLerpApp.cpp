@@ -46,7 +46,7 @@ void CustomLerpApp::setup()
 
 void CustomLerpApp::mouseDown( MouseEvent event )
 {
-	getTimeline().apply( &mBox, randomBox( event.getPos() ), 2.0f, EaseOutCubic(), boxLerp );
+	timeline().apply( &mBox, randomBox( event.getPos() ), 2.0f, EaseOutCubic(), boxLerp );
 }
 
 Box	CustomLerpApp::randomBox( Vec2f center )
