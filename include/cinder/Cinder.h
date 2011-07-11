@@ -40,6 +40,9 @@ using boost::uint64_t;
 	#define CINDER_MSW
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 	#define CINDER_LINUX
+	#if defined(ANDROID)
+		#define CINDER_ANDROID
+	#endif
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
 	#define CINDER_COCOA
 	#include "TargetConditionals.h"

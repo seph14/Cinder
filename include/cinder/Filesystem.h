@@ -24,7 +24,12 @@
 
 #include "cinder/Cinder.h"
 
-#define BOOST_FILESYSTEM_VERSION 3
+#if !defined(CINDER_ANDROID)
+	#define BOOST_FILESYSTEM_VERSION 3
+#else
+	#define BOOST_FILESYSTEM_VERSION 2
+	#define BOOST_SYSTEM_NO_DEPRECATED
+#endif
 #define BOOST_FILESYSTEM_NO_DEPRECATED
 #include <boost/filesystem.hpp>
 

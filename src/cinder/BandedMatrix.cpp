@@ -33,6 +33,10 @@
 #include <assert.h>
 #include <memory.h>
 
+#if defined(CINDER_ANDROID) || defined(ANDROID)
+#include <cstring>
+#endif
+
 namespace cinder {
 
 template<typename T>
