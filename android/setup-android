@@ -1,0 +1,34 @@
+#!/usr/bin/bash
+
+# This script sets up symbolic links to the Cinder source tree for use by the
+# Android ndk-build script.  On Windows (cygwin) it requires the Junction
+# tool to be installed and available in the path.
+#
+#   (http://technet.microsoft.com/en-us/sysinternals/bb896768)
+
+
+function remove_old_links {
+    rm -f jni/boost jni/include jni/src
+}
+
+if [ $# = 0 ]; then
+    echo "Usage: setup-android <cygwin|osx|linux>"
+elif [ $1 = "cygwin" ]; then
+    hash junction 2>&-
+    if [ $? -ne 0 ]; then
+        echo "Error: this script requires junction.exe in your PATH variable."
+        echo "  Verify your installation and try again"
+        echo "  (http://technet.microsoft.com/en-us/sysinternals/bb896768)"
+        exit
+    fi
+    remove_old_links
+    junction jni\\boost ..\\boost && junction jni\\include ..\\include && junction jni\\src ..\\src
+elif [ $1 = "osx" -o $1 = "linux" ]; then
+    remove_old_links
+    ln -s ../boost jni/boost && ln -s ../include jni/include && ln -s ../src jni/src
+fi
+
+if [ $? -ne 0 ]; then
+    echo "Error creating links, check your Cinder layout."
+fi
+
