@@ -29,6 +29,8 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/Area.cpp \
 					$(CINDER_SRC)/Sphere.cpp \
 					$(CINDER_SRC)/Stream.cpp \
 					$(CINDER_SRC)/TriMesh.cpp \
+					$(CINDER_SRC)/Url.cpp \
+					$(CINDER_SRC)/UrlImplAndroid.cpp \
 					$(CINDER_SRC)/Utilities.cpp \
 					$(CINDER_SRC)/Xml.cpp
 
