@@ -23,6 +23,12 @@
 #pragma once
 
 #include <string>
+#ifdef CINDER_ANDROID
+//  wstring is not implemented by gnuSTL
+namespace std {
+	typedef basic_string<wchar_t> wstring;
+}
+#endif
 #include <vector>
 #include "cinder/Cinder.h"
 #include "cinder/Url.h"
@@ -60,12 +66,10 @@ std::vector<std::string> split( const std::string &str, char separator );
 //! Returns a vector of substrings split by the characters in \a separators. <tt>split( "one, two, three", " ," ) -> [ "one", "two", "three" ]</tt>
 std::vector<std::string> split( const std::string &str, const std::string &separators );
 
-#if !defined(ANDROID)
 //! Returns a utf-16 encoded std::wstring by converting the utf-8 encoded string \a utf8
 std::wstring toUtf16( const std::string &utf8 );
 //! Returns a utf-8 encoded std::string by converting the utf-16 encoded string \a utf16
 std::string toUtf8( const std::wstring &utf16 );
-#endif
 
 //! Suspends the execution of the current thread until \a milliseconds have passed. Supports sub-millisecond precision only on Mac OS X.
 void sleep( float milliseconds );
