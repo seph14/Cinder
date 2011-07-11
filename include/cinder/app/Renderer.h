@@ -49,6 +49,10 @@
 		class AppImplCocoaTouchRendererQuartz;
 		class UIView;
 	#endif
+#elif defined( CINDER_ANDROID )
+	namespace cinder { namespace app {
+		class AppImplAndroidRendererGl;
+	} }
 #endif
 
 
@@ -80,6 +84,8 @@ class Renderer {
 
 	virtual HWND				getHwnd() = 0;
 	virtual HDC					getDc() { throw; } // the default behavior is failure
+#elif defined( CINDER_ANDROID )
+	virtual void setup( class App *aApp ) = 0;
 #endif
 
 	virtual Surface	copyWindowSurface( const Area &area ) = 0;
@@ -115,6 +121,8 @@ class RendererGl : public Renderer {
 	virtual HWND	getHwnd() { return mWnd; }
 	virtual void	prepareToggleFullScreen();
 	virtual void	finishToggleFullScreen();
+#elif defined( CINDER_ANDROID )
+	virtual void setup( class App *aApp );
 #endif
 
 	enum	{ AA_NONE = 0, AA_MSAA_2, AA_MSAA_4, AA_MSAA_6, AA_MSAA_8, AA_MSAA_16, AA_MSAA_32 };
@@ -136,6 +144,8 @@ class RendererGl : public Renderer {
 #elif defined( CINDER_MSW )
 	class AppImplMswRendererGl	*mImpl;
 	HWND						mWnd;
+#elif defined( CINDER_ANDROID )
+	AppImplAndroidRendererGl	*mImpl;
 #endif
 };
 

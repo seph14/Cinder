@@ -40,7 +40,11 @@
 	#include "cinder/app/AppImplMsw.h"
 	#include "cinder/app/AppImplMswRendererGl.h"
 	#include "cinder/app/AppImplMswRendererGdi.h"
+
+#elif defined( CINDER_ANDROID )
+	#include "cinder/app/AppImplAndroidRendererGl.h"
 #endif
+
 #include "cinder/ip/Flip.h"
 
 
@@ -234,6 +238,47 @@ Surface	RendererGl::copyWindowSurface( const Area &area )
 	glReadPixels( area.x1, mApp->getWindowHeight() - area.y2, area.getWidth(), area.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, s.getData() );
 	glPixelStorei( GL_PACK_ALIGNMENT, oldPackAlignment );	
 	ip::flipVertical( &s );
+	return s;
+}
+
+#elif defined( CINDER_ANDROID )
+RendererGl::~RendererGl()
+{
+}
+
+void RendererGl::setup( App *aApp )
+{
+	mApp = aApp;
+
+	mImpl = new AppImplAndroidRendererGl(mApp, this);
+}
+
+void RendererGl::startDraw()
+{
+	// XXX TODO
+}
+
+void RendererGl::finishDraw()
+{
+	// XXX TODO
+}
+
+void RendererGl::defaultResize()
+{
+	// XXX TODO
+}
+
+Surface	RendererGl::copyWindowSurface( const Area &area )
+{
+	Surface s( area.getWidth(), area.getHeight(), true );
+	glFlush(); // there is some disagreement about whether this is necessary, but ideally performance-conscious users will use FBOs anyway
+	GLint oldPackAlignment;
+	glGetIntegerv( GL_PACK_ALIGNMENT, &oldPackAlignment ); 
+	glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+	glReadPixels( area.x1, mApp->getWindowHeight() - area.y2, area.getWidth(), area.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, s.getData() );
+	glPixelStorei( GL_PACK_ALIGNMENT, oldPackAlignment );	
+	ip::flipVertical( &s );
+
 	return s;
 }
 

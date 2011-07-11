@@ -280,9 +280,11 @@ class App {
 	static std::string			getResourcePath( const std::string &rsrcRelativePath );
 	//! Returns the absolute file path to the bundle's resources folder. \sa \ref CinderResources
 	static std::string			getResourcePath();
-#else
+#elif defined( CINDER_MSW )
 	//! Returns a DataSourceRef to an application resource. \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
 	static DataSourceBufferRef	loadResource( int mswID, const std::string &mswType );
+#elif defined( CINDER_ANDROID )
+	static DataSourcePathRef	loadResource( const std::string &resourcePath );
 #endif
 	
 	//! Returns the path to the application on disk
@@ -416,10 +418,10 @@ inline uint32_t	getElapsedFrames() { return App::get()->getElapsedFrames(); }
 
 //! Returns a DataSource to an application resource. On Mac OS X, \a macPath is a path relative to the bundle's resources folder. On Windows, \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
 inline DataSourceRef			loadResource( const std::string &macPath, int mswID, const std::string &mswType ) { return App::loadResource( macPath, mswID, mswType ); }
-#if defined( CINDER_COCOA )
-	//! Returns a DataSource to an application resource. \a macPath is a path relative to the bundle's resources folder. \sa \ref CinderResources
-	inline DataSourcePathRef	loadResource( const std::string &macPath ) { return App::loadResource( macPath ); }
-#else
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
+	//! Returns a DataSource to an application resource. \a path is a path relative to the bundle's resources folder. \sa \ref CinderResources
+	inline DataSourcePathRef	loadResource( const std::string &resourcePath ) { return App::loadResource( resourcePath ); }
+#elif defined( CINDER_MSW )
 	//! Returns a DataSource to an application resource. \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
 	inline DataSourceBufferRef	loadResource( int mswID, const std::string &mswType ) { return App::loadResource( mswID, mswType ); }
 #endif
@@ -460,8 +462,8 @@ inline ::CGContextRef	createWindowCgContext() { return ((Renderer2d*)(App::get()
 //! Exception for failed resource loading
 class ResourceLoadExc : public Exception {
   public:
-#if defined( CINDER_COCOA )
-	ResourceLoadExc( const std::string &macPath );
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
+	ResourceLoadExc( const std::string &path );
 #elif defined( CINDER_MSW )
 	ResourceLoadExc( int mswID, const std::string &mswType );
 	ResourceLoadExc( const std::string &macPath, int mswID, const std::string &mswType );

@@ -10,7 +10,11 @@ CINDER_SRC = src/cinder
 LOCAL_MODULE 	 := libcinder
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
                     $(LOCAL_PATH)/boost
-LOCAL_SRC_FILES  := $(CINDER_SRC)/Area.cpp \
+LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
+					$(CINDER_SRC)/app/AppAndroid.cpp \
+					$(CINDER_SRC)/app/Renderer.cpp \
+					$(CINDER_SRC)/app/AppImplAndroidRendererGl.cpp \
+					$(CINDER_SRC)/Area.cpp \
                     $(CINDER_SRC)/AxisAlignedBox.cpp \
                     $(CINDER_SRC)/BandedMatrix.cpp \
                     $(CINDER_SRC)/BSpline.cpp \
@@ -36,7 +40,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/Area.cpp \
                     $(CINDER_SRC)/UrlImplAndroid.cpp \
                     $(CINDER_SRC)/Utilities.cpp \
                     $(CINDER_SRC)/Xml.cpp
-LOCAL_LDLIBS     := -lz
+LOCAL_LDLIBS     := -lz -lGLESv1_CM
 
 include $(BUILD_STATIC_LIBRARY)
 

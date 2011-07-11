@@ -53,6 +53,9 @@
 	#include <OpenGLES/ES1/glext.h>
 #elif defined( CINDER_MAC )
 	#include <OpenGL/gl.h>
+#elif defined( CINDER_ANDROID )
+    #include <GLES/gl.h>
+    #include <GLES/glext.h>
 #endif
 
 // forward declarations

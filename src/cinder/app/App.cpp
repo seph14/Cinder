@@ -177,7 +177,7 @@ DataSourceRef App::loadResource( const string &macPath, int mswID, const string 
 {
 #if defined( CINDER_COCOA )
 	return loadResource( macPath );
-#else
+#elif defined( CINDER_MSW )
 	return DataSourceBuffer::createRef( AppImplMsw::loadResource( mswID, mswType ), macPath );
 #endif
 }
@@ -191,11 +191,18 @@ DataSourcePathRef App::loadResource( const string &macPath )
 	else
 		return DataSourcePath::createRef( resourcePath );
 }
-#else
+#elif defined( CINDER_MSW )
 
 DataSourceBufferRef App::loadResource( int mswID, const string &mswType )
 {
 	return DataSourceBuffer::createRef( AppImplMsw::loadResource( mswID, mswType ) );
+}
+
+#elif defined( CINDER_ANDROID )
+
+DataSourcePathRef App::loadResource( const string &resourcePath )
+{
+    return DataSourcePath::createRef( resourcePath );
 }
 
 #endif
@@ -353,7 +360,7 @@ std::ostream& App::console()
 {
 #if defined( CINDER_COCOA )
 	return std::cout;
-#else
+#elif defined( CINDER_MSW )
 	if( ! mOutputStream )
 		mOutputStream = shared_ptr<cinder::msw::dostream>( new cinder::msw::dostream );
 	return *mOutputStream;
@@ -430,10 +437,10 @@ void App::Settings::enablePowerManagement( bool aPowerManagement )
 	mPowerManagement = aPowerManagement;
 }
 
-#if defined( CINDER_COCOA )
-ResourceLoadExc::ResourceLoadExc( const string &macPath )
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
+ResourceLoadExc::ResourceLoadExc( const string &path )
 {
-	sprintf( mMessage, "Failed to load resource: %s", macPath.c_str() );
+	sprintf( mMessage, "Failed to load resource: %s", path.c_str() );
 }
 
 #elif defined( CINDER_MSW )
