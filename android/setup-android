@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 # This script sets up symbolic links to the Cinder source tree for use by the
 # Android ndk-build script.  On Windows (cygwin) it requires the Junction
@@ -13,6 +13,7 @@ function remove_old_links {
 
 if [ $# = 0 ]; then
     echo "Usage: setup-android <cygwin|osx|linux>"
+    exit
 elif [ $1 = "cygwin" ]; then
     hash junction 2>&-
     if [ $? -ne 0 ]; then
@@ -25,10 +26,12 @@ elif [ $1 = "cygwin" ]; then
     junction jni\\boost ..\\boost && junction jni\\include ..\\include && junction jni\\src ..\\src
 elif [ $1 = "osx" -o $1 = "linux" ]; then
     remove_old_links
-    ln -s ../boost jni/boost && ln -s ../include jni/include && ln -s ../src jni/src
+    ln -s $PWD/../boost jni/boost && ln -s $PWD/../include jni/include && ln -s $PWD/../src jni/src
 fi
 
 if [ $? -ne 0 ]; then
     echo "Error creating links, check your Cinder layout."
+else
+    echo "Source links created, ready to run ndk-build"
 fi
 
