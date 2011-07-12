@@ -11,9 +11,13 @@ function remove_old_links {
     rm -f jni/boost jni/include jni/src
 }
 
-if [ $# = 0 ]; then
+function usage {
     echo "Usage: setup-android <cygwin|osx|linux>"
     exit
+}
+
+if [ $# = 0 ]; then
+    usage
 elif [ $1 = "cygwin" ]; then
     hash junction 2>&-
     if [ $? -ne 0 ]; then
@@ -27,6 +31,8 @@ elif [ $1 = "cygwin" ]; then
 elif [ $1 = "osx" -o $1 = "linux" ]; then
     remove_old_links
     ln -s $PWD/../boost jni/boost && ln -s $PWD/../include jni/include && ln -s $PWD/../src jni/src
+else
+    usage
 fi
 
 if [ $? -ne 0 ]; then
