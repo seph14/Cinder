@@ -1,3 +1,3 @@
 APP_STL := gnustl_static
-APP_MODULES := libcinder
+APP_MODULES := libcinder libfreeimage
 
