@@ -12,6 +12,14 @@ build/
 lib/libcinder*.a
 lib/cinder*.lib
 
+android/jni/FreeImage/
+android/jni/boost
+android/jni/include
+android/jni/src
+android/obj/
+android/setup/FreeImage/FreeImage3150.zip
+boost
+
 # Windows cruft
 *.suo
 *.ncb
