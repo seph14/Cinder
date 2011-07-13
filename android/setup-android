@@ -11,12 +11,17 @@ function remove_old_links {
     rm -f jni/boost jni/include jni/src
 }
 
-function usage {
-    echo "Usage: setup-android <cygwin|osx|linux>"
-    exit
+function check_for_junction {
+    hash junction 2>&-
+    if [ $? -ne 0 ]; then
+        echo "Error: this script requires junction.exe in your PATH variable."
+        echo "  Verify your installation and try again"
+        echo "  (http://technet.microsoft.com/en-us/sysinternals/bb896768)"
+        exit
+    fi
 }
 
-function freeimage {
+function unpack_freeimage {
     if [ ! -e setup/FreeImage/FreeImage3150.zip ]; then
         echo "Downloading FreeImage source distribution..."
         curl -O http://expandingbrain.com/cinder/FreeImage3150.zip
@@ -28,30 +33,21 @@ function freeimage {
     cp -p setup/FreeImage/Android.mk jni/FreeImage
 }
 
-if [ $# = 0 ]; then
-    usage
-elif [ $1 = "cygwin" ]; then
-    hash junction 2>&-
-    if [ $? -ne 0 ]; then
-        echo "Error: this script requires junction.exe in your PATH variable."
-        echo "  Verify your installation and try again"
-        echo "  (http://technet.microsoft.com/en-us/sysinternals/bb896768)"
-        exit
-    fi
+OSNAME=`uname -o`
+if [ $OSNAME = "Cygwin" ]; then
+    check_for_junction
     remove_old_links
     junction jni\\boost ..\\boost && junction jni\\include ..\\include && junction jni\\src ..\\src
-    freeimage
-elif [ $1 = "osx" -o $1 = "linux" ]; then
+else
     remove_old_links
     ln -s $PWD/../boost jni/boost && ln -s $PWD/../include jni/include && ln -s $PWD/../src jni/src
-    freeimage
-else
-    usage
 fi
 
+unpack_freeimage
+
 if [ $? -ne 0 ]; then
-    echo "Error creating links, check your Cinder layout."
+    echo "Error creating Android tree, check your Cinder source layout."
 else
-    echo "Source links created, ready to run ndk-build"
+    echo "Android source tree created, ready to run ndk-build"
 fi
 

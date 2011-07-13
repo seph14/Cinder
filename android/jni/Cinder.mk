@@ -73,7 +73,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(TESS_SRC)/tess.c
 
 LOCAL_LDLIBS     		:= -lz -lGLESv1_CM -landroid -llog -lEGL
-LOCAL_STATIC_LIBRARIES	:= android_native_app_glue
+LOCAL_STATIC_LIBRARIES	:= android_native_app_glue 
 
 include $(BUILD_STATIC_LIBRARY)
 
