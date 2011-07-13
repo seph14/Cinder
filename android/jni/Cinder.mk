@@ -50,6 +50,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(CINDER_SRC)/Sphere.cpp \
                     $(CINDER_SRC)/Stream.cpp \
                     $(CINDER_SRC)/Surface.cpp \
+                    $(CINDER_SRC)/Timer.cpp \
                     $(CINDER_SRC)/Triangulate.cpp \
                     $(CINDER_SRC)/TriMesh.cpp \
                     $(CINDER_SRC)/Url.cpp \
