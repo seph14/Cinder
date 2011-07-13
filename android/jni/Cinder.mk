@@ -16,6 +16,12 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/AppAndroid.cpp \
 					$(CINDER_SRC)/app/Renderer.cpp \
 					$(CINDER_SRC)/app/AppImplAndroidRendererGl.cpp \
+					$(CINDER_SRC)/gl/gl.cpp \
+					$(CINDER_SRC)/gl/Fbo.cpp \
+					$(CINDER_SRC)/gl/Light.cpp \
+					$(CINDER_SRC)/gl/Material.cpp \
+					$(CINDER_SRC)/gl/Texture.cpp \
+					$(CINDER_SRC)/gl/TileRender.cpp \
 					$(CINDER_SRC)/ip/Blend.cpp \
 					$(CINDER_SRC)/ip/EdgeDetect.cpp \
 					$(CINDER_SRC)/ip/Fill.cpp \
@@ -39,6 +45,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(CINDER_SRC)/DataTarget.cpp \
                     $(CINDER_SRC)/Exception.cpp \
                     $(CINDER_SRC)/ImageIo.cpp \
+                    $(CINDER_SRC)/ImageSourceFileFreeImage.cpp \
                     $(CINDER_SRC)/Matrix.cpp \
                     $(CINDER_SRC)/Path2D.cpp \
                     $(CINDER_SRC)/Perlin.cpp \
