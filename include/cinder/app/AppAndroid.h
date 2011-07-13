@@ -161,6 +161,5 @@ void android_main( struct android_app* state ) {							\
 	cinder::app::Renderer *ren = new RENDERER;								\
 	cinder::app::AppAndroid::executeLaunch( app, ren, #APP, state );		\
 	cinder::app::AppAndroid::cleanupLaunch();								\
-	return 0;																\
 }
 
