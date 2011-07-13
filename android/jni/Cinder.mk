@@ -35,12 +35,17 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(CINDER_SRC)/Shape2D.cpp \
                     $(CINDER_SRC)/Sphere.cpp \
                     $(CINDER_SRC)/Stream.cpp \
+                    $(CINDER_SRC)/Surface.cpp \
                     $(CINDER_SRC)/TriMesh.cpp \
                     $(CINDER_SRC)/Url.cpp \
                     $(CINDER_SRC)/UrlImplAndroid.cpp \
                     $(CINDER_SRC)/Utilities.cpp \
                     $(CINDER_SRC)/Xml.cpp
-LOCAL_LDLIBS     := -lz -lGLESv1_CM
+
+LOCAL_LDLIBS     		:= -lz -lGLESv1_CM -landroid -llog -lEGL
+LOCAL_STATIC_LIBRARIES	:= android_native_app_glue
 
 include $(BUILD_STATIC_LIBRARY)
+
+$(call import-module,android/native_app_glue)
 
