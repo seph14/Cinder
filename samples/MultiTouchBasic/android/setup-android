@@ -2,8 +2,9 @@
 
 ANDROID_TOOL=android
 
-uname -a | grep -i cygwin
-if [ $? = 0 ]; then
+# Use android.bat on cygwin
+hash ${ANDROID_TOOL} 2>&-
+if [ $? -ne 0 ]; then
     ANDROID_TOOL=android.bat
 fi
 
