@@ -1,14 +1,12 @@
 LOCAL_PATH := $(call my-dir)
 
+CINDER_PATH        := $(LOCAL_PATH)/../../../..
+CINDER_MODULE_PATH := ../../../../android/obj/local/armeabi
+
+include $(CINDER_PATH)/android/CinderModules.mk
+
 include $(CLEAR_VARS)
 
-LOCAL_MODULE := cinder
-LOCAL_SRC_FILES := ../../../../android/obj/local/armeabi/libcinder.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-
-CINDER_PATH       = $(LOCAL_PATH)/../../../..
 LOCAL_MODULE     := MultiTouchBasic
 LOCAL_C_INCLUDES := $(CINDER_PATH)/include \
 					$(CINDER_PATH)/boost 
@@ -16,7 +14,7 @@ LOCAL_C_INCLUDES := $(CINDER_PATH)/include \
 LOCAL_SRC_FILES := ../../src/MultiTouchApp.cpp
 
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv1_CM -lz
-LOCAL_STATIC_LIBRARIES := cinder android_native_app_glue 
+LOCAL_STATIC_LIBRARIES := cinder freeimage android_native_app_glue 
 
 include $(BUILD_SHARED_LIBRARY)
 

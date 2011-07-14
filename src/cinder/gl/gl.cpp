@@ -1171,6 +1171,8 @@ void draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 }
 
+#if !defined( CINDER_ANDROID )
+
 namespace {
 void drawStringHelper( const std::string &str, const Vec2f &pos, const ColorA &color, Font font, int justification )
 {
@@ -1215,6 +1217,8 @@ void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &co
 {
 	drawStringHelper( str, pos, color, font, 1 );
 }
+
+#endif // CINDER_ANDROID
 
 ///////////////////////////////////////////////////////////////////////////////
 // SaveTextureBindState

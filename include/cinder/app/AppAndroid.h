@@ -155,11 +155,13 @@ class AppAndroid : public App {
 } } // namespace cinder::app
 
 #define CINDER_APP_ANDROID( APP, RENDERER )									\
-void android_main( struct android_app* state ) {							\
-	cinder::app::AppAndroid::prepareLaunch();								\
-	cinder::app::AppAndroid *app = new APP;									\
-	cinder::app::Renderer *ren = new RENDERER;								\
-	cinder::app::AppAndroid::executeLaunch( app, ren, #APP, state );		\
-	cinder::app::AppAndroid::cleanupLaunch();								\
+extern "C" {																\
+  void android_main( struct android_app* state ) {							\
+  	cinder::app::AppAndroid::prepareLaunch();								\
+  	cinder::app::AppAndroid *app = new APP;									\
+  	cinder::app::Renderer *ren = new RENDERER;								\
+  	cinder::app::AppAndroid::executeLaunch( app, ren, #APP, state );		\
+  	cinder::app::AppAndroid::cleanupLaunch();								\
+  }																			\
 }
 
