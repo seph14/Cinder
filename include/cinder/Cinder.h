@@ -94,3 +94,9 @@ using boost::checked_array_deleter;
 #if ! defined( CINDER_NO_NS_ALIAS )
 	namespace ci = cinder;
 #endif // ! defined( CINDER_NO_NS_ALIAS )
+
+#if defined( CINDER_ANDROID )
+#include <android/log.h>
+#define CI_LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "cinder", __VA_ARGS__))
+#define CI_LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "cinder", __VA_ARGS__))
+#endif

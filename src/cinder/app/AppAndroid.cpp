@@ -121,10 +121,14 @@ static void engine_draw_frame(struct engine* engine) {
         return;
     }
 
-    // Just fill the screen with a color.
-    glClearColor(((float)engine->state.x)/engine->width, engine->state.angle,
-            ((float)engine->state.y)/engine->height, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    // // Just fill the screen with a color.
+    // glClearColor(((float)engine->state.x)/engine->width, engine->state.angle,
+    //         ((float)engine->state.y)/engine->height, 1);
+    // glClear(GL_COLOR_BUFFER_BIT);
+
+    cinder::app::AppAndroid* app = cinder::app::AppAndroid::get();
+    app->privateUpdate__();
+    app->privateDraw__();
 
     eglSwapBuffers(engine->display, engine->surface);
 }
@@ -179,6 +183,8 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             // The window is being shown, get it ready.
             if (engine->app->window != NULL) {
                 engine_init_display(engine);
+                cinder::app::AppAndroid* app = cinder::app::AppAndroid::get();
+                app->privateSetup__();
                 engine_draw_frame(engine);
             }
             break;
@@ -215,7 +221,8 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
  * android_native_app_glue.  It runs in its own thread, with its own
  * event loop for receiving input events and doing other things.
  */
-void android_run(struct android_app* state) {
+void android_run(struct android_app* state) 
+{
     struct engine engine;
 
     // Make sure glue isn't stripped.
@@ -338,6 +345,8 @@ void AppAndroid::launch( const char *title, int argc, char * const argv[] )
 {
 	// ::UIApplicationMain( argc, const_cast<char**>( argv ), nil, @"CinderAppDelegateIPhone" );
 	// XXX Start Activity
+    cinder::app::App* app = cinder::app::AppAndroid::get();
+
     android_run(mState->mAApp);
 }
 
