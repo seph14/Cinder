@@ -157,11 +157,28 @@ static void engine_term_display(struct engine* engine) {
  * Process the next input event.
  */
 static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
+    static const char* actionNames[] = {
+        "AMOTION_EVENT_ACTION_DOWN",
+        "AMOTION_EVENT_ACTION_UP",
+        "AMOTION_EVENT_ACTION_MOVE",
+        "AMOTION_EVENT_ACTION_CANCEL",
+        "AMOTION_EVENT_ACTION_OUTSIDE",
+        "AMOTION_EVENT_ACTION_POINTER_DOWN",
+        "AMOTION_EVENT_ACTION_POINTER_UP",
+    };
+
     struct engine* engine = (struct engine*)app->userData;
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
         engine->animating = 1;
         engine->state.x = AMotionEvent_getX(event, 0);
         engine->state.y = AMotionEvent_getY(event, 0);
+
+        int32_t actionCode = AMotionEvent_getAction(event);
+        int action = actionCode & AMOTION_EVENT_ACTION_MASK;
+        int index  = (actionCode & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+        const char* actionName = (action >= 0 && action <= 6) ? actionNames[action] : "UNKNOWN";
+        CI_LOGI("Received touch action %s pointer index %d x %d y %d", actionName, index, 
+                engine->state.x, engine->state.y);
         return 1;
     }
     return 0;
@@ -271,9 +288,9 @@ void android_run(struct android_app* state)
                     ASensorEvent event;
                     while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
                             &event, 1) > 0) {
-                        LOGI("accelerometer: x=%f y=%f z=%f",
-                                event.acceleration.x, event.acceleration.y,
-                                event.acceleration.z);
+                        // LOGI("accelerometer: x=%f y=%f z=%f",
+                        //         event.acceleration.x, event.acceleration.y,
+                        //         event.acceleration.z);
                     }
                 }
             }

@@ -149,7 +149,6 @@ void App::privateSetup__()
 
 void App::privateUpdate__()
 {
-    CI_LOGI("App::privateUpdate__");
 	update();
 	mFrameCount++;
 
