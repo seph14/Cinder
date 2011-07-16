@@ -61,9 +61,7 @@ class MultiTouchApp : public AppNative {
 
 void MultiTouchApp::setup()
 {
-#if !defined( CINDER_ANDROID )
 	console() << "MT: " << System::hasMultiTouch() << " Max points: " << System::getMaxMultiTouchPoints() << std::endl;
-#endif
 }
 
 void MultiTouchApp::prepareSettings( Settings *settings )
@@ -73,9 +71,7 @@ void MultiTouchApp::prepareSettings( Settings *settings )
 
 void MultiTouchApp::touchesBegan( TouchEvent event )
 {
-#if !defined( CINDER_ANDROID )
 	console() << "Began: " << event << std::endl;
-#endif
 	for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt ) {
 		Color newColor( CM_HSV, Rand::randFloat(), 1, 1 );
 		mActivePoints.insert( make_pair( touchIt->getId(), TouchPoint( touchIt->getPos(), newColor ) ) );
@@ -90,9 +86,7 @@ void MultiTouchApp::touchesMoved( TouchEvent event )
 
 void MultiTouchApp::touchesEnded( TouchEvent event )
 {
-#if !defined( CINDER_ANDROID )
 	console() << "Ended: " << event << std::endl;
-#endif
 	for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt ) {
 		mActivePoints[touchIt->getId()].startDying();
 		mDyingPoints.push_back( mActivePoints[touchIt->getId()] );
@@ -102,16 +96,12 @@ void MultiTouchApp::touchesEnded( TouchEvent event )
 
 void MultiTouchApp::mouseDown( MouseEvent event )
 {
-#if !defined( CINDER_ANDROID )
 	console() << "Mouse down: " << event.isRight() << " & " << event.isControlDown() << std::endl;	
-#endif
 }
 
 void MultiTouchApp::mouseDrag( MouseEvent event )
 {
-#if !defined( CINDER_ANDROID )
 	console() << "Mouse drag: " << std::endl;	
-#endif
 }
 
 void MultiTouchApp::draw()

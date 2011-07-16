@@ -34,6 +34,8 @@
 #elif defined( CINDER_MSW )
 	#include "cinder/msw/OutputDebugStringStream.h"
 	#include "cinder/app/AppImplMsw.h"
+#elif defined( CINDER_ANDROID )
+	#include "cinder/android/LogStream.h"
 #endif
 
 using namespace std;
@@ -363,6 +365,10 @@ std::ostream& App::console()
 #elif defined( CINDER_MSW )
 	if( ! mOutputStream )
 		mOutputStream = shared_ptr<cinder::msw::dostream>( new cinder::msw::dostream );
+	return *mOutputStream;
+#elif defined( CINDER_ANDROID )
+	if( ! mOutputStream )
+		mOutputStream = shared_ptr<cinder::android::dostream>( new cinder::android::dostream );
 	return *mOutputStream;
 #endif
 }

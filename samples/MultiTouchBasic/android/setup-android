@@ -8,5 +8,5 @@ if [ $? -ne 0 ]; then
     ANDROID_TOOL=android.bat
 fi
 
-${ANDROID_TOOL} update project --path . --name MultiTouchBasic
+${ANDROID_TOOL} update project --path . --name MultiTouchBasic --target android-8
 

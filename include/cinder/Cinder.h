@@ -99,4 +99,5 @@ using boost::checked_array_deleter;
 #include <android/log.h>
 #define CI_LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "cinder", __VA_ARGS__))
 #define CI_LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "cinder", __VA_ARGS__))
+#define CI_LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, "cinder", __VA_ARGS__))
 #endif

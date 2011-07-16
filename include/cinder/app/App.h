@@ -54,6 +54,8 @@
 //	class CinderView;
 #elif defined( CINDER_MSW )
 	#include "cinder/msw/OutputDebugStringStream.h"
+#elif defined( CINDER_ANDROID )
+	#include "cinder/android/LogStream.h"
 #endif
 
 #include <vector>
@@ -357,6 +359,8 @@ class App {
 #if defined( CINDER_MSW )
 	friend class AppImplMsw;
 	std::shared_ptr<cinder::msw::dostream>	mOutputStream;
+#elif defined( CINDER_ANDROID )
+	std::shared_ptr<cinder::android::dostream> mOutputStream;
 #else
 	static void				*sAutoReleasePool;
 #endif
