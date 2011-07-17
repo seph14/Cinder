@@ -45,6 +45,10 @@ struct engine {
 
     struct timespec mStartTime;
     ci::app::AppAndroid* cinderApp;
+
+    std::vector<ci::app::TouchEvent::Touch> touchesBegan;
+    std::vector<ci::app::TouchEvent::Touch> touchesMoved;
+    std::vector<ci::app::TouchEvent::Touch> touchesEnded;
 };
 
 /**
@@ -112,6 +116,14 @@ static int engine_init_display(struct engine* engine) {
     glShadeModel(GL_SMOOTH);
     glDisable(GL_DEPTH_TEST);
 
+	glMatrixMode( GL_PROJECTION );
+	glLoadIdentity();
+    glOrthof( 0, w, h, 0, -1.0f, 1.0f );
+    // glOrthof( 0, screenWidth, 0, screenHeight, -1.0f, 1.0f );
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+	glViewport( 0, 0, w, h );
+
     return 0;
 }
 
@@ -167,8 +179,8 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
 
     struct engine* engine = (struct engine*)app->userData;
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
-        engine->savedState.x = AMotionEvent_getX(event, 0);
-        engine->savedState.y = AMotionEvent_getY(event, 0);
+        int32_t x = engine->savedState.x = AMotionEvent_getX(event, 0);
+        int32_t y = engine->savedState.y = AMotionEvent_getY(event, 0);
 
         int32_t actionCode = AMotionEvent_getAction(event);
         int action = actionCode & AMOTION_EVENT_ACTION_MASK;
@@ -176,9 +188,41 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
         const char* actionName = (action >= 0 && action <= 6) ? actionNames[action] : "UNKNOWN";
         CI_LOGI("Received touch action %s pointer index %d x %d y %d", actionName, index, 
                 engine->savedState.x, engine->savedState.y);
+
+        double timestamp = engine->cinderApp->getElapsedSeconds();
+        if (action == AMOTION_EVENT_ACTION_DOWN) {
+            engine->touchesBegan.push_back(ci::app::TouchEvent::Touch(ci::Vec2f(x, y),
+                ci::Vec2f(x, y), index, timestamp, NULL));
+        }
+        else if (action == AMOTION_EVENT_ACTION_MOVE) {
+            engine->touchesMoved.push_back(ci::app::TouchEvent::Touch(ci::Vec2f(x, y),
+                ci::Vec2f(x, y), index, timestamp, NULL));
+        }
+        else if (action == AMOTION_EVENT_ACTION_UP) {
+            engine->touchesEnded.push_back(ci::app::TouchEvent::Touch(ci::Vec2f(x, y),
+                ci::Vec2f(x, y), index, timestamp, NULL));
+        }
+
         return 1;
     }
     return 0;
+}
+
+static void engine_update_touches(struct engine* engine) 
+{
+    ci::app::AppAndroid& app = *(engine->cinderApp);
+    if ( ! engine->touchesBegan.empty() ) {
+        app.privateTouchesBegan__( ci::app::TouchEvent( engine->touchesBegan ) );
+        engine->touchesBegan.clear();
+    }
+    if ( ! engine->touchesMoved.empty() ) {
+        app.privateTouchesMoved__( ci::app::TouchEvent( engine->touchesMoved ) );
+        engine->touchesMoved.clear();
+    }
+    if ( ! engine->touchesEnded.empty() ) {
+        app.privateTouchesEnded__( ci::app::TouchEvent( engine->touchesEnded ) );
+        engine->touchesEnded.clear();
+    }
 }
 
 /**
@@ -288,12 +332,16 @@ void android_run(struct engine* engine)
                 }
             }
 
+            // Update input
             // Check if we are exiting.
             if (state->destroyRequested != 0) {
                 engine_term_display(engine);
                 return;
             }
         }
+
+        //  Update engine touch state
+        engine_update_touches(engine);
 
         if (engine->animating) {
             // Drawing is throttled to the screen update rate, so there
@@ -307,30 +355,6 @@ namespace cinder { namespace app {
 
 AppAndroid*				AppAndroid::sInstance = 0;
 AppAndroid*				sInstance;
-
-// struct AppAndroidState {
-// // 	CinderViewCocoaTouch		*mCinderView;
-// // 	UIWindow					*mWindow;
-// 	struct timespec mStartTime;
-//     struct android_app* mAApp;
-// };
-
-// void setupCocoaTouchWindow( AppAndroid *app )
-// {
-// 	app->privatePrepareSettings__();
-// 	app->mState->mWindow = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-// 	app->mState->mCinderView = [[CinderViewCocoaTouch alloc] initWithFrame:[[UIScreen mainScreen] bounds] app:app renderer:app->getRenderer()];
-// 	[app->mState->mWindow addSubview:app->mState->mCinderView];
-// 	[app->mState->mCinderView release];
-// 	[app->mState->mWindow makeKeyAndVisible];
-// 
-// 	[app->mState->mCinderView layoutIfNeeded];
-// 	app->privateSetup__();
-// 	[app->mState->mCinderView setAppSetupCalled:YES];
-// 	app->privateResize__( ci::app::ResizeEvent( ci::Vec2i( [app->mState->mCinderView bounds].size.width, [app->mState->mCinderView bounds].size.height ) ) );
-// 	
-// 	[app->mState->mCinderView startAnimation];
-// }
 
 AppAndroid::AppAndroid()
 	: App()
