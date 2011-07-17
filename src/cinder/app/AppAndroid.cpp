@@ -13,9 +13,6 @@
 #include <android/log.h>
 #include <android_native_app_glue.h>
 
-#define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "native-activity", __VA_ARGS__))
-#define LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "native-activity", __VA_ARGS__))
-
 /**
  * Our saved state data.
  */
@@ -29,19 +26,25 @@ struct saved_state {
  * Shared state for our app.
  */
 struct engine {
-    struct android_app* app;
+    struct android_app* state;
 
     ASensorManager* sensorManager;
     const ASensor* accelerometerSensor;
     ASensorEventQueue* sensorEventQueue;
 
     int animating;
+
     EGLDisplay display;
     EGLSurface surface;
     EGLContext context;
+
     int32_t width;
     int32_t height;
-    struct saved_state state;
+
+    struct saved_state savedState;
+
+    struct timespec mStartTime;
+    ci::app::AppAndroid* cinderApp;
 };
 
 /**
@@ -83,13 +86,13 @@ static int engine_init_display(struct engine* engine) {
      * ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID. */
     eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
 
-    ANativeWindow_setBuffersGeometry(engine->app->window, 0, 0, format);
+    ANativeWindow_setBuffersGeometry(engine->state->window, 0, 0, format);
 
-    surface = eglCreateWindowSurface(display, config, engine->app->window, NULL);
+    surface = eglCreateWindowSurface(display, config, engine->state->window, NULL);
     context = eglCreateContext(display, config, NULL, NULL);
 
     if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) {
-        LOGW("Unable to eglMakeCurrent");
+        CI_LOGW("Unable to eglMakeCurrent");
         return -1;
     }
 
@@ -101,7 +104,7 @@ static int engine_init_display(struct engine* engine) {
     engine->surface = surface;
     engine->width = w;
     engine->height = h;
-    engine->state.angle = 0;
+    engine->savedState.angle = 0;
 
     // Initialize GL state.
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
@@ -121,14 +124,9 @@ static void engine_draw_frame(struct engine* engine) {
         return;
     }
 
-    // // Just fill the screen with a color.
-    // glClearColor(((float)engine->state.x)/engine->width, engine->state.angle,
-    //         ((float)engine->state.y)/engine->height, 1);
-    // glClear(GL_COLOR_BUFFER_BIT);
-
-    cinder::app::AppAndroid* app = cinder::app::AppAndroid::get();
-    app->privateUpdate__();
-    app->privateDraw__();
+    ci::app::AppAndroid& app = *(engine->cinderApp);
+    app.privateUpdate__();
+    app.privateDraw__();
 
     eglSwapBuffers(engine->display, engine->surface);
 }
@@ -169,16 +167,15 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
 
     struct engine* engine = (struct engine*)app->userData;
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
-        engine->animating = 1;
-        engine->state.x = AMotionEvent_getX(event, 0);
-        engine->state.y = AMotionEvent_getY(event, 0);
+        engine->savedState.x = AMotionEvent_getX(event, 0);
+        engine->savedState.y = AMotionEvent_getY(event, 0);
 
         int32_t actionCode = AMotionEvent_getAction(event);
         int action = actionCode & AMOTION_EVENT_ACTION_MASK;
         int index  = (actionCode & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
         const char* actionName = (action >= 0 && action <= 6) ? actionNames[action] : "UNKNOWN";
         CI_LOGI("Received touch action %s pointer index %d x %d y %d", actionName, index, 
-                engine->state.x, engine->state.y);
+                engine->savedState.x, engine->savedState.y);
         return 1;
     }
     return 0;
@@ -192,17 +189,21 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
             // The system has asked us to save our current state.  Do so.
-            engine->app->savedState = malloc(sizeof(struct saved_state));
-            *((struct saved_state*)engine->app->savedState) = engine->state;
-            engine->app->savedStateSize = sizeof(struct saved_state);
+            engine->state->savedState = malloc(sizeof(struct saved_state));
+            *((struct saved_state*)engine->state->savedState) = engine->savedState;
+            engine->state->savedStateSize = sizeof(struct saved_state);
             break;
         case APP_CMD_INIT_WINDOW:
             // The window is being shown, get it ready.
-            if (engine->app->window != NULL) {
+            if (engine->state->window != NULL) {
                 engine_init_display(engine);
-                cinder::app::AppAndroid* app = cinder::app::AppAndroid::get();
-                app->privateSetup__();
+
+                ci::app::AppAndroid& app = *(engine->cinderApp);
+                app.privateSetup__();
+                app.privateResize__(ci::Vec2i(engine->width, engine->height));
+
                 engine_draw_frame(engine);
+                engine->animating = 1;
             }
             break;
         case APP_CMD_TERM_WINDOW:
@@ -233,34 +234,26 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
     }
 }
 
-/**
- * This is the main entry point of a native application that is using
- * android_native_app_glue.  It runs in its own thread, with its own
- * event loop for receiving input events and doing other things.
- */
-void android_run(struct android_app* state) 
+void android_run(struct engine* engine) 
 {
-    struct engine engine;
-
     // Make sure glue isn't stripped.
     app_dummy();
 
-    memset(&engine, 0, sizeof(engine));
-    state->userData = &engine;
+    struct android_app* state = engine->state;
+    state->userData = engine;
     state->onAppCmd = engine_handle_cmd;
     state->onInputEvent = engine_handle_input;
-    engine.app = state;
 
     // Prepare to monitor accelerometer
-    engine.sensorManager = ASensorManager_getInstance();
-    engine.accelerometerSensor = ASensorManager_getDefaultSensor(engine.sensorManager,
+    engine->sensorManager = ASensorManager_getInstance();
+    engine->accelerometerSensor = ASensorManager_getDefaultSensor(engine->sensorManager,
             ASENSOR_TYPE_ACCELEROMETER);
-    engine.sensorEventQueue = ASensorManager_createEventQueue(engine.sensorManager,
+    engine->sensorEventQueue = ASensorManager_createEventQueue(engine->sensorManager,
             state->looper, LOOPER_ID_USER, NULL, NULL);
 
     if (state->savedState != NULL) {
         // We are starting with a previous saved state; restore from it.
-        engine.state = *(struct saved_state*)state->savedState;
+        engine->savedState = *(struct saved_state*)state->savedState;
     }
 
     // loop waiting for stuff to do.
@@ -274,7 +267,7 @@ void android_run(struct android_app* state)
         // If not animating, we will block forever waiting for events.
         // If animating, we loop until all events are read, then continue
         // to draw the next frame of animation.
-        while ((ident=ALooper_pollAll(engine.animating ? 0 : -1, NULL, &events,
+        while ((ident=ALooper_pollAll(engine->animating ? 0 : -1, NULL, &events,
                 (void**)&source)) >= 0) {
 
             // Process this event.
@@ -284,9 +277,9 @@ void android_run(struct android_app* state)
 
             // If a sensor has data, process it now.
             if (ident == LOOPER_ID_USER) {
-                if (engine.accelerometerSensor != NULL) {
+                if (engine->accelerometerSensor != NULL) {
                     ASensorEvent event;
-                    while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
+                    while (ASensorEventQueue_getEvents(engine->sensorEventQueue,
                             &event, 1) > 0) {
                         // LOGI("accelerometer: x=%f y=%f z=%f",
                         //         event.acceleration.x, event.acceleration.y,
@@ -297,21 +290,15 @@ void android_run(struct android_app* state)
 
             // Check if we are exiting.
             if (state->destroyRequested != 0) {
-                engine_term_display(&engine);
+                engine_term_display(engine);
                 return;
             }
         }
 
-        if (engine.animating) {
-            // Done with events; draw next animation frame.
-            engine.state.angle += .01f;
-            if (engine.state.angle > 1) {
-                engine.state.angle = 0;
-            }
-
+        if (engine->animating) {
             // Drawing is throttled to the screen update rate, so there
             // is no need to do timing here.
-            engine_draw_frame(&engine);
+            engine_draw_frame(engine);
         }
     }
 }
@@ -321,12 +308,12 @@ namespace cinder { namespace app {
 AppAndroid*				AppAndroid::sInstance = 0;
 AppAndroid*				sInstance;
 
-struct AppAndroidState {
-// 	CinderViewCocoaTouch		*mCinderView;
-// 	UIWindow					*mWindow;
-	struct timespec mStartTime;
-    struct android_app* mAApp;
-};
+// struct AppAndroidState {
+// // 	CinderViewCocoaTouch		*mCinderView;
+// // 	UIWindow					*mWindow;
+// 	struct timespec mStartTime;
+//     struct android_app* mAApp;
+// };
 
 // void setupCocoaTouchWindow( AppAndroid *app )
 // {
@@ -348,41 +335,32 @@ struct AppAndroidState {
 AppAndroid::AppAndroid()
 	: App()
 {
-	mState = std::shared_ptr<AppAndroidState>( new AppAndroidState() );
-	clock_gettime(CLOCK_MONOTONIC, &mState->mStartTime);
+    mEngine = new engine;
+    memset(mEngine, 0, sizeof(engine));
+    mEngine->cinderApp = this;
+	clock_gettime(CLOCK_MONOTONIC, &(mEngine->mStartTime));
 	mLastAccel = mLastRawAccel = Vec3f::zero();
 }
 
 void AppAndroid::setAppState( struct android_app* state )
 {
-    mState->mAApp = state;
+    mEngine->state = state;
 }
 
 void AppAndroid::launch( const char *title, int argc, char * const argv[] )
 {
-	// ::UIApplicationMain( argc, const_cast<char**>( argv ), nil, @"CinderAppDelegateIPhone" );
-	// XXX Start Activity
     cinder::app::App* app = cinder::app::AppAndroid::get();
-
-    android_run(mState->mAApp);
+    android_run(mEngine);
 }
 
 int	AppAndroid::getWindowWidth() const
 {
-	// ::CGRect bounds = [mState->mCinderView bounds];
-	// if( [mState->mCinderView respondsToSelector:NSSelectorFromString(@"contentScaleFactor")] )
-	// 	return ::CGRectGetWidth( bounds ) * mState->mCinderView.contentScaleFactor;
-	// else
-	// 	return ::CGRectGetWidth( bounds );
+    return mEngine->width;
 }
 
 int	AppAndroid::getWindowHeight() const
 {
-	// ::CGRect bounds = [mState->mCinderView bounds];
-	// if( [mState->mCinderView respondsToSelector:NSSelectorFromString(@"contentScaleFactor")] )
-	// 	return ::CGRectGetHeight( bounds ) * mState->mCinderView.contentScaleFactor;
-	// else
-	// 	return ::CGRectGetHeight( bounds );
+    return mEngine->height;
 }
 
 //! Enables the accelerometer
@@ -430,7 +408,7 @@ double AppAndroid::getElapsedSeconds() const
 	struct timespec currentTime;
 	clock_gettime(CLOCK_MONOTONIC, &currentTime);
 	return ( (currentTime.tv_sec + currentTime.tv_nsec / 1e9) 
-			- (mState->mStartTime.tv_sec + mState->mStartTime.tv_nsec / 1e9) );
+			- (mEngine->mStartTime.tv_sec + mEngine->mStartTime.tv_nsec / 1e9) );
 }
 
 std::string AppAndroid::getAppPath()

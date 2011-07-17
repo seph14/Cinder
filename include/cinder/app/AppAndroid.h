@@ -5,10 +5,9 @@
 #include "cinder/app/AccelEvent.h"
 
 struct android_app;
+struct engine;
 
 namespace cinder { namespace app {
-
-struct AppAndroidState;
 
 class AppAndroid : public App {
   public:
@@ -137,8 +136,8 @@ class AppAndroid : public App {
 	//! \endcond
 
   private:
-	// The state is contained in a struct in order to avoid this .h needing to be compiled as Objective-C++
-	std::shared_ptr<AppAndroidState>		mState;
+	//  Android Native Activity state
+	struct engine*			mEngine;
 	
 	static AppAndroid		*sInstance;
 	Settings				mSettings;
