@@ -13,6 +13,12 @@
 #include <android/log.h>
 #include <android_native_app_glue.h>
 
+#include <map>
+
+using std::vector;
+using std::map;
+using ci::app::TouchEvent;
+
 /**
  * Our saved state data.
  */
@@ -46,9 +52,11 @@ struct engine {
     struct timespec mStartTime;
     ci::app::AppAndroid* cinderApp;
 
-    std::vector<ci::app::TouchEvent::Touch> touchesBegan;
-    std::vector<ci::app::TouchEvent::Touch> touchesMoved;
-    std::vector<ci::app::TouchEvent::Touch> touchesEnded;
+    vector<TouchEvent::Touch> touchesBegan;
+    vector<TouchEvent::Touch> touchesMoved;
+    vector<TouchEvent::Touch> touchesEnded;
+
+    map<int, TouchEvent::Touch> activeTouches;
 };
 
 /**
@@ -179,28 +187,50 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
 
     struct engine* engine = (struct engine*)app->userData;
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
-        int32_t x = engine->savedState.x = AMotionEvent_getX(event, 0);
-        int32_t y = engine->savedState.y = AMotionEvent_getY(event, 0);
+        // int32_t x = engine->savedState.x = AMotionEvent_getX(event, 0);
+        // int32_t y = engine->savedState.y = AMotionEvent_getY(event, 0);
 
         int32_t actionCode = AMotionEvent_getAction(event);
         int action = actionCode & AMOTION_EVENT_ACTION_MASK;
         int index  = (actionCode & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
         const char* actionName = (action >= 0 && action <= 6) ? actionNames[action] : "UNKNOWN";
-        CI_LOGI("Received touch action %s pointer index %d x %d y %d", actionName, index, 
-                engine->savedState.x, engine->savedState.y);
+        CI_LOGI("Received touch action %s pointer index %d", actionName, index);
 
         double timestamp = engine->cinderApp->getElapsedSeconds();
         if (action == AMOTION_EVENT_ACTION_DOWN) {
-            engine->touchesBegan.push_back(ci::app::TouchEvent::Touch(ci::Vec2f(x, y),
-                ci::Vec2f(x, y), index, timestamp, NULL));
+            int pointerId = AMotionEvent_getPointerId(event, index);
+            int32_t x = AMotionEvent_getX(event, index);
+            int32_t y = AMotionEvent_getY(event, index);
+            TouchEvent::Touch touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL);
+            engine->touchesBegan.push_back(touch);
+            CI_LOGI("Pointer id %d down x %d y %d", pointerId, x, y);
+            // engine->activeTouches.insert(std::pair<int, TouchEvent::Touch>(pointerId, touch));
         }
         else if (action == AMOTION_EVENT_ACTION_MOVE) {
-            engine->touchesMoved.push_back(ci::app::TouchEvent::Touch(ci::Vec2f(x, y),
-                ci::Vec2f(x, y), index, timestamp, NULL));
+            int pointerCount = AMotionEvent_getPointerCount(event);
+
+            for (int i=0; i < pointerCount; ++i) {
+                int pointerId = AMotionEvent_getPointerId(event, i);
+                int32_t x = AMotionEvent_getX(event, i);
+                int32_t y = AMotionEvent_getY(event, i);
+                // map<int, TouchEvent::Touch>::iterator it = engine->activeTouches.find(pointerId);
+                // if (it != engine->activeTouches.end()) {
+                //     TouchEvent::Touch& prevTouch = it->second;
+                //     TouchEvent::Touch touch(ci::Vec2f(x, y), prevTouch.getPos(), pointerId, timestamp, NULL);
+                     TouchEvent::Touch touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL);
+                     engine->touchesMoved.push_back(touch);
+                    CI_LOGI("Pointer id %d move x %d y %d", pointerId, x, y);
+                //     engine->activeTouches.insert(std::pair<int, TouchEvent::Touch>(pointerId, touch));
+                // }
+            }
         }
         else if (action == AMOTION_EVENT_ACTION_UP) {
-            engine->touchesEnded.push_back(ci::app::TouchEvent::Touch(ci::Vec2f(x, y),
-                ci::Vec2f(x, y), index, timestamp, NULL));
+            int pointerId = AMotionEvent_getPointerId(event, index);
+            int32_t x = AMotionEvent_getX(event, index);
+            int32_t y = AMotionEvent_getY(event, index);
+            // engine->activeTouches.erase(pointerId);
+            engine->touchesEnded.push_back(TouchEvent::Touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL));
+            CI_LOGI("Pointer id %d up x %d y %d", pointerId, x, y);
         }
 
         return 1;
