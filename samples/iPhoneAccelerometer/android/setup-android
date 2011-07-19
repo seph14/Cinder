@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+ANDROID_TOOL=android
+
+# Use android.bat on cygwin
+hash ${ANDROID_TOOL} 2>&-
+if [ $? -ne 0 ]; then
+    ANDROID_TOOL=android.bat
+fi
+
+${ANDROID_TOOL} update project --path . --name Accelerometer --target android-8
+

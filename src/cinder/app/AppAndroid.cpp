@@ -62,6 +62,10 @@ struct engine {
     ci::app::AppAndroid* cinderApp;
 
     TouchState* touchState;
+
+    //  accelerometer
+    bool  accelEnabled;
+    float accelUpdateFrequency;
 };
 
 /**
@@ -132,7 +136,6 @@ static int engine_init_display(struct engine* engine) {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
     glOrthof( 0, w, h, 0, -1.0f, 1.0f );
-    // glOrthof( 0, screenWidth, 0, screenHeight, -1.0f, 1.0f );
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 	glViewport( 0, 0, w, h );
@@ -236,8 +239,8 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             int pointerId = AMotionEvent_getPointerId(event, index);
             int32_t x = AMotionEvent_getX(event, index);
             int32_t y = AMotionEvent_getY(event, index);
-            touchState->activeTouches.erase(pointerId);
             touchState->touchesEnded.push_back(TouchEvent::Touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL));
+            touchState->activeTouches.erase(pointerId);
             CI_LOGI("Pointer id %d up x %d y %d", pointerId, x, y);
         }
 
@@ -265,11 +268,30 @@ static void engine_update_touches(struct engine* engine)
     }
 }
 
+inline void engine_enable_accelerometer(struct engine* engine)
+{
+    if (engine->accelerometerSensor != NULL) {
+        ASensorEventQueue_enableSensor(engine->sensorEventQueue,
+                engine->accelerometerSensor);
+        ASensorEventQueue_setEventRate(engine->sensorEventQueue,
+            engine->accelerometerSensor, (1000L/engine->accelUpdateFrequency)*1000);
+    }
+}
+
+inline void engine_disable_accelerometer(struct engine* engine)
+{
+    if (engine->accelerometerSensor != NULL) {
+        ASensorEventQueue_disableSensor(engine->sensorEventQueue,
+            engine->accelerometerSensor);
+    }
+}
+
 /**
  * Process the next main command.
  */
 static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
     struct engine* engine = (struct engine*)app->userData;
+
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
             // The system has asked us to save our current state.  Do so.
@@ -296,29 +318,19 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
         case APP_CMD_GAINED_FOCUS:
             // When our app gains focus, we start monitoring the accelerometer.
-            if (engine->accelerometerSensor != NULL) {
-                ASensorEventQueue_enableSensor(engine->sensorEventQueue,
-                        engine->accelerometerSensor);
-                // We'd like to get 60 events per second (in us).
-                ASensorEventQueue_setEventRate(engine->sensorEventQueue,
-                        engine->accelerometerSensor, (1000L/60)*1000);
+            if (engine->accelerometerSensor != NULL && engine->accelEnabled) {
+                engine_enable_accelerometer(engine);
             }
             break;
         case APP_CMD_LOST_FOCUS:
-            // When our app loses focus, we stop monitoring the accelerometer.
-            // This is to avoid consuming battery while not being used.
-            if (engine->accelerometerSensor != NULL) {
-                ASensorEventQueue_disableSensor(engine->sensorEventQueue,
-                        engine->accelerometerSensor);
-            }
-            // Also stop animating.
+            engine_disable_accelerometer(engine);
             engine->animating = 0;
             engine_draw_frame(engine);
             break;
     }
 }
 
-void android_run(struct engine* engine) 
+static void android_run(struct engine* engine) 
 {
     // Make sure glue isn't stripped.
     app_dummy();
@@ -340,8 +352,7 @@ void android_run(struct engine* engine)
         engine->savedState = *(struct saved_state*)state->savedState;
     }
 
-    // loop waiting for stuff to do.
-
+    //  Event loop
     while (1) {
         // Read all pending events.
         int ident;
@@ -365,9 +376,10 @@ void android_run(struct engine* engine)
                     ASensorEvent event;
                     while (ASensorEventQueue_getEvents(engine->sensorEventQueue,
                             &event, 1) > 0) {
-                        // LOGI("accelerometer: x=%f y=%f z=%f",
-                        //         event.acceleration.x, event.acceleration.y,
-                        //         event.acceleration.z);
+                        ci::app::AppAndroid& app = *(engine->cinderApp);
+                        app.privateAccelerated__(ci::Vec3f(event.acceleration.x, 
+                                                           event.acceleration.y, 
+                                                           event.acceleration.z));
                     }
                 }
             }
@@ -404,6 +416,7 @@ AppAndroid::AppAndroid()
     memset(mEngine, 0, sizeof(engine));
     mEngine->cinderApp = this;
     mEngine->touchState = new TouchState;
+    mEngine->accelEnabled = false;
 	clock_gettime(CLOCK_MONOTONIC, &(mEngine->mStartTime));
 	mLastAccel = mLastRawAccel = Vec3f::zero();
 }
@@ -432,19 +445,26 @@ int	AppAndroid::getWindowHeight() const
 //! Enables the accelerometer
 void AppAndroid::enableAccelerometer( float updateFrequency, float filterFactor )
 {
-	mAccelFilterFactor = filterFactor;
-	
-	if( updateFrequency <= 0 )
-		updateFrequency = 30.0f;
-	
-	// [[UIAccelerometer sharedAccelerometer] setUpdateInterval:1.0 / updateFrequency];
-	// CinderAppDelegateIPhone *appDel = (CinderAppDelegateIPhone *)[[UIApplication sharedApplication] delegate];
-	// [[UIAccelerometer sharedAccelerometer] setDelegate:appDel];
+    if ( mEngine->accelerometerSensor != NULL ) {
+	    mAccelFilterFactor = filterFactor;
+	    
+	    if( updateFrequency <= 0 )
+	    	updateFrequency = 30.0f;
+
+        mEngine->accelUpdateFrequency = updateFrequency;
+
+        if ( !mEngine->accelEnabled )
+            engine_enable_accelerometer(mEngine);
+
+        mEngine->accelEnabled = true;
+    }
 }
 
 void AppAndroid::disableAccelerometer() {
-	
-	// [[UIAccelerometer sharedAccelerometer] setDelegate:nil];
+    if ( mEngine->accelerometerSensor != NULL && mEngine->accelEnabled ) {
+        mEngine->accelEnabled = false;
+        engine_disable_accelerometer(mEngine);
+    }
 }
 
 //! Returns the maximum frame-rate the App will attempt to maintain.
