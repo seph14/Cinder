@@ -3,9 +3,12 @@
 #if defined( CINDER_COCOA_TOUCH )
 	#include "cinder/app/AppCocoaTouch.h"
 	typedef ci::app::AppCocoaTouch AppBase;
-#else
+#elif defined( CINDER_MSW )
 	#include "cinder/app/AppBasic.h"
 	typedef ci::app::AppBasic AppBase;
+#elif defined( CINDER_ANDROID )
+    #include "cinder/app/AppAndroid.h"
+	typedef ci::app::AppAndroid AppBase;
 #endif
 
 #include "cinder/Camera.h"
@@ -117,6 +120,9 @@ void FBOBasicApp::draw()
 
 #if defined( CINDER_COCOA_TOUCH )
 CINDER_APP_COCOA_TOUCH( FBOBasicApp, RendererGl )
-#else
+#elif defined( CINDER_MSW )
 CINDER_APP_BASIC( FBOBasicApp, RendererGl )
+#elif defined( CINDER_ANDROID )
+CINDER_APP_ANDROID( FBOBasicApp, RendererGl )
 #endif
+
