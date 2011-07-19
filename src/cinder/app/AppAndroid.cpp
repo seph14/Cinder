@@ -556,4 +556,14 @@ void AppAndroid::privateAccelerated__( const Vec3f &direction )
 	mLastRawAccel = direction;
 }
 
+//  static loadResource method
+DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
+{
+    //  XXX throw ResourceLoadExc( resourcePath ); on error
+    AppAndroid* cinderApp = AppAndroid::get();
+    android_app* state = cinderApp->mEngine->state;
+    AAssetManager* mgr = state->activity->assetManager;
+    return DataSourceAsset::createRef(mgr, resourcePath);
+}
+
 } } // namespace cinder::app

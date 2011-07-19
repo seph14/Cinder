@@ -35,6 +35,10 @@
 #	include <boost/iostreams/stream.hpp>
 #endif
 
+#if defined( ANDROID )
+#include <android/asset_manager.h>
+#endif
+
 namespace cinder {
 
 class StreamBase : private boost::noncopyable {
@@ -183,6 +187,37 @@ class IStreamFile : public IStream {
 	mutable bool				mSizeCached;
 };
 
+#if defined( CINDER_ANDROID )
+
+typedef std::shared_ptr<class IStreamAsset>	IStreamAssetRef;
+
+class IStreamAsset : public IStream {
+ public:
+	//! Creates a new IStreamAssetRef from an asset descriptor. If \a ownsFile the returned stream will destroy the stream upon its own destruction.
+	static IStreamAssetRef createRef( AAsset *asset, bool ownsFile = true );
+	~IStreamAsset();
+
+	size_t		readDataAvailable( void *dest, size_t maxSize );
+	
+	void		seekAbsolute( off_t absoluteOffset );
+	void		seekRelative( off_t relativeOffset );
+	off_t		tell() const;
+	off_t		size() const;
+	
+	bool		isEof() const;
+
+ protected:
+	IStreamAsset( AAsset *aAsset, bool aOwnsFile = true );
+
+	virtual void		IORead( void *t, size_t size );
+ 
+	AAsset						*mAsset;
+	bool						mOwnsFile;
+	mutable off_t				mSize;
+	mutable bool				mSizeCached;
+	// int							mOffset;
+};
+#endif
 
 typedef std::shared_ptr<class OStreamFile>	OStreamFileRef;
 
@@ -322,6 +357,10 @@ IStreamFileRef	loadFileStream( const std::string &path );
 OStreamFileRef	writeFileStream( const std::string &path, bool createParents = true );
 //! Opens a path for read-write access as a stream.
 IoStreamFileRef readWriteFileStream( const std::string &path );
+
+#if defined( CINDER_ANDROID )
+IStreamAssetRef loadAssetStream(AAssetManager* mgr, const std::string &path);
+#endif
 
 //! Loads the contents of a stream into a contiguous block of memory, pointed to by \a resultData. The size of this block is stored in \a resultDataSize.
 void loadStreamMemory( IStreamRef is, std::shared_ptr<uint8_t> *resultData, size_t *resultDataSize );

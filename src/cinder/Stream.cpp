@@ -250,6 +250,85 @@ void IStreamFile::IORead( void *t, size_t size )
 	}
 }
 
+#if defined( CINDER_ANDROID )
+////////////////////////////////////////////////////////////////////////////////////////
+// IStreamAsset
+IStreamAssetRef IStreamAsset::createRef( AAsset *asset, bool ownsFile )
+{
+	return IStreamAssetRef( new IStreamAsset( asset, ownsFile ) );
+}
+
+IStreamAsset::IStreamAsset( AAsset *aAsset, bool aOwnsFile )
+	: IStream(), mAsset( aAsset ), mOwnsFile( aOwnsFile ), mSizeCached( false )
+{
+}
+
+IStreamAsset::~IStreamAsset()
+{
+	if( mOwnsFile )
+		AAsset_close( mAsset );
+	if( mDeleteOnDestroy && ( ! mFileName.empty() ) )
+		deleteFile( mFileName );
+}
+
+size_t IStreamAsset::readDataAvailable( void *dest, size_t maxSize )
+{
+	size_t bytesRead = AAsset_read( mAsset, dest, maxSize);
+	return bytesRead;
+}
+
+void IStreamAsset::seekAbsolute( off_t absoluteOffset )
+{
+	int dir = ( absoluteOffset >= 0 ) ? SEEK_SET : SEEK_END;
+	absoluteOffset = abs( absoluteOffset );
+
+	off_t pos = AAsset_seek( mAsset, absoluteOffset, dir );
+	if( pos == -1 )
+		throw StreamExc();
+}
+
+void IStreamAsset::seekRelative( off_t relativeOffset )
+{
+	off_t pos = AAsset_seek( mAsset, relativeOffset, SEEK_CUR );
+	if( pos == -1 )
+		throw StreamExc();
+}
+
+off_t IStreamAsset::tell() const
+{
+	return size() - AAsset_getRemainingLength(mAsset);
+}
+
+off_t IStreamAsset::size() const
+{
+	if ( ! mSizeCached ) {
+		mSize = AAsset_getLength(mAsset);
+		mSizeCached = true;
+	}
+	
+	return mSize;
+}
+
+bool IStreamAsset::isEof() const
+{
+	return (AAsset_getRemainingLength(mAsset) == 0);
+}
+
+void IStreamAsset::IORead( void *t, size_t size )
+{
+	if (size > AAsset_getRemainingLength(mAsset))
+		throw StreamExc();
+
+	int read = AAsset_read( mAsset, t, size);
+	if (read < size) {
+		size -= read;
+		void *dest = static_cast<void*>(static_cast<unsigned char*>(t) + read);
+		IORead(dest, size);
+	}
+}
+
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////
 // OStreamFile
 OStreamFileRef OStreamFile::createRef( FILE *file, bool ownsFile )
@@ -547,6 +626,19 @@ IoStreamFileRef readWriteFileStream( const std::string &path )
 	else
 		return IoStreamFileRef();
 }
+
+#if defined( CINDER_ANDROID )
+IStreamAssetRef loadAssetStream(AAssetManager* mgr, const std::string &path)
+{
+	AAsset *f = AAssetManager_open(mgr, path.c_str(), AASSET_MODE_RANDOM);
+	if (f) {
+		IStreamAssetRef s = IStreamAsset::createRef( f, true );
+		return s;
+	}
+	else
+		return IStreamAssetRef();
+}
+#endif
 
 void loadStreamMemory( IStreamRef is, std::shared_ptr<uint8_t> *resultData, size_t *resultDataSize )
 {

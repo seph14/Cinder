@@ -286,7 +286,7 @@ class App {
 	//! Returns a DataSourceRef to an application resource. \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
 	static DataSourceBufferRef	loadResource( int mswID, const std::string &mswType );
 #elif defined( CINDER_ANDROID )
-	static DataSourcePathRef	loadResource( const std::string &resourcePath );
+	static DataSourceAssetRef	loadResource( const std::string &resourcePath );
 #endif
 	
 	//! Returns the path to the application on disk
@@ -422,12 +422,14 @@ inline uint32_t	getElapsedFrames() { return App::get()->getElapsedFrames(); }
 
 //! Returns a DataSource to an application resource. On Mac OS X, \a macPath is a path relative to the bundle's resources folder. On Windows, \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
 inline DataSourceRef			loadResource( const std::string &macPath, int mswID, const std::string &mswType ) { return App::loadResource( macPath, mswID, mswType ); }
-#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
+#if defined( CINDER_COCOA )
 	//! Returns a DataSource to an application resource. \a path is a path relative to the bundle's resources folder. \sa \ref CinderResources
 	inline DataSourcePathRef	loadResource( const std::string &resourcePath ) { return App::loadResource( resourcePath ); }
 #elif defined( CINDER_MSW )
 	//! Returns a DataSource to an application resource. \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
 	inline DataSourceBufferRef	loadResource( int mswID, const std::string &mswType ) { return App::loadResource( mswID, mswType ); }
+#elif defined( CINDER_ANDROID )
+	inline DataSourceAssetRef	loadResource( const std::string &resourcePath ) { return App::loadResource( resourcePath ); }
 #endif
 
 //! Returns the path to the active App on disk

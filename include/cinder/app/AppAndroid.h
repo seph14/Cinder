@@ -134,7 +134,8 @@ class AppAndroid : public App {
 	void		privateSetActiveTouches__( const std::vector<TouchEvent::Touch> &touches ) { mActiveTouches = touches; }
 	void		privateAccelerated__( const Vec3f &direction );
 	//! \endcond
-
+	//
+	
   private:
 	//  Android Native Activity state
 	struct engine*			mEngine;
@@ -149,6 +150,9 @@ class AppAndroid : public App {
 
 	float					mAccelFilterFactor;
 	Vec3f					mLastAccel, mLastRawAccel;
+
+  public:
+	static DataSourceAssetRef loadResource(const std::string &resourcePath);
 };
 
 } } // namespace cinder::app

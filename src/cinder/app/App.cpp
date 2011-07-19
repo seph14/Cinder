@@ -36,6 +36,8 @@
 	#include "cinder/app/AppImplMsw.h"
 #elif defined( CINDER_ANDROID )
 	#include "cinder/android/LogStream.h"
+	#include "cinder/app/AppAndroid.h"
+	#include <android_native_app_glue.h>
 #endif
 
 using namespace std;
@@ -177,7 +179,7 @@ void App::privateShutdown__()
 	
 DataSourceRef App::loadResource( const string &macPath, int mswID, const string &mswType )
 {
-#if defined( CINDER_COCOA )
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 	return loadResource( macPath );
 #elif defined( CINDER_MSW )
 	return DataSourceBuffer::createRef( AppImplMsw::loadResource( mswID, mswType ), macPath );
@@ -202,9 +204,9 @@ DataSourceBufferRef App::loadResource( int mswID, const string &mswType )
 
 #elif defined( CINDER_ANDROID )
 
-DataSourcePathRef App::loadResource( const string &resourcePath )
+DataSourceAssetRef App::loadResource( const string &resourcePath )
 {
-    return DataSourcePath::createRef( resourcePath );
+    return AppAndroid::loadResource(resourcePath);
 }
 
 #endif
