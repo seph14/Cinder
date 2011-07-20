@@ -31,6 +31,8 @@ function unpack_freeimage {
     rm -rf jni/FreeImage
     unzip setup/FreeImage/FreeImage3150.zip -d jni
     cp -p setup/FreeImage/Android.mk jni/FreeImage
+    cp -f setup/FreeImage/dcraw_common.cpp jni/FreeImage/Source/LibRawLite/internal/dcraw_common.cpp
+    cp -f setup/FreeImage/tif_dirinfo.c jni/FreeImage/Source/LibTIFF/tif_dirinfo.c
 }
 
 OSNAME=`uname -o`

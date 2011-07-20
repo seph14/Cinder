@@ -11,7 +11,8 @@ TESS_SRC   = src/libtess2
 LOCAL_MODULE 	 := libcinder
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
                     $(LOCAL_PATH)/boost \
-					$(LOCAL_PATH)/$(TESS_SRC)
+					$(LOCAL_PATH)/$(TESS_SRC) \
+					$(TOP_PATH)/FreeImage/Source
 LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/AppAndroid.cpp \
 					$(CINDER_SRC)/app/Renderer.cpp \

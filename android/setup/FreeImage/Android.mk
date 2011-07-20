@@ -328,14 +328,12 @@ LOCAL_SRC_FILES := Source/FreeImage/BitmapAccess.cpp \
 				   Source/OpenEXR/IlmThread/IlmThread.cpp \
 				   Source/OpenEXR/IlmThread/IlmThreadMutex.cpp \
 				   Source/OpenEXR/IlmThread/IlmThreadPool.cpp \
-				   Source/OpenEXR/IlmThread/IlmThreadSemaphore.cpp 
-
-# dcraw_common requires an implementation of swab()
-#				   Source/LibRawLite/internal/dcraw_common.cpp \
-#				   Source/LibRawLite/internal/dcraw_fileio.cpp \
-#				   Source/LibRawLite/internal/demosaic_packs.cpp \
-#				   Source/LibRawLite/src/libraw_c_api.cpp \
-#				   Source/LibRawLite/src/libraw_cxx.cpp 
+				   Source/OpenEXR/IlmThread/IlmThreadSemaphore.cpp \
+				   Source/LibRawLite/internal/dcraw_common.cpp \
+				   Source/LibRawLite/internal/dcraw_fileio.cpp \
+				   Source/LibRawLite/internal/demosaic_packs.cpp \
+				   Source/LibRawLite/src/libraw_c_api.cpp \
+				   Source/LibRawLite/src/libraw_cxx.cpp 
 
 include $(BUILD_STATIC_LIBRARY)
 

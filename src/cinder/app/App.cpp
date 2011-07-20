@@ -38,6 +38,8 @@
 	#include "cinder/android/LogStream.h"
 	#include "cinder/app/AppAndroid.h"
 	#include <android_native_app_glue.h>
+    //  XXX find a better place to put FreeImage (de)init calls
+    #include "FreeImage.h"
 #endif
 
 using namespace std;
@@ -398,6 +400,8 @@ void App::prepareLaunch()
 {
 #if defined( CINDER_COCOA )
     sAutoReleasePool = [[NSAutoreleasePool alloc] init];
+#elif defined( CINDER_ANDROID )
+    FreeImage_Initialise(true);
 #endif
 }
 
@@ -412,6 +416,8 @@ void App::cleanupLaunch()
 {
 #if defined( CINDER_COCOA )
     sAutoReleasePool = [[NSAutoreleasePool alloc] init];
+#elif defined( CINDER_ANDROID )
+    FreeImage_DeInitialise();
 #endif
 }
 
