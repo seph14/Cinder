@@ -228,17 +228,6 @@ LOCAL_SRC_FILES := Source/FreeImage/BitmapAccess.cpp \
 				   Source/LibTIFF/tif_warning.c \
 				   Source/LibTIFF/tif_write.c \
 				   Source/LibTIFF/tif_zip.c \
-				   Source/ZLib/adler32.c \
-				   Source/ZLib/compress.c \
-				   Source/ZLib/crc32.c \
-				   Source/ZLib/deflate.c \
-				   Source/ZLib/infback.c \
-				   Source/ZLib/inffast.c \
-				   Source/ZLib/inflate.c \
-				   Source/ZLib/inftrees.c \
-				   Source/ZLib/trees.c \
-				   Source/ZLib/uncompr.c \
-				   Source/ZLib/zutil.c \
 				   Source/LibOpenJPEG/bio.c \
 				   Source/LibOpenJPEG/cio.c \
 				   Source/LibOpenJPEG/dwt.c \
