@@ -2,10 +2,13 @@
 
 # This script sets up symbolic links to the Cinder source tree for use by the
 # Android ndk-build script.  On Windows (cygwin) it requires the Junction
-# tool to be installed and available in the path.
+# tool [1] to be installed and available in the PATH.
 #
-#   (http://technet.microsoft.com/en-us/sysinternals/bb896768)
-
+# It will also download and set up FreeImage for building on Android.  This
+# requires curl and unzip to be in the PATH.
+#
+#
+# [1] http://technet.microsoft.com/en-us/sysinternals/bb896768
 
 function remove_old_links {
     rm -f jni/boost jni/include jni/src
@@ -31,12 +34,12 @@ function unpack_freeimage {
     rm -rf jni/FreeImage
     unzip setup/FreeImage/FreeImage3150.zip -d jni
     cp -p setup/FreeImage/Android.mk jni/FreeImage
+	# patched source files with missing function implementations
     cp -f setup/FreeImage/dcraw_common.cpp jni/FreeImage/Source/LibRawLite/internal/dcraw_common.cpp
     cp -f setup/FreeImage/tif_dirinfo.c jni/FreeImage/Source/LibTIFF/tif_dirinfo.c
 }
 
-OSNAME=`uname -o`
-if [ $OSNAME = "Cygwin" ]; then
+if [ $OSTYPE = "cygwin" ]; then
     check_for_junction
     remove_old_links
     junction jni\\boost ..\\boost && junction jni\\include ..\\include && junction jni\\src ..\\src

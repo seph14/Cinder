@@ -24,9 +24,8 @@ void AndroidTest::setup()
 {
 	try {
 		console() << "Loading logo image" << endl;
-		ImageSourceRef image = loadImage( loadResource("cinder_logo.png") );
-		console() << "success!!!" << endl;
 		mTexture = gl::Texture( loadImage( loadResource("cinder_logo.png") ) );
+		console() << "success!!!" << endl;
 	}
 	catch( ... ) {
 		console() << "unable to load the texture file!" << std::endl;

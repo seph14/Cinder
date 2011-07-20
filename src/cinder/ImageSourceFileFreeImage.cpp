@@ -46,26 +46,8 @@ ImageSourceFileFreeImageRef ImageSourceFileFreeImage::createFileFreeImageRef( Da
 }
 
 ImageSourceFileFreeImage::ImageSourceFileFreeImage( DataSourceRef dataSourceRef, ImageSource::Options options )
-	: ImageSource()
+	: ImageSource(), mBitmap(NULL)
 {
-	FreeImageIO io;
-
-	io.read_proc  = _ReadProc;
-	io.write_proc = _WriteProc;
-	io.tell_proc  = _TellProc;
-	io.seek_proc  = _SeekProc;
-
-	IStreamRef stream = dataSourceRef->createStream();
-
-	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeFromHandle(&io, stream.get());
-	CI_LOGI("FreeImage format detected: %d", format);
-
-	mBitmap = FreeImage_LoadFromHandle(format, &io, stream.get());
-	mWidth  = FreeImage_GetWidth(mBitmap);
-	mHeight = FreeImage_GetHeight(mBitmap);
-	CI_LOGI("XXX ImageSourceFileFreeImage loaded from %s (%d x %d)", stream->getFileName().c_str(),
-			mWidth, mHeight);
-
 	static const char* imageTypes[] = {
 		"FIT_UNKNOWN",
 		"FIT_BITMAP ",
@@ -90,6 +72,24 @@ ImageSourceFileFreeImage::ImageSourceFileFreeImage( DataSourceRef dataSourceRef,
 		"FIC_CMYK      ",
 	};
 
+	FreeImageIO io;
+
+	io.read_proc  = _ReadProc;
+	io.write_proc = _WriteProc;
+	io.tell_proc  = _TellProc;
+	io.seek_proc  = _SeekProc;
+
+	IStreamRef stream = dataSourceRef->createStream();
+
+	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeFromHandle(&io, stream.get());
+	CI_LOGI("FreeImage format detected: %d", format);
+
+	mBitmap = FreeImage_LoadFromHandle(format, &io, stream.get());
+	mWidth  = FreeImage_GetWidth(mBitmap);
+	mHeight = FreeImage_GetHeight(mBitmap);
+	CI_LOGI("ImageSourceFileFreeImage loaded from %s (%d x %d)", stream->getFileName().c_str(),
+			mWidth, mHeight);
+
 	FREE_IMAGE_TYPE imageType = FreeImage_GetImageType(mBitmap);
 	FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(mBitmap);
 	// bits per pixel
@@ -113,6 +113,7 @@ ImageSourceFileFreeImage::ImageSourceFileFreeImage( DataSourceRef dataSourceRef,
         setDataType( DATA_UNKNOWN );
     }
 
+	//  XXX Channel order for CM_RGB and CM_RGBA is probably only correct for data type UINT8
     if (colorType == FIC_RGB) {
         setColorModel( ImageIo::CM_RGB );
         //  if bpp == 32 then RGB is padded with an alpha value
@@ -148,8 +149,17 @@ void ImageSourceFileFreeImage::registerSelf()
 {
 	const int32_t SOURCE_PRIORITY = 2;
 	
+	// XXX perform init here if we can find a way to deinit
+    // FreeImage_Initialise(true);
 	ImageIoRegistrar::registerSourceGeneric( ImageSourceFileFreeImage::createRef, SOURCE_PRIORITY );
-	CI_LOGI("XXX ImageSourceFileFreeImage registered as a generic source");
+}
+
+ImageSourceFileFreeImage::~ImageSourceFileFreeImage()
+{
+	if (mBitmap) {
+		FreeImage_Unload(mBitmap);
+		mBitmap = NULL;
+	}
 }
 
 } // namespace ci

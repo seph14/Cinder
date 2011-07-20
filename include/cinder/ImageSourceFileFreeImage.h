@@ -19,6 +19,8 @@ class ImageSourceFileFreeImage : public ImageSource {
 
 	static void registerSelf();
 
+	virtual ~ImageSourceFileFreeImage();
+
   protected:
 	ImageSourceFileFreeImage( DataSourceRef dataSourceRef, ImageSource::Options options );
 	
