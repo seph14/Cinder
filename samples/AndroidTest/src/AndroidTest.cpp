@@ -26,7 +26,7 @@ void AndroidTest::setup()
 		console() << "Loading logo image" << endl;
 		ImageSourceRef image = loadImage( loadResource("cinder_logo.png") );
 		console() << "success!!!" << endl;
-		// mTexture = gl::Texture( loadImage( loadResource("cinder_logo.png") ) );
+		mTexture = gl::Texture( loadImage( loadResource("cinder_logo.png") ) );
 	}
 	catch( ... ) {
 		console() << "unable to load the texture file!" << std::endl;
@@ -51,10 +51,10 @@ void AndroidTest::setup()
 void AndroidTest::draw()
 {
 	gl::setMatricesWindow( getWindowSize() );
-	gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
+	gl::clear( Color( 0.2f, 0.2f, 0.2f ) );
 
-	// if( mTexture )
-	// 	gl::draw( mTexture, Vec2f( 0, 0 ) );
+	if( mTexture )
+		gl::draw( mTexture, Vec2f( 0, 0 ) );
 }
 
 CINDER_APP_NATIVE( AndroidTest, RendererGl )

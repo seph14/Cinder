@@ -24,6 +24,7 @@ class ImageSourceFileFreeImage : public ImageSource {
 	
 	std::shared_ptr<uint8_t>	mData;
 	int32_t						mRowBytes;
+	int32_t						mRowPitch;
 	FIBITMAP*					mBitmap;
 };
 

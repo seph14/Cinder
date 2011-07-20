@@ -8,5 +8,12 @@ if [ $? -ne 0 ]; then
     ANDROID_TOOL=android.bat
 fi
 
+if [ ! -e assets ]; then
+    mkdir assets
+fi
+if [ ! -e assets/cinder_logo.png ]; then
+    cp ../../data/cinder_logo.png assets
+fi
+
 ${ANDROID_TOOL} update project --path . --name AndroidTest --target android-8
 
