@@ -55,12 +55,51 @@ ImageSourceFileFreeImage::ImageSourceFileFreeImage( DataSourceRef dataSourceRef,
 	io.seek_proc  = _SeekProc;
 
 	IStreamRef stream = dataSourceRef->createStream();
-	// XXX match file extension to image format
-	mBitmap = FreeImage_LoadFromHandle(FIF_PNG, &io, stream.get());
+
+	FREE_IMAGE_FORMAT format = FreeImage_GetFileTypeFromHandle(&io, stream.get());
+	CI_LOGI("FreeImage format detected: %d", format);
+
+	mBitmap = FreeImage_LoadFromHandle(format, &io, stream.get());
 	mWidth  = FreeImage_GetWidth(mBitmap);
 	mHeight = FreeImage_GetHeight(mBitmap);
-	CI_LOGI("XXX ImageSourceFileFreeImage loaded PNG from %s (%d x %d)", stream->getFileName().c_str(),
+	CI_LOGI("XXX ImageSourceFileFreeImage loaded from %s (%d x %d)", stream->getFileName().c_str(),
 			mWidth, mHeight);
+
+	static const char* imageTypes[] = {
+		"FIT_UNKNOWN",
+		"FIT_BITMAP ",
+		"FIT_UINT16 ",
+		"FIT_INT16  ",
+		"FIT_UINT32 ",
+		"FIT_INT32  ",
+		"FIT_FLOAT  ",
+		"FIT_DOUBLE ",
+		"FIT_COMPLEX",
+		"FIT_RGB16  ",
+		"FIT_RGBA16 ",
+		"FIT_RGBF   ",
+		"FIT_RGBAF  ",
+	};
+	static const char* colorTypes[] = {
+		"FIC_MINISWHITE",
+		"FIC_MINISBLACK",
+		"FIC_RGB       ",
+		"FIC_PALETTE   ",
+		"FIC_RGBALPHA  ",
+		"FIC_CMYK      ",
+	};
+
+	FREE_IMAGE_TYPE imageType = FreeImage_GetImageType(mBitmap);
+	FREE_IMAGE_COLOR_TYPE colorType = FreeImage_GetColorType(mBitmap);
+	// bits per pixel
+	unsigned int bpp = FreeImage_GetBPP(mBitmap);
+	CI_LOGI("Image type %s, color type %s, bpp %d", imageTypes[imageType], colorTypes[colorType], bpp);
+	//  row data
+	unsigned int rowWidthInBytes = FreeImage_GetLine(mBitmap);
+	unsigned int rowPitch = FreeImage_GetPitch(mBitmap);
+	CI_LOGI("row width %d row pitch %d", rowWidthInBytes, rowPitch);
+
+
 	// switch( FreeImage_GetColorType(mBitmap) ) {
 	// 	case FIC_MINISBLACK:
 	// 		mColorModel = CM_GRAY;
