@@ -110,6 +110,7 @@ class DataSourceAsset : public DataSource {
 };
 
 DataSourceAssetRef	loadAsset( AAssetManager *mgr, const std::string &path );
+
 #endif
 
 typedef std::shared_ptr<class DataSourceUrl>	DataSourceUrlRef;
