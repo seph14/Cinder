@@ -104,7 +104,6 @@ DataSourceAsset::DataSourceAsset( AAssetManager *mgr, const std::string &path )
 
 void DataSourceAsset::createBuffer()
 {
-	// no-op - we already supplied the buffer in the constructor
 	IStreamAssetRef stream = loadAssetStream( mManager, mFilePath );
 	if( ! stream )
 		throw StreamExc();

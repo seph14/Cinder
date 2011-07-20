@@ -4,6 +4,8 @@
 #include "cinder/ImageIO.h"
 #include "cinder/Exception.h"
 
+#include "FreeImage.h"
+
 namespace cinder {
 
 typedef std::shared_ptr<class ImageSourceFileFreeImage>	ImageSourceFileFreeImageRef;
@@ -22,6 +24,7 @@ class ImageSourceFileFreeImage : public ImageSource {
 	
 	std::shared_ptr<uint8_t>	mData;
 	int32_t						mRowBytes;
+	FIBITMAP*					mBitmap;
 };
 
 REGISTER_IMAGE_IO_FILE_HANDLER( ImageSourceFileFreeImage )
