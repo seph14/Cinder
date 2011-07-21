@@ -81,9 +81,9 @@ static int engine_init_display(struct engine* engine) {
      */
     const EGLint attribs[] = {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_BLUE_SIZE, 8,
-            EGL_GREEN_SIZE, 8,
-            EGL_RED_SIZE, 8,
+            EGL_BLUE_SIZE, 5,
+            EGL_GREEN_SIZE, 6,
+            EGL_RED_SIZE, 5,
             EGL_NONE
     };
     EGLint w, h, dummy, format;
@@ -317,6 +317,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             engine_term_display(engine);
             break;
         case APP_CMD_GAINED_FOCUS:
+            engine->animating = 1;
             // When our app gains focus, we start monitoring the accelerometer.
             if (engine->accelerometerSensor != NULL && engine->accelEnabled) {
                 engine_enable_accelerometer(engine);
