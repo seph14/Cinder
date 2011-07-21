@@ -43,6 +43,7 @@
 
 #elif defined( CINDER_ANDROID )
 	#include "cinder/app/AppImplAndroidRendererGl.h"
+    #include <android/native_window.h>
 #endif
 
 #include "cinder/ip/Flip.h"
@@ -244,28 +245,42 @@ Surface	RendererGl::copyWindowSurface( const Area &area )
 #elif defined( CINDER_ANDROID )
 RendererGl::~RendererGl()
 {
+    delete mImpl;
 }
 
-void RendererGl::setup( App *aApp )
+void RendererGl::setup( App *aApp, ANativeWindow* window, int32_t& width, int32_t& height )
 {
 	mApp = aApp;
 
-	mImpl = new AppImplAndroidRendererGl(mApp, this);
+    if ( ! mImpl )
+        mImpl = new AppImplAndroidRendererGl(mApp, this);
+
+	mImpl->initialize( window, width, height );
+}
+
+void RendererGl::teardown()
+{
+    mImpl->teardown();
+}
+
+bool RendererGl::isValidDisplay()
+{
+    return mImpl->isValidDisplay();
 }
 
 void RendererGl::startDraw()
 {
-	// XXX TODO
+    mImpl->makeCurrentContext();
 }
 
 void RendererGl::finishDraw()
 {
-	// XXX TODO
+	mImpl->swapBuffers();
 }
 
 void RendererGl::defaultResize()
 {
-	// XXX TODO
+	mImpl->defaultResize();
 }
 
 Surface	RendererGl::copyWindowSurface( const Area &area )

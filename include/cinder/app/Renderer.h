@@ -50,6 +50,9 @@
 		class UIView;
 	#endif
 #elif defined( CINDER_ANDROID )
+    extern "C" {
+        struct ANativeWindow;
+    }
 	namespace cinder { namespace app {
 		class AppImplAndroidRendererGl;
 	} }
@@ -87,7 +90,9 @@ class Renderer {
 	virtual HWND				getHwnd() = 0;
 	virtual HDC					getDc() { throw; } // the default behavior is failure
 #elif defined( CINDER_ANDROID )
-	virtual void setup( class App *aApp ) = 0;
+	virtual void setup( class App *aApp, ANativeWindow* window, int32_t& width, int32_t& height ) = 0;
+    virtual void teardown() {}
+    virtual bool isValidDisplay() = 0;
 #endif
 
 	virtual Surface	copyWindowSurface( const Area &area ) = 0;
@@ -124,7 +129,9 @@ class RendererGl : public Renderer {
 	virtual void	prepareToggleFullScreen();
 	virtual void	finishToggleFullScreen();
 #elif defined( CINDER_ANDROID )
-	virtual void setup( class App *aApp );
+    virtual void    setup( App *aApp, ANativeWindow* window, int32_t& width, int32_t& height );
+    virtual void    teardown();
+    virtual bool    isValidDisplay();
 #endif
 
 	enum	{ AA_NONE = 0, AA_MSAA_2, AA_MSAA_4, AA_MSAA_6, AA_MSAA_8, AA_MSAA_16, AA_MSAA_32 };
