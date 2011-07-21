@@ -2,12 +2,8 @@
 
 #include <time.h>
 
-//  Android native activity sample code
 #include <jni.h>
 #include <errno.h>
-
-// #include <EGL/egl.h>
-#include <GLES/gl.h>
 
 #include <android/sensor.h>
 #include <android/log.h>
@@ -49,10 +45,6 @@ struct engine {
 
     int animating;
 
-    // EGLDisplay display;
-    // EGLSurface surface;
-    // EGLContext context;
-
     int32_t width;
     int32_t height;
 
@@ -68,84 +60,6 @@ struct engine {
     float accelUpdateFrequency;
 };
 
-/**
- * Initialize an EGL context for the current display.
- */
-// static int engine_init_display(struct engine* engine) {
-//     // initialize OpenGL ES and EGL
-// 
-//     /*
-//      * Here specify the attributes of the desired configuration.
-//      * Below, we select an EGLConfig with at least 8 bits per color
-//      * component compatible with on-screen windows
-//      */
-//     const EGLint attribs[] = {
-//             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-//             EGL_BLUE_SIZE, 5,
-//             EGL_GREEN_SIZE, 6,
-//             EGL_RED_SIZE, 5,
-//             EGL_NONE
-//     };
-//     EGLint w, h, dummy, format;
-//     EGLint numConfigs;
-//     EGLConfig config;
-//     EGLSurface surface;
-//     EGLContext context;
-// 
-//     EGLDisplay display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-// 
-//     eglInitialize(display, 0, 0);
-// 
-//     /* Here, the application chooses the configuration it desires. In this
-//      * sample, we have a very simplified selection process, where we pick
-//      * the first EGLConfig that matches our criteria */
-//     eglChooseConfig(display, attribs, &config, 1, &numConfigs);
-// 
-//     /* EGL_NATIVE_VISUAL_ID is an attribute of the EGLConfig that is
-//      * guaranteed to be accepted by ANativeWindow_setBuffersGeometry().
-//      * As soon as we picked a EGLConfig, we can safely reconfigure the
-//      * ANativeWindow buffers to match, using EGL_NATIVE_VISUAL_ID. */
-//     eglGetConfigAttrib(display, config, EGL_NATIVE_VISUAL_ID, &format);
-// 
-//     ANativeWindow_setBuffersGeometry(engine->state->window, 0, 0, format);
-// 
-//     surface = eglCreateWindowSurface(display, config, engine->state->window, NULL);
-//     context = eglCreateContext(display, config, NULL, NULL);
-// 
-//     if (eglMakeCurrent(display, surface, surface, context) == EGL_FALSE) {
-//         CI_LOGW("Unable to eglMakeCurrent");
-//         return -1;
-//     }
-// 
-//     eglQuerySurface(display, surface, EGL_WIDTH, &w);
-//     eglQuerySurface(display, surface, EGL_HEIGHT, &h);
-// 
-//     engine->display = display;
-//     engine->context = context;
-//     engine->surface = surface;
-//     engine->width = w;
-//     engine->height = h;
-//     engine->savedState.angle = 0;
-// 
-//     // Initialize GL state.
-//     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
-//     glEnable(GL_CULL_FACE);
-//     glShadeModel(GL_SMOOTH);
-//     glDisable(GL_DEPTH_TEST);
-// 
-// 	glMatrixMode( GL_PROJECTION );
-// 	glLoadIdentity();
-//     glOrthof( 0, w, h, 0, -1.0f, 1.0f );
-// 	glMatrixMode( GL_MODELVIEW );
-// 	glLoadIdentity();
-// 	glViewport( 0, 0, w, h );
-// 
-//     return 0;
-// }
-
-/**
- * Just the current frame in the display.
- */
 static void engine_draw_frame(struct engine* engine) {
     ci::app::AppAndroid& app      = *(engine->cinderApp);
     ci::app::Renderer&   renderer = *(app.getRenderer());
@@ -159,28 +73,7 @@ static void engine_draw_frame(struct engine* engine) {
     app.privateUpdate__();
     app.privateDraw__();
     renderer.finishDraw();
-    // eglSwapBuffers(engine->display, engine->surface);
 }
-
-// /**
-//  * Tear down the EGL context currently associated with the display.
-//  */
-// static void engine_term_display(struct engine* engine) {
-//     if (engine->display != EGL_NO_DISPLAY) {
-//         eglMakeCurrent(engine->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-//         if (engine->context != EGL_NO_CONTEXT) {
-//             eglDestroyContext(engine->display, engine->context);
-//         }
-//         if (engine->surface != EGL_NO_SURFACE) {
-//             eglDestroySurface(engine->display, engine->surface);
-//         }
-//         eglTerminate(engine->display);
-//     }
-//     engine->animating = 0;
-//     engine->display = EGL_NO_DISPLAY;
-//     engine->context = EGL_NO_CONTEXT;
-//     engine->surface = EGL_NO_SURFACE;
-// }
 
 /**
  * Process the next input event.
@@ -200,9 +93,6 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
     struct TouchState* touchState = engine->touchState;
 
     if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
-        // int32_t x = engine->savedState.x = AMotionEvent_getX(event, 0);
-        // int32_t y = engine->savedState.y = AMotionEvent_getY(event, 0);
-
         int32_t actionCode = AMotionEvent_getAction(event);
         int action = actionCode & AMOTION_EVENT_ACTION_MASK;
         int index  = (actionCode & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
@@ -308,7 +198,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             if (engine->state->window != NULL) {
                 cinderApp->getRenderer()->setup(cinderApp, engine->state->window, 
                         engine->width, engine->height);
-                // engine_init_display(engine);
 
                 cinderApp->privateSetup__();
                 cinderApp->privateResize__(ci::Vec2i(engine->width, engine->height));
@@ -321,17 +210,19 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             // The window is being hidden or closed, clean it up.
             cinderApp->getRenderer()->teardown();
             engine->animating = 0;
-            // engine_term_display(engine);
             break;
         case APP_CMD_GAINED_FOCUS:
             engine->animating = 1;
-            // When our app gains focus, we start monitoring the accelerometer.
+
+            // Start monitoring the accelerometer.
             if (engine->accelerometerSensor != NULL && engine->accelEnabled) {
                 engine_enable_accelerometer(engine);
             }
             break;
         case APP_CMD_LOST_FOCUS:
+            //  Disable accelerometer (saves power)
             engine_disable_accelerometer(engine);
+
             engine->animating = 0;
             engine_draw_frame(engine);
             break;
@@ -398,7 +289,6 @@ static void android_run(struct engine* engine)
                 ci::app::AppAndroid& app = *(engine->cinderApp);
                 app.getRenderer()->teardown();
                 engine->animating = 0;
-                // engine_term_display(engine);
                 return;
             }
         }
@@ -567,7 +457,7 @@ void AppAndroid::privateAccelerated__( const Vec3f &direction )
 	mLastRawAccel = direction;
 }
 
-//  static loadResource method
+//  static loadResource method, loads from assets/
 DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
 {
     //  XXX throw ResourceLoadExc( resourcePath ); on error
