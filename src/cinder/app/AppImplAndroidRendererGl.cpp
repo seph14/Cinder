@@ -53,6 +53,7 @@ void AppImplAndroidRendererGl::initialize( ANativeWindow* window, int32_t& width
     height = h;
 
     // Initialize GL state
+    glDisable(GL_DITHER);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
     glEnable(GL_CULL_FACE);
     glShadeModel(GL_SMOOTH);
