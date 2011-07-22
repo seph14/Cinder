@@ -15,7 +15,7 @@ Quickstart
 
   - Android SDK and Android NDK R5c
   - (Windows only) Junction (http://technet.microsoft.com/en-us/sysinternals/bb896768)
-  - bash, curl and unzip command-line tools (required by setup-android script)
+  - bash, curl, unzip, tar and bzip2 command-line tools (required by setup-android script)
 
 * Run setup-android then build the Cinder static library from $CINDER_ROOT/android
 

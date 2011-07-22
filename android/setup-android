@@ -5,7 +5,7 @@
 # tool [1] to be installed and available in the PATH.
 #
 # It will also download and set up FreeImage for building on Android.  This
-# requires curl and unzip to be in the PATH.
+# requires curl, unzip, tar and bzip2 to be in the PATH.
 #
 #
 # [1] http://technet.microsoft.com/en-us/sysinternals/bb896768
