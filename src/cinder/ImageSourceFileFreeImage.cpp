@@ -149,8 +149,8 @@ void ImageSourceFileFreeImage::registerSelf()
 {
 	const int32_t SOURCE_PRIORITY = 2;
 	
-	// XXX perform init here if we can find a way to deinit
-    // FreeImage_Initialise(true);
+	// XXX find a way to deinit
+    FreeImage_Initialise(true);
 	ImageIoRegistrar::registerSourceGeneric( ImageSourceFileFreeImage::createRef, SOURCE_PRIORITY );
 }
 
