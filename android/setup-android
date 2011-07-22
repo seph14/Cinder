@@ -39,6 +39,18 @@ function unpack_freeimage {
     cp -f setup/FreeImage/tif_dirinfo.c jni/FreeImage/Source/LibTIFF/tif_dirinfo.c
 }
 
+function unpack_freetype {
+    if [ ! -e setup/freetype/freetype-2.4.5.tar.bz2 ]; then
+        echo "Downloading freetype source distribution"
+        curl -L -O http://download.savannah.gnu.org/releases/freetype/freetype-2.4.5.tar.bz2
+        mv freetype-2.4.5.tar.bz2 setup/freetype
+    fi
+    echo "Setup freetype..."
+    rm -rf jni/freetype-2.4.5
+    tar jxvf setup/freetype/freetype-2.4.5.tar.bz2 -C jni
+    cp -p setup/freetype/Android.mk jni/freetype-2.4.5
+}
+
 if [ $OSTYPE = "cygwin" ]; then
     check_for_junction
     remove_old_links
@@ -49,6 +61,7 @@ else
 fi
 
 unpack_freeimage
+unpack_freetype
 
 if [ $? -ne 0 ]; then
     echo "Error creating Android tree, check your Cinder source layout."
