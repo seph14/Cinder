@@ -1,0 +1,55 @@
+About
+=====
+
+This is a work-in-progress port of Cinder to Android.  It uses the NDK Native
+Activity code, which restricts it to running on Android versions 2.3
+(Gingerbread) and upwards.
+
+Tested to build on Windows (cygwin) and OSX, but it should work on Linux too.
+
+
+Quickstart
+==========
+
+* Install prerequisites as required:
+
+  - Android SDK and Android NDK R5c
+  - (Windows only) Junction (http://technet.microsoft.com/en-us/sysinternals/bb896768)
+  - bash, curl and unzip command-line tools (required by setup-android script)
+
+* Run setup-android then build the Cinder static library from $CINDER_ROOT/android
+
+  % cd cinder/android
+  % ./setup-android
+  % ndk-build
+
+* Build one of the sample programs (AndroidTest, FBOBasic, iPhoneAccelerometer
+  or MultiTouchBasic)
+
+  % cd cinder/samples/<SAMPLE>/android
+  % ./setup-android
+  % ndk-build && ant debug && adb install -r bin/<SAMPLE-APK>
+
+
+Status
+======
+
+* console() output goes to the Android debug log
+* loadResource opens files embedded from the project "assets" folder
+* FreeImage image source, tested to work with PNG/JPG/BMP files so far
+
+
+TODO
+====
+
+* Android save/restore state callbacks
+* Text support (Font/TextureFont, to be implemented with Freetype/Harfbuzz)
+* Audio support (using OpenSL ES)
+* Vertex buffer objects and GLES2 (related)
+* URL implementation (currently stubbed out)
+* Camera capture (may require JNI)
+* Better filesystem support
+
+
+safetydank 21/7/11
+
