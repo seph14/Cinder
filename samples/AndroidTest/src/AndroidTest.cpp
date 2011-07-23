@@ -20,7 +20,7 @@ public:
 	void draw();
 	
 	gl::Texture		mTexture;	
-	// Font mFont;
+	Font mFont;
 };
 
 void AndroidTest::setup()
@@ -36,11 +36,10 @@ void AndroidTest::setup()
 
 	string fontFile("/system/fonts/DroidSans.ttf");
 	DataSourceRef fontData = loadFile(fontFile);
-	// IStreamRef stream = fontData->createStream();
-	// console() << "Loaded stream " << fontFile << " size " << stream->size() << endl;
-	// mFont = Font(fontData, 16);
-	Font font(fontData, 16);
-	console() << "Loaded font name " << font.getName() << " num glyphs " << font.getNumGlyphs() << endl;
+	mFont = Font(fontData, 16);
+	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
+	// XXX uncomment to trigger a crash in Font destructor
+	// mFont = Font();
 
 	// console() << "AndroidTest" << endl;
 	// DataSourceRef data = loadResource("hello.txt");
