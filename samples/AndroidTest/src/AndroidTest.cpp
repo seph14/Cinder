@@ -7,6 +7,8 @@
 
 #include "cinder/gl/Texture.h"
 
+#include "cinder/Font.h"
+
 using namespace ci;
 using namespace ci::app;
 
@@ -18,6 +20,7 @@ public:
 	void draw();
 	
 	gl::Texture		mTexture;	
+	// Font mFont;
 };
 
 void AndroidTest::setup()
@@ -30,6 +33,15 @@ void AndroidTest::setup()
 	catch( ... ) {
 		console() << "unable to load the texture file!" << std::endl;
 	}
+
+	string fontFile("/system/fonts/DroidSans.ttf");
+	DataSourceRef fontData = loadFile(fontFile);
+	// IStreamRef stream = fontData->createStream();
+	// console() << "Loaded stream " << fontFile << " size " << stream->size() << endl;
+	// mFont = Font(fontData, 16);
+	Font font(fontData, 16);
+	console() << "Loaded font name " << font.getName() << " num glyphs " << font.getNumGlyphs() << endl;
+
 	// console() << "AndroidTest" << endl;
 	// DataSourceRef data = loadResource("hello.txt");
 	// console() << "Loaded hello.txt" << endl;

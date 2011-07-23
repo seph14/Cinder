@@ -35,8 +35,8 @@ function unpack_freeimage {
     unzip setup/FreeImage/FreeImage3150.zip -d jni
     cp -p setup/FreeImage/Android.mk jni/FreeImage
 	# patched source files with missing function implementations
-    cp -f setup/FreeImage/dcraw_common.cpp jni/FreeImage/Source/LibRawLite/internal/dcraw_common.cpp
-    cp -f setup/FreeImage/tif_dirinfo.c jni/FreeImage/Source/LibTIFF/tif_dirinfo.c
+    cp -pf setup/FreeImage/dcraw_common.cpp jni/FreeImage/Source/LibRawLite/internal/dcraw_common.cpp
+    cp -pf setup/FreeImage/tif_dirinfo.c jni/FreeImage/Source/LibTIFF/tif_dirinfo.c
 }
 
 function unpack_freetype {
@@ -49,6 +49,7 @@ function unpack_freetype {
     rm -rf jni/freetype-2.4.5
     tar jxvf setup/freetype/freetype-2.4.5.tar.bz2 -C jni
     cp -p setup/freetype/Android.mk jni/freetype-2.4.5
+	cp -pf setup/freetype/ftmodule.h jni/freetype-2.4.5/include/freetype/config/ftmodule.h
 }
 
 if [ $OSTYPE = "cygwin" ]; then

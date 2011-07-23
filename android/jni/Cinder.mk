@@ -12,7 +12,8 @@ LOCAL_MODULE 	 := libcinder
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
                     $(LOCAL_PATH)/boost \
 					$(LOCAL_PATH)/$(TESS_SRC) \
-					$(TOP_PATH)/FreeImage/Source
+					$(TOP_PATH)/FreeImage/Source \
+					$(TOP_PATH)/freetype-2.4.5/include
 LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/AppAndroid.cpp \
 					$(CINDER_SRC)/app/Renderer.cpp \
@@ -45,6 +46,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(CINDER_SRC)/DataSource.cpp \
                     $(CINDER_SRC)/DataTarget.cpp \
                     $(CINDER_SRC)/Exception.cpp \
+					$(CINDER_SRC)/Font.cpp \
                     $(CINDER_SRC)/ImageIo.cpp \
                     $(CINDER_SRC)/ImageSourceFileFreeImage.cpp \
                     $(CINDER_SRC)/Matrix.cpp \

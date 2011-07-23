@@ -40,6 +40,9 @@
 	#include "cinder/msw/CinderMsw.h"
 	#include "cinder/msw/CinderMswGdiPlus.h"
 	#pragma comment(lib, "gdiplus")
+#elif defined( CINDER_ANDROID )
+	#include <ft2build.h>
+	#include FT_FREETYPE_H
 #endif
 #include "cinder/Utilities.h"
 
@@ -78,6 +81,8 @@ class FontManager
 	HDC					getFontDc() const { return mFontDc; }
 	Gdiplus::Graphics*	getGraphics() const { return mGraphics; }
 	LONG				convertSizeToLogfontHeight( float size ) { return ::MulDiv( (long)size, -::GetDeviceCaps( mFontDc, LOGPIXELSY ), 96 ); }
+#elif defined( CINDER_ANDROID )
+	FT_Library			getLibrary() const { return mLibrary; }
 #endif
 	
 #if defined( CINDER_MAC )
@@ -85,6 +90,8 @@ class FontManager
 #elif defined( CINDER_MSW )
 	HDC					mFontDc;
 	Gdiplus::Graphics	*mGraphics;
+#elif defined( CINDER_ANDROID )
+	FT_Library          mLibrary;
 #endif
 
 	friend class Font;
@@ -101,6 +108,11 @@ FontManager::FontManager()
 #elif defined( CINDER_MSW )
 	mFontDc = ::CreateCompatibleDC( NULL );
 	mGraphics = new Gdiplus::Graphics( mFontDc );
+#elif defined( CINDER_ANDROID )
+	int error = FT_Init_FreeType( &mLibrary );
+	if ( error ) {
+		CI_LOGI("Error initializing FreeType");
+	}
 #endif
 }
 
@@ -108,6 +120,8 @@ FontManager::~FontManager()
 {
 #if defined( CINDER_MAC )
 	[nsFontManager release];
+#elif defined( CINDER_ANDROID )
+	FT_Done_FreeType( mLibrary );
 #endif
 }
 
@@ -447,12 +461,70 @@ Rectf Font::getGlyphBoundingBox( Glyph glyphIndex ) const
 			metrics.gmptGlyphOrigin.x + metrics.gmBlackBoxX, metrics.gmptGlyphOrigin.y + (int)metrics.gmBlackBoxY );
 }
 
+#elif defined( CINDER_ANDROID )
+
+// XXX implement these!
+std::string Font::getFullName() const
+{
+	return mObj->mName;
+}
+
+float Font::getLeading() const
+{
+	return 0;
+}
+
+float Font::getAscent() const
+{
+	return 0;
+}
+
+float Font::getDescent() const
+{
+	return 0;
+}
+
+size_t Font::getNumGlyphs() const
+{
+	return mObj->mNumGlyphs;
+}
+
+Font::Glyph Font::getGlyphChar( char c ) const
+{
+	return (Glyph) 0;
+}
+
+Font::Glyph Font::getGlyphIndex( size_t idx ) const
+{
+	return (Glyph) 0;
+}
+
+vector<Font::Glyph> Font::getGlyphs( const string &utf8String ) const
+{
+	vector<Glyph> result;
+	return result;
+}
+
+Shape2d Font::getGlyphShape( Glyph glyphIndex ) const
+{
+	Shape2d resultShape;
+	return resultShape;
+}
+
+Rectf Font::getGlyphBoundingBox( Glyph glyphIndex ) const
+{
+	return Rectf(0, 0, 0, 0);
+}
+
+
 #endif
 
 Font::Obj::Obj( const string &aName, float aSize )
 	: mName( aName ), mSize( aSize )
 #if defined( CINDER_MSW )
 	, mHfont( 0 )
+#elif defined( CINDER_ANDROID )
+	, mFace( 0 )
 #endif
 {
 #if defined( CINDER_COCOA )
@@ -466,7 +538,7 @@ Font::Obj::Obj( const string &aName, float aSize )
 	::CFStringRef fullName = ::CGFontCopyFullName( mCGFont );
 	string result = cocoa::convertCfString( fullName );
 	::CFRelease( fullName );
-#else
+#elif defined( CINDER_MSW )
 	FontManager::instance(); // force GDI+ init
 	assert( sizeof(wchar_t) == 2 );
     wstring faceName = toUtf16( mName );
@@ -480,13 +552,42 @@ Font::Obj::Obj( const string &aName, float aSize )
 	mGdiplusFont = std::shared_ptr<Gdiplus::Font>( new Gdiplus::Font( FontManager::instance()->getFontDc(), mHfont ) );
 	
 	finishSetup();
+#elif defined( CINDER_ANDROID )
+	FontManager::instance();  // init FreeType
+	// XXX create font from name
 #endif
 }
+
+#if defined( CINDER_ANDROID )
+//  FreeType stream reading callbacks
+unsigned long _ReadStream(FT_Stream ftstream, 
+						  unsigned long offset, 
+						  unsigned char* buffer, 
+						  unsigned long count)
+{
+	// CI_LOGI("Read stream called on %p", ftstream);
+	IStream* stream = static_cast<IStream*>(ftstream->descriptor.pointer);
+	stream->seekAbsolute(offset);
+	if (count) {
+		return static_cast<unsigned long>(stream->readDataAvailable(buffer, count));
+	}
+
+	return 0;
+}
+
+void _CloseStream(FT_Stream ftstream)
+{
+	//  closed automatically? check for debug
+	CI_LOGI("XXX close stream called on %p", ftstream);
+}
+#endif
 
 Font::Obj::Obj( DataSourceRef dataSource, float size )
 	: mSize( size )
 #if defined( CINDER_MSW )
 	, mHfont( 0 )
+#elif defined( CINDER_ANDROID )
+	, mFace( 0 )
 #endif
 {
 #if defined( CINDER_COCOA )
@@ -536,6 +637,45 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 		throw FontInvalidNameExc();
 
 	finishSetup();
+#elif defined( CINDER_ANDROID )
+	FontManager* mgr = FontManager::instance();  // init FreeType
+
+	IStreamRef stream = dataSource->createStream();
+	if (!stream) {
+		CI_LOGI("Error: invalid stream passed to font");
+		return;
+	}
+
+	FT_StreamRec sr;
+	sr.base               = NULL;
+	sr.size               = stream->size();
+	sr.pos                = 0;
+	sr.descriptor.pointer = stream.get();
+	sr.read				  = _ReadStream;
+	sr.close        	  = _CloseStream;
+
+	FT_Open_Args args;
+	memset(&args, 0, sizeof(FT_Open_Args));
+	args.flags  |= FT_OPEN_STREAM;
+	args.stream  = &sr;
+
+	int error = FT_Open_Face( mgr->getLibrary(),
+							  &args,
+							  0,
+							  &mFace );
+
+	if (error == FT_Err_Unknown_File_Format) {
+		CI_LOGI("Error opening font: unknown format");
+	}
+	else if (error) {
+		CI_LOGI("Error opening font: unhandled");
+	}
+	else {
+		mName = string(mFace->family_name);
+		mNumGlyphs = mFace->num_glyphs;
+		CI_LOGI("Opened font: family name %s", mName.c_str());
+		error = FT_Set_Char_Size( mFace, 50 * 64, 0, 100, 0 );
+	}
 #endif
 }
 
@@ -544,9 +684,13 @@ Font::Obj::~Obj()
 #if defined( CINDER_COCOA )
 	::CGFontRelease( mCGFont );
 	::CFRelease( mCTFont );
-#else
+#elif defined( CINDER_MSW )
 	if( mHfont ) // this should be replaced with something exception-safe
 		::DeleteObject( mHfont ); 
+#elif defined( CINDER_ANDROID )
+	CI_LOGI("XXX Attempting to FT_Done_Face %p (CRASH?)", mFace);
+	FT_Done_Face( mFace );
+	CI_LOGI("XXX FT_Done_Face success");
 #endif
 }
 

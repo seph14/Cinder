@@ -43,6 +43,9 @@
 	namespace Gdiplus {
 		class Font;
 	}
+#elif defined( CINDER_ANDROID )
+	struct FT_FaceRec_;
+	typedef struct FT_FaceRec_* FT_Face;
 #endif
 
 namespace cinder {
@@ -113,6 +116,9 @@ class Font {
 		std::shared_ptr<Gdiplus::Font>	mGdiplusFont;
 		std::vector<std::pair<uint16_t,uint16_t> >	mUnicodeRanges;
 		size_t					mNumGlyphs;
+#elif defined( CINDER_ANDROID )
+		FT_Face	mFace;
+		size_t	mNumGlyphs;
 #endif 		
 	};
 
