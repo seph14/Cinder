@@ -10,7 +10,7 @@ TESS_SRC   = src/libtess2
 
 LOCAL_MODULE 	 := libcinder
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
-                    $(LOCAL_PATH)/boost \
+					$(LOCAL_PATH)/boost \
 					$(LOCAL_PATH)/$(TESS_SRC) \
 					$(TOP_PATH)/FreeImage/Source \
 					$(TOP_PATH)/freetype-2.4.5/include
@@ -20,6 +20,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/AppImplAndroidRendererGl.cpp \
 					$(CINDER_SRC)/gl/gl.cpp \
 					$(CINDER_SRC)/gl/Fbo.cpp \
+					$(CINDER_SRC)/gl/GlslProg.cpp \
 					$(CINDER_SRC)/gl/Texture.cpp \
 					$(CINDER_SRC)/gl/Vbo.cpp \
 					$(CINDER_SRC)/ip/Blend.cpp \
@@ -74,7 +75,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(TESS_SRC)/sweep.c \
 					$(TESS_SRC)/tess.c
 
-LOCAL_LDLIBS				:= -lz -lGLESv1_CM -landroid -llog -lEGL
+LOCAL_LDLIBS				:= -lz -lGLESv2 -landroid -llog -lEGL
 LOCAL_STATIC_LIBRARIES	:= android_native_app_glue 
 
 include $(BUILD_STATIC_LIBRARY)

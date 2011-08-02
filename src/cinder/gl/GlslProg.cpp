@@ -36,6 +36,9 @@ using namespace std;
 	#define GL_GEOMETRY_SHADER		GL_GEOMETRY_SHADER_EXT
 #endif
 
+#if defined( CINDER_GLES2 )
+   typedef char GLchar;
+#endif
 
 namespace cinder { namespace gl {
 
@@ -57,14 +60,14 @@ GlslProg::GlslProg( DataSourceRef vertexShader, DataSourceRef fragmentShader, Da
 	mObj->mHandle = glCreateProgram();
 	
 	if ( vertexShader )
-		loadShader( vertexShader->getBuffer(), GL_VERTEX_SHADER_ARB );
+		loadShader( vertexShader->getBuffer(), GL_VERTEX_SHADER );
     
 	if( fragmentShader )
-		loadShader( fragmentShader->getBuffer(), GL_FRAGMENT_SHADER_ARB );
+		loadShader( fragmentShader->getBuffer(), GL_FRAGMENT_SHADER );
 
 #if ! defined( CINDER_GLES )    
 	if( geometryShader ) {
-		loadShader( geometryShader->getBuffer(), GL_GEOMETRY_SHADER_EXT );
+		loadShader( geometryShader->getBuffer(), GL_GEOMETRY_SHADER );
         
         glProgramParameteriEXT(mObj->mHandle, GL_GEOMETRY_INPUT_TYPE_EXT, geometryInputType);
         glProgramParameteriEXT(mObj->mHandle, GL_GEOMETRY_OUTPUT_TYPE_EXT, geometryOutputType);
@@ -85,14 +88,14 @@ GlslProg::GlslProg( const char *vertexShader, const char *fragmentShader, const 
 	mObj->mHandle = glCreateProgram();
 	
 	if ( vertexShader )
-		loadShader( vertexShader, GL_VERTEX_SHADER_ARB );
+		loadShader( vertexShader, GL_VERTEX_SHADER );
     
 	if( fragmentShader )
-		loadShader( fragmentShader, GL_FRAGMENT_SHADER_ARB );
+		loadShader( fragmentShader, GL_FRAGMENT_SHADER );
     
 #if ! defined( CINDER_GLES )
 	if( geometryShader ) {
-		loadShader( geometryShader, GL_GEOMETRY_SHADER_EXT );
+		loadShader( geometryShader, GL_GEOMETRY_SHADER );
         
         glProgramParameteriEXT(mObj->mHandle, GL_GEOMETRY_INPUT_TYPE_EXT, geometryInputType);
         glProgramParameteriEXT(mObj->mHandle, GL_GEOMETRY_OUTPUT_TYPE_EXT, geometryOutputType);
@@ -273,12 +276,12 @@ GLint GlslProg::getAttribLocation( const std::string &name )
 GlslProgCompileExc::GlslProgCompileExc( const std::string &log, GLint aShaderType ) throw()
 	: mShaderType( aShaderType )
 {
-	if( mShaderType == GL_VERTEX_SHADER_ARB )
+	if( mShaderType == GL_VERTEX_SHADER )
 		strncpy( mMessage, "VERTEX: ", 1000 );
-	else if( mShaderType == GL_FRAGMENT_SHADER_ARB )
+	else if( mShaderType == GL_FRAGMENT_SHADER )
 		strncpy( mMessage, "FRAGMENT: ", 1000 );
 #if ! defined( CINDER_GLES )
-	else if( mShaderType == GL_GEOMETRY_SHADER_EXT )
+	else if( mShaderType == GL_GEOMETRY_SHADER )
 		strncpy( mMessage, "GEOMETRY: ", 1000 );
 #endif
 	else

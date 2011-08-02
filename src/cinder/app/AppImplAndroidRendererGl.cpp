@@ -41,7 +41,13 @@ void AppImplAndroidRendererGl::initialize( ANativeWindow* window, int32_t& width
     ANativeWindow_setBuffersGeometry(window, 0, 0, format);
 
     mSurface = eglCreateWindowSurface(mDisplay, config, window, NULL);
+
+#if defined( CINDER_GLES2 )
+    EGLint eglAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+    mContext = eglCreateContext(mDisplay, config, EGL_NO_CONTEXT, eglAttribs);
+#else
     mContext = eglCreateContext(mDisplay, config, NULL, NULL);
+#endif
 
     makeCurrentContext();
 
