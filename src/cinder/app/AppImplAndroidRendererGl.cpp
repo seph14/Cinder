@@ -54,10 +54,13 @@ void AppImplAndroidRendererGl::initialize( ANativeWindow* window, int32_t& width
 
     // Initialize GL state
     glDisable(GL_DITHER);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
     glEnable(GL_CULL_FACE);
-    glShadeModel(GL_SMOOTH);
     glDisable(GL_DEPTH_TEST);
+
+#if ! defined( CINDER_GLES2 )
+    glShadeModel(GL_SMOOTH);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST);
+#endif
 }
 
 void AppImplAndroidRendererGl::makeCurrentContext()
@@ -77,6 +80,7 @@ void AppImplAndroidRendererGl::defaultResize()
 	glViewport( 0, 0, mApp->getWindowWidth(), mApp->getWindowHeight() );
 	cinder::CameraPersp cam( mApp->getWindowWidth(), mApp->getWindowHeight(), 60.0f );
 
+#if ! defined( CINDER_GLES2 )
 	glMatrixMode( GL_PROJECTION );
 	glLoadMatrixf( cam.getProjectionMatrix().m );
 
@@ -84,6 +88,7 @@ void AppImplAndroidRendererGl::defaultResize()
 	glLoadMatrixf( cam.getModelViewMatrix().m );
 	glScalef( 1.0f, -1.0f, 1.0f );           // invert Y axis so increasing Y goes down.
 	glTranslatef( 0.0f, (float)-mApp->getWindowHeight(), 0.0f );       // shift origin up to upper-left corner.
+#endif
 }
 
 void AppImplAndroidRendererGl::teardown()

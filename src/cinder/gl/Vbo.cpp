@@ -25,10 +25,9 @@
 
 using namespace std;
 
-#if defined( CINDER_ANDROID )
+#if defined(CINDER_ANDROID) && defined( CINDER_GLES2 )
 
-//  GLES2 compatible functions and constants
-
+//  Android GLES2 compatible functions and constants
 #define glBufferDataARB    glBufferData
 #define glBufferSubDataARB glBufferSubData
 #define glMapBuffer        glMapBufferOES
@@ -457,6 +456,7 @@ void VboMesh::initializeBuffers( bool staticDataPlanar )
 		mObj->mCustomDynamicLocations = vector<GLint>( mObj->mLayout.mCustomDynamic.size(), -1 );
 }
 
+#if ! defined(CINDER_GLES)
 void VboMesh::enableClientStates() const
 {
 	if( mObj->mLayout.hasPositions() )
@@ -571,6 +571,8 @@ void VboMesh::bindAllData() const
 		}	
 	}
 }
+
+#endif
 
 void VboMesh::bindIndexBuffer() const
 {
