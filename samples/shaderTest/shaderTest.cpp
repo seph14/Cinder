@@ -75,7 +75,7 @@ void ImageFileTestApp::draw()
 	// mShader.bind();
 	// mShader.uniform( "tex0", 0 );
 	// mShader.uniform( "sampleOffset", Vec2f( cos( mAngle ), sin( mAngle ) ) * ( 3.0f / getWindowWidth() ) );
-   CI_LOGI("XXX gl::drawSolidRect");
+	// CI_LOGI("XXX gl::drawSolidRect");
 	// gl::drawSolidRect( getWindowBounds() );
 
 	mTexture.unbind();

@@ -15,7 +15,7 @@ LOCAL_C_INCLUDES := $(CINDER_PATH)/include \
 LOCAL_SRC_FILES := ../../ShaderTest.cpp
 
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv2 -lz
-LOCAL_STATIC_LIBRARIES := cinder freeimage ft2 android_native_app_glue 
+LOCAL_STATIC_LIBRARIES := cinder ft2 android_native_app_glue 
 
 include $(BUILD_SHARED_LIBRARY)
 
