@@ -64,9 +64,14 @@ fi
 unpack_freeimage
 unpack_freetype
 
+cp -pf setup/Configure.mk jni/Configure.mk
+
+echo
 if [ $? -ne 0 ]; then
     echo "Error creating Android tree, check your Cinder source layout."
 else
     echo "Android source tree created, ready to run ndk-build"
+    echo
+    echo "(Optional) Edit jni/Configure.mk to select build settings"
 fi
 

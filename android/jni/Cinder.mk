@@ -5,14 +5,14 @@ LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
 
-CINDER_SRC = src/cinder
-TESS_SRC   = src/libtess2
+CINDER_SRC   = src/cinder
+TESS_SRC     = src/libtess2
+STBIMAGE_SRC = src/stb_image
 
 LOCAL_MODULE 	 := libcinder
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
 					$(LOCAL_PATH)/boost \
 					$(LOCAL_PATH)/$(TESS_SRC) \
-					$(TOP_PATH)/FreeImage/Source \
 					$(TOP_PATH)/freetype-2.4.5/include
 LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/AppAndroid.cpp \
@@ -47,7 +47,6 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/Exception.cpp \
 					$(CINDER_SRC)/Font.cpp \
 					$(CINDER_SRC)/ImageIo.cpp \
-					$(CINDER_SRC)/ImageSourceFileFreeImage.cpp \
 					$(CINDER_SRC)/Matrix.cpp \
 					$(CINDER_SRC)/Path2D.cpp \
 					$(CINDER_SRC)/Perlin.cpp \
@@ -75,7 +74,20 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(TESS_SRC)/sweep.c \
 					$(TESS_SRC)/tess.c
 
-LOCAL_LDLIBS				:= -lz -lGLESv2 -landroid -llog -lEGL
+ifdef USE_FREEIMAGE
+LOCAL_C_INCLUDES += $(TOP_PATH)/FreeImage/Source
+LOCAL_SRC_FILES  += $(CINDER_SRC)/ImageSourceFileFreeImage.cpp
+LOCAL_CFLAGS     += -DCINDER_FREEIMAGE
+endif
+
+ifdef USE_STBIMAGE
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/src/stb_image
+LOCAL_SRC_FILES  += $(STBIMAGE_SRC)/stb_image.c \
+					$(CINDER_SRC)/ImageSourceFileStbImage.cpp
+LOCAL_CFLAGS     += -DCINDER_STBIMAGE
+endif
+
+LOCAL_LDLIBS			:= -lz -lGLESv2 -landroid -llog -lEGL
 LOCAL_STATIC_LIBRARIES	:= android_native_app_glue 
 
 include $(BUILD_STATIC_LIBRARY)

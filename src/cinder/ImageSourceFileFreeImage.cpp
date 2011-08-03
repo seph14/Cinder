@@ -138,7 +138,6 @@ void ImageSourceFileFreeImage::load( ImageTargetRef target )
 	// get a pointer to the ImageSource function appropriate for handling our data configuration
 	ImageSource::RowFunc func = setupRowFunc( target );
 	
-	const uint8_t *data = mData.get();
 	for( int32_t row = 0; row < mHeight; ++row ) {
         const uint8_t *data = FreeImage_GetScanLine(mBitmap, mHeight-row-1);
 		((*this).*func)( target, row, data );
