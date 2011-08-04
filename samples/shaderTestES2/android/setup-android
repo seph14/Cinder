@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+ANDROID_TOOL=android
+
+# Use android.bat on cygwin
+hash ${ANDROID_TOOL} 2>&-
+if [ $? -ne 0 ]; then
+    ANDROID_TOOL=android.bat
+fi
+
+if [ ! -e assets ]; then
+    mkdir assets
+fi
+if [ ! -e assets/cinder_logo.png ]; then
+    cp ../data/vert.glsl assets
+    cp ../data/frag.glsl assets
+fi
+
+${ANDROID_TOOL} update project --path . --name ShaderTestES2 --target android-8
+
