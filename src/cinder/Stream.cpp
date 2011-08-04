@@ -29,6 +29,11 @@
 #include <boost/scoped_array.hpp>
 #include <iostream>
 #include <boost/preprocessor/seq/for_each.hpp>
+
+#if defined( ANDROID )
+#include <android/asset_manager.h>
+#endif
+
 using std::string;
 
 namespace cinder {

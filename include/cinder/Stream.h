@@ -36,7 +36,8 @@
 #endif
 
 #if defined( ANDROID )
-#include <android/asset_manager.h>
+struct AAssetManager;
+struct AAsset;
 #endif
 
 namespace cinder {
