@@ -112,11 +112,14 @@ void setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft 
 //! Sets the viewport and the \c MODELVIEW and \c PROJECTION matrices to orthographic with the upper-left corner at \c [0,0] and the lower-right at \c [size.x,size.y] if \a originUpperLeft is \c true. Otherwise the origin is in the lower right.
 inline void setMatricesWindow( const Vec2i &screenSize, bool originUpperLeft = true ) { setMatricesWindow( screenSize.x, screenSize.y, originUpperLeft ); }
 
+#if ! defined( CINDER_GLES )
 //! Returns the current OpenGL Viewport as an Area
 Area getViewport();
+#endif
 //! Sets the current OpenGL Viewport to \a area
 void setViewport( const Area &area );
 
+#if ! defined( CINDER_GLES )
 //! Produces a translation by \a pos in the current matrix.
 void translate( const Vec2f &pos );
 //! Produces a translation by \a x and \a y in the current matrix.
@@ -141,6 +144,7 @@ void rotate( const Vec3f &xyz );
 void rotate( const Quatf &quat );
 //! Produces a 2D rotation, the equivalent of a rotation around the Z axis by \a degrees.
 inline void rotate( float degrees ) { rotate( Vec3f( 0, 0, degrees ) ); }
+#endif
 
 #if ! defined( CINDER_GLES )
 //! Used between calls to \c glBegin and \c glEnd, appends a vertex to the current primitive.

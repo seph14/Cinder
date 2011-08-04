@@ -355,12 +355,14 @@ Area getViewport()
 	Area result;
 	return Area( params[0], params[1], params[0] + params[2], params[1] + params[3] );
 }
+#endif // ! defined( CINDER_GLES )
 
 void setViewport( const Area &area )
 {
 	glViewport( area.x1, area.y1, ( area.x2 - area.x1 ), ( area.y2 - area.y1 ) );
 }
 
+#if ! defined( CINDER_GLES )
 void translate( const Vec2f &pos )
 {
 	glTranslatef( pos.x, pos.y, 0 );
