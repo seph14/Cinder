@@ -32,13 +32,11 @@ void ShaderTestES2::setup()
         console() << "Unable to load shader" << std::endl;
     }
 
-    Area windowBounds = getWindowBounds();
-    gl::setViewport(windowBounds);
+    gl::setViewport(getWindowBounds());
 }
 
 void ShaderTestES2::update()
 {
-	mAngle += 0.05f;
 }
 
 void ShaderTestES2::draw()
