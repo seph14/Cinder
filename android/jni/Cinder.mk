@@ -19,6 +19,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/Renderer.cpp \
 					$(CINDER_SRC)/app/AppImplAndroidRendererGl.cpp \
 					$(CINDER_SRC)/gl/gl.cpp \
+					$(CINDER_SRC)/gl/gles2.cpp \
 					$(CINDER_SRC)/gl/Fbo.cpp \
 					$(CINDER_SRC)/gl/GlslProg.cpp \
 					$(CINDER_SRC)/gl/Texture.cpp \

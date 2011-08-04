@@ -203,6 +203,7 @@ void enableDepthRead( bool enable = true );
 //! Enables writing to the depth buffer when \a enable.
 void enableDepthWrite( bool enable = true );
 
+#if ! defined( CINDER_GLES )
 //! Draws a line from \a start to \a end
 void drawLine( const Vec2f &start, const Vec2f &end );
 //! Draws a line from \a start to \a end
@@ -246,7 +247,6 @@ void draw( const class Path2d &path2d, float approximationScale = 1.0f );
 //! Draws a Shape2d \a shape2d using approximation scale \a approximationScale. 1.0 corresponds to screenspace, 2.0 is double screen resolution, etc
 void draw( const class Shape2d &shape2d, float approximationScale = 1.0f );
 
-#if ! defined( CINDER_GLES )
 //! Draws a solid (filled) Path2d \a path2d using approximation scale \a approximationScale. 1.0 corresponds to screenspace, 2.0 is double screen resolution, etc
 void drawSolid( const class Path2d &path2d, float approximationScale = 1.0f );
 
@@ -261,7 +261,6 @@ void drawRange( const VboMesh &vbo, size_t startIndex, size_t indexCount, int ve
 //! Draws a range of elements from a cinder::gl::VboMesh \a vbo.
 void drawArrays( const VboMesh &vbo, GLint first, GLsizei count );
 //!	Draws a textured quad of size \a scale that is aligned with the vectors \a bbRight and \a bbUp at \a pos, rotated by \a rotationDegrees around the vector orthogonal to \a bbRight and \a bbUp.
-#endif // ! defined( CINDER_GLES )
 
 void drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp );
 //! Draws \a texture on the XY-plane
@@ -280,6 +279,7 @@ void drawStringCentered( const std::string &str, const Vec2f &pos, const ColorA 
 //! Draws a right-justified string \a str with the center of its  located at \a pos. Optional \a font and \a color affect the style
 void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), Font font = Font() );
 
+#endif // ! defined( CINDER_GLES )
 
 //! Convenience class designed to push and pop the currently bound texture for a given texture unit
 struct SaveTextureBindState {
