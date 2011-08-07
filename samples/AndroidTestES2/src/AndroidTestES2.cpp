@@ -38,8 +38,8 @@ void AndroidTestES2::setup()
 	DataSourceRef fontData = loadFile(fontFile);
 	mFont = Font(fontData, 16);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
-	// XXX uncomment to trigger a crash in Font destructor
-	// mFont = Font();
+    //  release font, tests FT_Done_Face works
+	mFont = Font();
 
 	// console() << "AndroidTestES2" << endl;
 	// DataSourceRef data = loadResource("hello.txt");

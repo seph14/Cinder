@@ -640,24 +640,23 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 #elif defined( CINDER_ANDROID )
 	FontManager* mgr = FontManager::instance();  // init FreeType
 
-	IStreamRef stream = dataSource->createStream();
-	if (!stream) {
+	mStreamRef = dataSource->createStream();
+	if (!mStreamRef) {
 		CI_LOGI("Error: invalid stream passed to font");
 		return;
 	}
 
-	FT_StreamRec sr;
-	sr.base               = NULL;
-	sr.size               = stream->size();
-	sr.pos                = 0;
-	sr.descriptor.pointer = stream.get();
-	sr.read				  = _ReadStream;
-	sr.close        	  = _CloseStream;
+	mStreamRec.base               = NULL;
+	mStreamRec.size               = mStreamRef->size();
+	mStreamRec.pos                = 0;
+	mStreamRec.descriptor.pointer = mStreamRef.get();
+	mStreamRec.read				  = _ReadStream;
+	mStreamRec.close        	  = _CloseStream;
 
 	FT_Open_Args args;
 	memset(&args, 0, sizeof(FT_Open_Args));
 	args.flags  |= FT_OPEN_STREAM;
-	args.stream  = &sr;
+	args.stream  = &mStreamRec;
 
 	int error = FT_Open_Face( mgr->getLibrary(),
 							  &args,
@@ -688,9 +687,9 @@ Font::Obj::~Obj()
 	if( mHfont ) // this should be replaced with something exception-safe
 		::DeleteObject( mHfont ); 
 #elif defined( CINDER_ANDROID )
-	CI_LOGI("XXX Attempting to FT_Done_Face %p (CRASH?)", mFace);
+    //  Free face and release stream
 	FT_Done_Face( mFace );
-	CI_LOGI("XXX FT_Done_Face success");
+    mStreamRef = IStreamRef();
 #endif
 }
 

@@ -44,8 +44,8 @@
 		class Font;
 	}
 #elif defined( CINDER_ANDROID )
-	struct FT_FaceRec_;
-	typedef struct FT_FaceRec_* FT_Face;
+	#include <ft2build.h>
+	#include FT_FREETYPE_H
 #endif
 
 namespace cinder {
@@ -117,8 +117,10 @@ class Font {
 		std::vector<std::pair<uint16_t,uint16_t> >	mUnicodeRanges;
 		size_t					mNumGlyphs;
 #elif defined( CINDER_ANDROID )
-		FT_Face	mFace;
-		size_t	mNumGlyphs;
+		IStreamRef		mStreamRef;
+		FT_StreamRec	mStreamRec;
+		FT_Face			mFace;
+		size_t			mNumGlyphs;
 #endif 		
 	};
 
