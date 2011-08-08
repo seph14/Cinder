@@ -8,11 +8,13 @@ include $(CLEAR_VARS)
 CINDER_SRC   = src/cinder
 TESS_SRC     = src/libtess2
 STBIMAGE_SRC = src/stb_image
+UTF8_CPP_SRC = src/utf8-cpp/source
 
 LOCAL_MODULE 	 := libcinder
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
 					$(LOCAL_PATH)/boost \
 					$(LOCAL_PATH)/$(TESS_SRC) \
+					$(LOCAL_PATH)/$(UTF8_CPP_SRC) \
 					$(TOP_PATH)/freetype-2.4.5/include
 LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/AppAndroid.cpp \

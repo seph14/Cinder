@@ -41,16 +41,16 @@
 	#include "cinder/msw/CinderMswGdiPlus.h"
 	#pragma comment(lib, "gdiplus")
 #elif defined( CINDER_ANDROID )
+	#include <utf8.h>
+	#include <iterator>
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
 
-	namespace cinder {
-		struct FTData {
-			ci::IStreamRef	streamRef;
-			FT_StreamRec	streamRec;
-			FT_Face			face;
-		};
-	}
+    struct FTData {
+        ci::IStreamRef	streamRef;
+        FT_StreamRec	streamRec;
+        FT_Face			face;
+    };
 #endif
 #include "cinder/Utilities.h"
 
@@ -483,19 +483,19 @@ std::string Font::getFullName() const
 
 float Font::getLeading() const
 {
-	FT_Face& face = mObj->mFTData->face;
+	FT_Face face = getFTFace();
 	return float(face->ascender - face->descender - face->units_per_EM) / face->units_per_EM * mObj->mSize;
 }
 
 float Font::getAscent() const
 {
-	FT_Face& face = mObj->mFTData->face;
+	FT_Face face = getFTFace();
 	return float(face->ascender) / face->units_per_EM * mObj->mSize;
 }
 
 float Font::getDescent() const
 {
-	FT_Face& face = mObj->mFTData->face;
+	FT_Face face = getFTFace();
 	return float(face->descender) / face->units_per_EM * mObj->mSize;
 }
 
@@ -516,7 +516,12 @@ Font::Glyph Font::getGlyphIndex( size_t idx ) const
 
 vector<Font::Glyph> Font::getGlyphs( const string &utf8String ) const
 {
+	vector<int> utf32String;
 	vector<Glyph> result;
+	utf8::utf8to32(utf8String.begin(), utf8String.end(), std::back_inserter(utf32String));
+	for (vector<int>::iterator it = utf32String.begin(); it != utf32String.end(); ++it) {
+		result.push_back(FT_Get_Char_Index(getFTFace(), *it));
+	}
 	return result;
 }
 
