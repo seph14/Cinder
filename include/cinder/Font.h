@@ -44,8 +44,9 @@
 		class Font;
 	}
 #elif defined( CINDER_ANDROID )
-	#include <ft2build.h>
-	#include FT_FREETYPE_H
+	struct FTData;
+	struct FT_FaceRec_;
+	typedef struct FT_FaceRec_* FT_Face;
 #endif
 
 namespace cinder {
@@ -92,6 +93,8 @@ class Font {
 	::HFONT					getHfont() const { return mObj->mHfont; }
 	const Gdiplus::Font*	getGdiplusFont() const { return mObj->mGdiplusFont.get(); }
 	static HDC				getGlobalDc();
+#elif defined( CINDER_ANDROID )
+	FT_Face&				getFTFace() const;
 #endif
 
  private:
@@ -117,10 +120,8 @@ class Font {
 		std::vector<std::pair<uint16_t,uint16_t> >	mUnicodeRanges;
 		size_t					mNumGlyphs;
 #elif defined( CINDER_ANDROID )
-		IStreamRef		mStreamRef;
-		FT_StreamRec	mStreamRec;
-		FT_Face			mFace;
-		size_t			mNumGlyphs;
+		std::shared_ptr<FTData>	mFTData;
+		size_t					mNumGlyphs;
 #endif 		
 	};
 

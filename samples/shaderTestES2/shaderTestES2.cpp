@@ -77,7 +77,7 @@ void ShaderTestES2::setup()
     mCamera.setPerspective(35.0f, aspectRatio, 0.1f, 100.0f);
     mCamera.lookAt(Vec3f(0, 0, 5.0f), Vec3f(0, 0, 0));
 
-    glDisable(GL_CULL_FACE);
+    glFrontFace(GL_CW);
 }
 
 void ShaderTestES2::update()

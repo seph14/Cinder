@@ -43,6 +43,14 @@
 #elif defined( CINDER_ANDROID )
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
+
+	namespace cinder {
+		struct FTData {
+			ci::IStreamRef	streamRef;
+			FT_StreamRec	streamRec;
+			FT_Face			face;
+		};
+	}
 #endif
 #include "cinder/Utilities.h"
 
@@ -64,7 +72,11 @@ class FontManager
 	Font					getDefault() const
 	{
 		if( ! mDefault )
+#if defined (CINDER_ANDROID)
+			mDefault = Font(loadFile("/system/fonts/DroidSans.ttf"), 12);
+#else
 			mDefault = Font( "Arial", 12 );
+#endif
 		
 		return mDefault;
 	}
@@ -471,17 +483,20 @@ std::string Font::getFullName() const
 
 float Font::getLeading() const
 {
-	return 0;
+	FT_Face& face = mObj->mFTData->face;
+	return float(face->ascender - face->descender - face->units_per_EM) / face->units_per_EM * mObj->mSize;
 }
 
 float Font::getAscent() const
 {
-	return 0;
+	FT_Face& face = mObj->mFTData->face;
+	return float(face->ascender) / face->units_per_EM * mObj->mSize;
 }
 
 float Font::getDescent() const
 {
-	return 0;
+	FT_Face& face = mObj->mFTData->face;
+	return float(face->descender) / face->units_per_EM * mObj->mSize;
 }
 
 size_t Font::getNumGlyphs() const
@@ -516,7 +531,6 @@ Rectf Font::getGlyphBoundingBox( Glyph glyphIndex ) const
 	return Rectf(0, 0, 0, 0);
 }
 
-
 #endif
 
 Font::Obj::Obj( const string &aName, float aSize )
@@ -524,7 +538,7 @@ Font::Obj::Obj( const string &aName, float aSize )
 #if defined( CINDER_MSW )
 	, mHfont( 0 )
 #elif defined( CINDER_ANDROID )
-	, mFace( 0 )
+	, mFTData(new FTData)
 #endif
 {
 #if defined( CINDER_COCOA )
@@ -553,8 +567,8 @@ Font::Obj::Obj( const string &aName, float aSize )
 	
 	finishSetup();
 #elif defined( CINDER_ANDROID )
+	// XXX creating font from name not implemented
 	FontManager::instance();  // init FreeType
-	// XXX create font from name
 #endif
 }
 
@@ -587,7 +601,7 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 #if defined( CINDER_MSW )
 	, mHfont( 0 )
 #elif defined( CINDER_ANDROID )
-	, mFace( 0 )
+	, mFTData(new FTData)
 #endif
 {
 #if defined( CINDER_COCOA )
@@ -640,28 +654,30 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 #elif defined( CINDER_ANDROID )
 	FontManager* mgr = FontManager::instance();  // init FreeType
 
-	mStreamRef = dataSource->createStream();
-	if (!mStreamRef) {
+	mFTData->streamRef = dataSource->createStream();
+	IStreamRef& streamRef = mFTData->streamRef;
+	if (!streamRef) {
 		CI_LOGI("Error: invalid stream passed to font");
 		return;
 	}
 
-	mStreamRec.base               = NULL;
-	mStreamRec.size               = mStreamRef->size();
-	mStreamRec.pos                = 0;
-	mStreamRec.descriptor.pointer = mStreamRef.get();
-	mStreamRec.read				  = _ReadStream;
-	mStreamRec.close        	  = _CloseStream;
+	FT_StreamRec& streamRec = mFTData->streamRec;
+	streamRec.base               = NULL;
+	streamRec.size               = streamRef->size();
+	streamRec.pos                = 0;
+	streamRec.descriptor.pointer = streamRef.get();
+	streamRec.read				  = _ReadStream;
+	streamRec.close        	  = _CloseStream;
 
 	FT_Open_Args args;
 	memset(&args, 0, sizeof(FT_Open_Args));
 	args.flags  |= FT_OPEN_STREAM;
-	args.stream  = &mStreamRec;
+	args.stream  = &(mFTData->streamRec);
 
 	int error = FT_Open_Face( mgr->getLibrary(),
 							  &args,
 							  0,
-							  &mFace );
+							  &(mFTData->face) );
 
 	if (error == FT_Err_Unknown_File_Format) {
 		CI_LOGI("Error opening font: unknown format");
@@ -670,10 +686,12 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 		CI_LOGI("Error opening font: unhandled");
 	}
 	else {
-		mName = string(mFace->family_name);
-		mNumGlyphs = mFace->num_glyphs;
+		FT_Face& face = mFTData->face;
+		mName = string(face->family_name);
+		mNumGlyphs = face->num_glyphs;
 		CI_LOGI("Opened font: family name %s", mName.c_str());
-		error = FT_Set_Char_Size( mFace, 50 * 64, 0, 100, 0 );
+		const int dpi = 200;  //  XXX query device capabilities
+		error = FT_Set_Char_Size( face, size * 64, 0, dpi, 0 );
 	}
 #endif
 }
@@ -687,9 +705,7 @@ Font::Obj::~Obj()
 	if( mHfont ) // this should be replaced with something exception-safe
 		::DeleteObject( mHfont ); 
 #elif defined( CINDER_ANDROID )
-    //  Free face and release stream
-	FT_Done_Face( mFace );
-    mStreamRef = IStreamRef();
+	FT_Done_Face( mFTData->face );
 #endif
 }
 
