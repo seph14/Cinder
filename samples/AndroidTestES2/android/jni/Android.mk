@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 CINDER_PATH        := $(LOCAL_PATH)/../../../..
 CINDER_MODULE_PATH := ../../../../android/obj/local/$(TARGET_ARCH_ABI)
 
-include $(CINDER_PATH)/android/CinderModules.mk
+include $(CINDER_PATH)/android/jni/CinderModules.mk
 
 include $(CLEAR_VARS)
 
