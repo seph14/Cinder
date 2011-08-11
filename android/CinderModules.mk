@@ -7,7 +7,7 @@ LOCAL_MODULE := cinder
 LOCAL_SRC_FILES := $(CINDER_MODULE_PATH)/libcinder.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-include $(CINDER_PATH)/android/jni/Configure.mk
+include $(CINDER_PATH)/android/jni/cinder/Configure.mk
 
 ifdef USE_FREEIMAGE
 include $(CLEAR_VARS)

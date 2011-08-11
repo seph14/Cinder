@@ -4,7 +4,7 @@ APP_STL      := gnustl_static
 APP_MODULES  := libcinder
 
 MY_PATH := $(call my-dir)
-include $(MY_PATH)/Configure.mk
+include $(MY_PATH)/cinder/Configure.mk
 
 ifdef USE_FREEIMAGE
 APP_MODULES += libfreeimage

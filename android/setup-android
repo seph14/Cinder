@@ -11,7 +11,7 @@
 # [1] http://technet.microsoft.com/en-us/sysinternals/bb896768
 
 function remove_old_links {
-    rm -f jni/boost jni/include jni/src
+    rm -f jni/cinder
 }
 
 function check_for_junction {
@@ -55,16 +55,18 @@ function unpack_freetype {
 if [ $OSTYPE = "cygwin" ]; then
     check_for_junction
     remove_old_links
-    junction jni\\boost ..\\boost && junction jni\\include ..\\include && junction jni\\src ..\\src
+    mkdir -p jni/cinder
+    junction jni\\cinder\\boost ..\\boost && junction jni\\cinder\\include ..\\include && junction jni\\cinder\\src ..\\src
 else
     remove_old_links
-    ln -s $PWD/../boost jni/boost && ln -s $PWD/../include jni/include && ln -s $PWD/../src jni/src
+    ln -s $PWD/../boost jni/cinder/boost && ln -s $PWD/../include jni/cinder/include && ln -s $PWD/../src jni/cinder/src
 fi
 
 unpack_freeimage
 unpack_freetype
 
-cp -pf setup/Configure.mk jni/Configure.mk
+cp -pf setup/Configure.mk jni/cinder/Configure.mk
+cp -pf setup/Cinder.mk jni/cinder/Android.mk
 
 echo
 if [ $? -ne 0 ]; then
