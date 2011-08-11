@@ -17,6 +17,14 @@ LOCAL_SRC_FILES := ../../ShaderTest.cpp
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv2 -lz
 LOCAL_STATIC_LIBRARIES := cinder ft2 android_native_app_glue 
 
+include $(CINDER_PATH)/android/jni/cinder/Configure.mk
+ifdef USE_FREEIMAGE
+LOCAL_STATIC_LIBRARIES += freeimage
+endif
+ifdef USE_FREETYPE
+LOCAL_STATIC_LIBRARIES += ft2
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module,android/native_app_glue)

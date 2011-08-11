@@ -14,7 +14,15 @@ LOCAL_C_INCLUDES := $(CINDER_PATH)/include \
 LOCAL_SRC_FILES := ../../src/AndroidTest.cpp
 
 LOCAL_LDLIBS    := -llog -landroid -lEGL -lGLESv1_CM -lz
-LOCAL_STATIC_LIBRARIES := cinder freeimage ft2 android_native_app_glue 
+LOCAL_STATIC_LIBRARIES := cinder android_native_app_glue 
+
+include $(CINDER_PATH)/android/jni/cinder/Configure.mk
+ifdef USE_FREEIMAGE
+LOCAL_STATIC_LIBRARIES += freeimage
+endif
+ifdef USE_FREETYPE
+LOCAL_STATIC_LIBRARIES += ft2
+endif
 
 include $(BUILD_SHARED_LIBRARY)
 
