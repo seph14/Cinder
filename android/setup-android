@@ -74,6 +74,6 @@ if [ $? -ne 0 ]; then
 else
     echo "Android source tree created, ready to run ndk-build"
     echo
-    echo "(Optional) Edit jni/Configure.mk to select build settings"
+    echo "(Optional) Edit jni/cinder/Configure.mk to select build settings"
 fi
 
