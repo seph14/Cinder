@@ -1,7 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 
 CINDER_PATH        := $(LOCAL_PATH)/../../../..
-CINDER_MODULE_PATH := ../../../../android/obj/local/armeabi
+CINDER_MODULE_PATH := ../../../../android/obj/local/$(TARGET_ARCH_ABI)
 
 include $(CINDER_PATH)/android/CinderModules.mk
 
@@ -10,7 +10,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE     := AndroidTestES2
 LOCAL_C_INCLUDES := $(CINDER_PATH)/include \
 					$(CINDER_PATH)/boost
-
 
 LOCAL_SRC_FILES := ../../src/AndroidTestES2.cpp
 

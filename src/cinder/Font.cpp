@@ -475,6 +475,11 @@ Rectf Font::getGlyphBoundingBox( Glyph glyphIndex ) const
 
 #elif defined( CINDER_ANDROID )
 
+FT_Face& Font::getFTFace() const
+{
+	return mObj->mFTData->face;
+}
+
 // XXX implement these!
 std::string Font::getFullName() const
 {
