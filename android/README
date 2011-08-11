@@ -20,15 +20,31 @@ Quickstart
 * Run setup-android then build the Cinder static library from $CINDER_ROOT/android
 
   % cd cinder/android
-  % ./setup-android
+  % . setup-android
+
+* 
   % ndk-build
 
 * Build one of the sample programs (AndroidTest, FBOBasic, iPhoneAccelerometer
   or MultiTouchBasic)
 
   % cd cinder/samples/<SAMPLE>/android
-  % ./setup-android
+  % . setup-android
   % ndk-build && ant debug && adb install -r bin/<SAMPLE-APK>
+
+
+Linking against Cinder
+======================
+
+  The android/setup-android script will suggest settings for linking against
+  prebuilt static libraries, or you can set NDK_MODULE_PATH to
+  $CINDER_PATH/android/jni to build a new copy of Cinder against each importing
+  project.
+
+  Each sample has a setup-android script that will automatically set
+  NDK_MODULE_PATH if it hasn't already been defined.
+
+  See $NDK/docs/IMPORT-MODULE.html for more details.
 
 
 Status

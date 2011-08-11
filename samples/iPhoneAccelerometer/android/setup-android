@@ -1,5 +1,4 @@
-#!/usr/bin/env bash
-
+# source this file 
 ANDROID_TOOL=android
 
 # Use android.bat on cygwin
@@ -9,4 +8,14 @@ if [ $? -ne 0 ]; then
 fi
 
 ${ANDROID_TOOL} update project --path . --name Accelerometer --target android-8
+
+if [ -z $NDK_MODULE_PATH ]; then
+export NDK_MODULE_PATH=$PWD/../../../android/prebuilt
+echo "NDK_MODULE_PATH set to $NDK_MODULE_PATH"
+fi
+
+echo
+echo "Ready to run ndk-build && ant"
+
+
 

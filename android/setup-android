@@ -11,7 +11,7 @@
 # [1] http://technet.microsoft.com/en-us/sysinternals/bb896768
 
 function remove_old_links {
-    rm -f jni/cinder
+    rm -rf jni/cinder
 }
 
 function check_for_junction {
@@ -72,8 +72,15 @@ echo
 if [ $? -ne 0 ]; then
     echo "Error creating Android tree, check your Cinder source layout."
 else
+    NEW_CINDER_PATH=`readlink -f $PWD/..`
+    echo "Recommended environment variable settings:"
+    echo
+    echo "export CINDER_PATH=$NEW_CINDER_PATH"
+    echo "export NDK_MODULE_PATH=\$CINDER_PATH/android/prebuilt"
+    echo
+    echo "Edit jni/cinder/Configure.mk to select Cinder build settings (optional)"
+    echo
     echo "Android source tree created, ready to run ndk-build"
     echo
-    echo "(Optional) Edit jni/cinder/Configure.mk to select build settings"
 fi
 
