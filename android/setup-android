@@ -11,7 +11,10 @@
 # [1] http://technet.microsoft.com/en-us/sysinternals/bb896768
 
 function remove_old_links {
-    rm -rf jni/cinder
+    if [ -e jni/cinder ]; then
+        # preserve Configure.mk
+        rm -rf jni/cinder/boost jni/cinder/include jni/cinder/src jni/cinder/Android.mk
+    fi
 }
 
 function check_for_junction {
@@ -65,7 +68,14 @@ fi
 unpack_freeimage
 unpack_freetype
 
-cp -pf setup/Configure.mk jni/cinder/Configure.mk
+if [ ! -e jni/cinder/Configure.mk ]; then
+    cp -pf setup/Configure.mk jni/cinder/Configure.mk
+else
+    echo
+    echo "Detected an existing jni/Cinder/Configure.mk - you may want to check"
+    echo "it against setup/Configure.mk"
+fi
+
 cp -pf setup/Cinder.mk jni/cinder/Android.mk
 
 echo

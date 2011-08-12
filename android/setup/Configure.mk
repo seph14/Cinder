@@ -1,11 +1,16 @@
 # Cinder Android build configuration options
+# 
+# Changes made here may require a rebuild to take effect
 
-# comment out a line to disable a module
-# changes may require a clean rebuild of libcinder to take effect
+# Enable FreeImage backend for Image decoding (large)
+# USE_FREEIMAGE = yes
 
-USE_FREEIMAGE = yes
-USE_STBIMAGE  = yes
-USE_FREETYPE  = yes
+# Enable ARM v7 ABI (required for NEON support)
+# USE_ARMEABI_V7A = yes
 
-# GLES selection
+# Suggest leaving these enabled by default
+USE_STBIMAGE = yes
+USE_FREETYPE = yes
+
+# TODO: GLES selection
 
