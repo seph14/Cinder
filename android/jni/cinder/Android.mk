@@ -384,15 +384,15 @@ endif  # USE_FREETYPE
 
 include $(CLEAR_VARS)
 
-CINDER_SRC   = src/cinder
-TESS_SRC     = src/libtess2
-STBIMAGE_SRC = src/stb_image
-UTF8_CPP_SRC = src/utf8-cpp/source
+CINDER_SRC   = ../../../src/cinder
+TESS_SRC     = ../../../src/libtess2
+STBIMAGE_SRC = ../../../src/stb_image
+UTF8_CPP_SRC = ../../../src/utf8-cpp/source
 
 LOCAL_MODULE 	 := cinder
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
-					$(LOCAL_PATH)/boost \
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
+					$(LOCAL_PATH)/../../../boost \
 					$(LOCAL_PATH)/$(TESS_SRC) \
 					$(LOCAL_PATH)/$(UTF8_CPP_SRC) \
 					$(LOCAL_PATH)/../freetype-2.4.5/include
@@ -432,13 +432,13 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/Font.cpp \
 					$(CINDER_SRC)/ImageIo.cpp \
 					$(CINDER_SRC)/Matrix.cpp \
-					$(CINDER_SRC)/Path2D.cpp \
+					$(CINDER_SRC)/Path2d.cpp \
 					$(CINDER_SRC)/Perlin.cpp \
 					$(CINDER_SRC)/PolyLine.cpp \
 					$(CINDER_SRC)/Rand.cpp \
 					$(CINDER_SRC)/Ray.cpp \
 					$(CINDER_SRC)/Rect.cpp \
-					$(CINDER_SRC)/Shape2D.cpp \
+					$(CINDER_SRC)/Shape2d.cpp \
 					$(CINDER_SRC)/Sphere.cpp \
 					$(CINDER_SRC)/Stream.cpp \
 					$(CINDER_SRC)/Surface.cpp \
@@ -465,7 +465,7 @@ LOCAL_CFLAGS     += -DCINDER_FREEIMAGE
 endif
 
 ifdef USE_STBIMAGE
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src/stb_image
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../src/stb_image
 LOCAL_SRC_FILES  += $(STBIMAGE_SRC)/stb_image.c \
 					$(CINDER_SRC)/ImageSourceFileStbImage.cpp
 LOCAL_CFLAGS     += -DCINDER_STBIMAGE

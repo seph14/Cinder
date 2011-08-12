@@ -17,7 +17,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := cinder
 LOCAL_SRC_FILES := ../../obj/local/$(TARGET_ARCH_ABI)/libcinder.a
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../jni/cinder/include $(LOCAL_PATH)/../../jni/cinder/boost
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../include $(LOCAL_PATH)/../../../boost
 LOCAL_EXPORT_LDLIBS := -llog -lEGL -lGLESv2 -lz
 include $(PREBUILT_STATIC_LIBRARY)
 
