@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE     := ShaderTestES2
 
-LOCAL_SRC_FILES := ../../ShaderTestES2.cpp
+LOCAL_SRC_FILES := ../../shaderTestES2.cpp
 
 LOCAL_LDLIBS    := -landroid
 LOCAL_STATIC_LIBRARIES := cinder freeimage ft2 android_native_app_glue 
