@@ -47,7 +47,7 @@ echo
 if [ $? -ne 0 ]; then
     echo "Error creating Android tree, check your Cinder source layout."
 else
-    NEW_CINDER_PATH=`readlink -f $PWD/..`
+    NEW_CINDER_PATH=$PWD/..
     echo "Recommended environment variable settings:"
     echo
     echo "export CINDER_PATH=$NEW_CINDER_PATH"
