@@ -1,50 +1,61 @@
-About
-=====
+Cinder on Android
+=================
 
-This is a work-in-progress port of Cinder to Android.  It uses the NDK Native
-Activity code, which restricts it to running on Android versions 2.3
-(Gingerbread) and upwards.
+This is a work-in-progress port of Cinder to Android.
 
-Tested to build on Windows (cygwin) and OSX, but it should work on Linux too.
+When linked as an activity it uses the NDK Native Activity code, which
+restricts it to running on Android versions 2.3 (Gingerbread) and upwards. This
+restriction does not apply when linked as a static library called through JNI.
+
+Tested to build on Windows (cygwin), OSX and Linux.
 
 
 Quickstart
 ==========
 
-* Install prerequisites as required:
+* Install prerequisites:
 
-  - Android SDK and Android NDK R5c
-  - (Windows only) Junction (http://technet.microsoft.com/en-us/sysinternals/bb896768)
-  - bash, curl, unzip, tar and bzip2 command-line tools (required by setup-android script)
+  - Android SDK and Android NDK R5c or later
+  - bash, curl, unzip, tar and bzip2 command-line tools (required by setup-android)
 
-* Run setup-android then build the Cinder static library from $CINDER_ROOT/android
+* Run setup-android
 
   % cd cinder/android
   % . setup-android
 
-* 
-  % ndk-build
+* Configure build settings by editing jni/cinder/Configure.mk (optional)
+  
+  USE_FREEIMAGE : use FreeImage image library (wide format compatibility but large)
+  USE_STBIMAGE  : use the stb_image image library (small JPEG/PNG/GIF reader)
+  USE_GLES2     : select OpenGL ES2 - if disabled then OpenGL ES1.5 is used instead
 
-* Build one of the sample programs (AndroidTest, FBOBasic, iPhoneAccelerometer
-  or MultiTouchBasic)
+* Build the library.  Tip: use -j <num cores> to enable multi-threaded build.
+
+  % ndk-build -j 4
+
+* Build one of the sample programs (AndroidTest, FBOBasic, iPhoneAccelerometer,
+  MultiTouchBasic, AndroidTestES2 or shaderTestES2)
 
   % cd cinder/samples/<SAMPLE>/android
   % . setup-android
   % ndk-build && ant debug && adb install -r bin/<SAMPLE-APK>
 
+NB: The ES2 samples will only build against an ES2 build of Cinder (and vice versa)
+
 
 Linking against Cinder
 ======================
 
-  The android/setup-android script will suggest settings for linking against
-  prebuilt static libraries, or you can set NDK_MODULE_PATH to
-  $CINDER_PATH/android/jni to build a new copy of Cinder against each importing
-  project.
+The android/setup-android script will suggest settings for linking against
+prebuilt static libraries, or you can set NDK_MODULE_PATH to
+$CINDER_PATH/android/jni to build a new copy of Cinder against each importing
+project.
 
-  Each sample has a setup-android script that will automatically set
-  NDK_MODULE_PATH if it hasn't already been defined.
+Each sample has a setup-android script fragment that will automatically set
+NDK_MODULE_PATH if it hasn't already been defined.
 
-  See $NDK/docs/IMPORT-MODULE.html for more details.
+See $NDK/docs/IMPORT-MODULE.html for more details of how to use
+NDK_MODULE_PATH.
 
 
 Status
@@ -53,6 +64,7 @@ Status
 * console() output goes to the Android debug log
 * loadResource opens files embedded from the project "assets" folder
 * FreeImage image source, tested to work with PNG/JPG/BMP files so far
+* OpenGL ES2 supported at compile time with a restricted subset of gl methods
 
 
 TODO
@@ -61,11 +73,10 @@ TODO
 * Android save/restore state callbacks
 * Text support (Font/TextureFont, to be implemented with Freetype/Harfbuzz)
 * Audio support (using OpenSL ES)
-* Vertex buffer objects and GLES2 (related)
 * URL implementation (currently stubbed out)
 * Camera capture (may require JNI)
 * Better filesystem support
 
 
-safetydank 21/7/11
+safetydank 14/8/11
 
