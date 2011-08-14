@@ -6,6 +6,7 @@
 #include "cinder/Stream.h"
 
 #include "cinder/gl/Texture.h"
+#include "cinder/gl/TextureFont.h"
 
 #include "cinder/Font.h"
 
@@ -20,7 +21,10 @@ public:
 	void draw();
 	
 	gl::Texture		mTexture;	
-	Font mFont;
+
+	Font               mFont;
+	gl::TextureFontRef mTexFont;
+	gl::Texture        mFontTexture;
 };
 
 void AndroidTest::setup()
@@ -38,6 +42,10 @@ void AndroidTest::setup()
 	DataSourceRef fontData = loadFile(fontFile);
 	mFont = Font(fontData, 16);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
+
+    mTexFont = gl::TextureFont::create( mFont );
+    mFontTexture = mTexFont->getTexture();
+
 	// XXX uncomment to trigger a crash in Font destructor
 	// mFont = Font();
 
@@ -63,8 +71,10 @@ void AndroidTest::draw()
 	gl::setMatricesWindow( getWindowSize() );
 	gl::clear( Color( 0.2f, 0.2f, 0.2f ) );
 
-	if( mTexture )
-		gl::draw( mTexture, Vec2f( 0, 0 ) );
+	// if( mTexture )
+	// 	gl::draw( mTexture, Vec2f( 0, 0 ) );
+	if( mFontTexture )
+		gl::draw( mFontTexture, Vec2f( 0, 0 ) );
 }
 
 CINDER_APP_NATIVE( AndroidTest, RendererGl )

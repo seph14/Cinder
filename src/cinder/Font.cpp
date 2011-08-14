@@ -671,6 +671,11 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 		return;
 	}
 
+    FT_Matrix matrix = { (int)((1.0 /*/hres*/) * 0x10000L),
+                         (int)((0.0)      * 0x10000L),
+                         (int)((0.0)      * 0x10000L),
+                         (int)((1.0)      * 0x10000L) };
+
 	FT_StreamRec& streamRec = mFTData->streamRec;
 	streamRec.base               = NULL;
 	streamRec.size               = streamRef->size();
@@ -701,7 +706,10 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 		mNumGlyphs = face->num_glyphs;
 		CI_LOGI("Opened font: family name %s", mName.c_str());
 		const int dpi = 200;  //  XXX query device capabilities
-		error = FT_Set_Char_Size( face, size * 64, 0, dpi, 0 );
+        error = FT_Select_Charmap( face, FT_ENCODING_UNICODE );
+        //  XXX error handling
+		error = FT_Set_Char_Size( face, size * 64, 0, dpi, dpi );
+        FT_Set_Transform( face, &matrix, NULL );
 	}
 #endif
 }

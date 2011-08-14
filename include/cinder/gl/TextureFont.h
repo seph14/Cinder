@@ -23,7 +23,6 @@
 #pragma once
 
 #include "cinder/Cinder.h"
-#include "cinder/Text.h"
 #include "cinder/Font.h"
 #include "cinder/gl/Texture.h"
 
@@ -104,10 +103,14 @@ class TextureFont {
 	static TextureFontRef		create( const Font &font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() )
 	{ return TextureFontRef( new TextureFont( font, supportedChars, format ) ); }
 	
+// XXX TODO
+#if ! defined( CINDER_ANDROID )
 	//! Draws string \a str at baseline \a baseline with DrawOptions \a options
 	void	drawString( const std::string &str, const Vec2f &baseline, const DrawOptions &options = DrawOptions() );
 	//! Draws string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options
 	void	drawString( const std::string &str, const Rectf &fitRect, const Vec2f &offset = Vec2f::zero(), const DrawOptions &options = DrawOptions() );
+#endif
+
 #if defined( CINDER_COCOA )
 	//! Draws word-wrapped string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options. Mac & iOS only.
 	void	drawStringWrapped( const std::string &str, const Rectf &fitRect, const Vec2f &offset = Vec2f::zero(), const DrawOptions &options = DrawOptions() );
@@ -143,6 +146,11 @@ class TextureFont {
 	//! Returns the default set of characters for a TextureFont, suitable for most English text, including some common ligatures and accented vowels.
 	//! \c "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\@#_[]<>%^llflfiphridséáèà"
 	static std::string		defaultChars() { return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\@#_[]<>%^llflfiphrids\303\251\303\241\303\250\303\240"; }
+
+// XXX DEBUGGING, remove later
+#ifdef CINDER_ANDROID
+    gl::Texture getTexture();
+#endif
 
   protected:
 	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );

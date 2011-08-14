@@ -35,6 +35,21 @@
 	#endif
 #endif
 
+#if defined( CINDER_ANDROID )
+	#include <ft2build.h>
+	#include FT_FREETYPE_H
+
+#undef __FTERRORS_H__
+#define FT_ERRORDEF( e, v, s )  { e, s },
+#define FT_ERROR_START_LIST     {
+#define FT_ERROR_END_LIST       { 0, 0 } };
+const struct {
+    int          code;
+    const char*  message;
+} FT_Errors[] =
+#include FT_ERRORS_H
+#endif
+
 #include <set>
 
 using namespace std;
@@ -265,7 +280,6 @@ TextureFont::TextureFont( const Font &font, const string &utf8Chars, const Forma
 			gl::Texture::Format textureFormat = gl::Texture::Format();
 			textureFormat.enableMipmapping( mFormat.hasMipmapping() );
 			textureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
-			mTextures.push_back( gl::Texture( tempSurface, textureFormat ) );
 			ip::fill<uint8_t>( &channel, 0 );			
 			curOffset = Vec2i::zero();
 			curGlyphIndex = 0;
@@ -279,6 +293,132 @@ TextureFont::TextureFont( const Font &font, const string &utf8Chars, const Forma
 
 	delete [] pBuff;
 }
+#elif defined( CINDER_ANDROID )
+TextureFont::TextureFont( const Font &font, const string &supportedChars, const TextureFont::Format &format )
+	: mFont( font ), mFormat( format )
+{
+	// get the glyph indices we'll need
+	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars );
+	set<Font::Glyph> glyphs( tempGlyphs.begin(), tempGlyphs.end() );
+
+	// determine the max glyph extents
+	Vec2f glyphExtents = Vec2f::zero();
+	for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ++glyphIt ) {
+		Rectf bb = font.getGlyphBoundingBox( *glyphIt );
+		CI_LOGW("XXX get glyph bounding box %f x %f", bb.getWidth(), bb.getHeight());
+		glyphExtents.x = std::max( glyphExtents.x, bb.getWidth() );
+		glyphExtents.y = std::max( glyphExtents.y, bb.getHeight() );
+	}
+
+	glyphExtents.x = ceil( glyphExtents.x );
+	glyphExtents.y = ceil( glyphExtents.y );
+
+	// XXX debug, replace
+	glyphExtents.x = 32.0f;
+	glyphExtents.y = 32.0f;
+
+	CI_LOGW("XXX glyph extents set to %f x %f", glyphExtents.x, glyphExtents.y);
+
+	int glyphsWide = floor( mFormat.getTextureWidth() / (glyphExtents.x+3) );
+	int glyphsTall = floor( mFormat.getTextureHeight() / (glyphExtents.y+5) );	
+	uint8_t curGlyphIndex = 0, curTextureIndex = 0;
+	Vec2i curOffset = Vec2i::zero();
+	Surface surface( mFormat.getTextureWidth(), mFormat.getTextureHeight(), true );
+	ip::fill( &surface, ColorA8u( 0, 0, 0, 0 ) );
+	ColorA white( 1, 1, 1, 1 );
+
+	CI_LOGW("Max glyph extents %f x %f", glyphExtents.x, glyphExtents.y);
+
+#if defined( CINDER_GLES )
+	std::shared_ptr<uint8_t> lumAlphaData( new uint8_t[mFormat.getTextureWidth()*mFormat.getTextureHeight()*2], checked_array_deleter<uint8_t>() );
+#endif
+
+	for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ) {
+		GlyphInfo newInfo;
+		newInfo.mTextureIndex = curTextureIndex;
+		// Rectf bb = font.getGlyphBoundingBox( *glyphIt );
+		// XXX DEBUG
+		Rectf bb = Rectf(Vec2f(0, 0), glyphExtents);
+		Vec2f ul = curOffset + Vec2f( 0, glyphExtents.y - bb.getHeight() );
+		Vec2f lr = curOffset + Vec2f( glyphExtents.x, glyphExtents.y );
+		newInfo.mTexCoords = Area( floor( ul.x ), floor( ul.y ), ceil( lr.x ) + 3, ceil( lr.y ) + 2 );
+		newInfo.mOriginOffset.x = floor(bb.x1) - 1;
+		newInfo.mOriginOffset.y = -(bb.getHeight()-1)-ceil( bb.y1+0.5f );
+		mGlyphMap[*glyphIt] = newInfo;
+		// renderGlyphs[curGlyphIndex] = *glyphIt;
+		// renderPositions[curGlyphIndex].x = curOffset.x - floor(bb.x1) + 1;
+		// renderPositions[curGlyphIndex].y = surface.getHeight() - (curOffset.y + glyphExtents.y) - ceil(bb.y1+0.5f);
+		Vec2f renderPosition(curOffset.x - floor(bb.x1) + 1,
+							 surface.getHeight() - (curOffset.y + glyphExtents.y) - ceil(bb.y1+0.5f));
+		curOffset += Vec2i( glyphExtents.x + 3, 0 );
+
+		//  XXX Draw glyph to texture position on bitmap
+		FT_Face face = mFont.getFTFace();
+		int error = FT_Load_Glyph(face, *glyphIt, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT);
+        if( error ) {
+            CI_LOGW("FT_Error (line %d, code 0x%02x) : %s\n",
+                    __LINE__, FT_Errors[error].code, FT_Errors[error].message);
+        }
+		FT_GlyphSlot slot = face->glyph;
+
+		Area renderArea(ul, lr);
+		CI_LOGW("Rendered face #%d glyph index %d area %.1f %.1f %.1f %.1f bm %d x %d", 
+				face->num_glyphs, *glyphIt, 
+				renderArea.x1, renderArea.y1, renderArea.x2, renderArea.y2,
+				slot->bitmap.width, slot->bitmap.rows);
+
+		Surface::Iter iter( surface, Area(ul, ul + Vec2f(slot->bitmap.width, slot->bitmap.rows)));
+
+		uint8_t* rowPtr = slot->bitmap.buffer;
+		while (iter.line()) {
+			uint8_t* pxPtr = rowPtr;
+			while (iter.pixel()) {
+				iter.r() = *pxPtr;
+				iter.a() = *pxPtr;
+				++pxPtr;
+			}
+			rowPtr += slot->bitmap.pitch;
+		}
+
+		++glyphIt;
+		if( ( ++curGlyphIndex == glyphsWide * glyphsTall ) || ( glyphIt == glyphs.end() ) ) {
+			// ::CGContextShowGlyphsAtPositions( cgContext, renderGlyphs, renderPositions, curGlyphIndex );
+			
+			// pass premultiply and mipmapping preferences to Texture::Format
+			if( ! mFormat.getPremultiply() )
+				ip::unpremultiply( &surface );
+
+			gl::Texture::Format textureFormat = gl::Texture::Format();
+			textureFormat.enableMipmapping( mFormat.hasMipmapping() );
+			textureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
+
+#if defined( CINDER_GLES )
+			// under iOS format and interalFormat must match, so let's make a block of LUMINANCE_ALPHA data
+			Surface8u::ConstIter iter( surface, surface.getBounds() );
+			size_t offset = 0;
+			while( iter.line() ) {
+				while( iter.pixel() ) {
+					lumAlphaData.get()[offset+0] = iter.r();
+					lumAlphaData.get()[offset+1] = iter.a();
+					offset += 2;
+				}
+			}
+			mTextures.push_back( gl::Texture( lumAlphaData.get(), GL_LUMINANCE_ALPHA, mFormat.getTextureWidth(), mFormat.getTextureHeight(), textureFormat ) );
+#else
+			mTextures.push_back( gl::Texture( surface, textureFormat ) );
+#endif
+			ip::fill( &surface, ColorA8u( 0, 0, 0, 0 ) );			
+			curOffset = Vec2i::zero();
+			curGlyphIndex = 0;
+			++curTextureIndex;
+		}
+		else if( ( curGlyphIndex ) % glyphsWide == 0 ) { // wrap around
+			curOffset.x = 0;
+			curOffset.y += glyphExtents.y + 2;
+		}
+	}
+}
+
 #endif
 
 void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const std::vector<ColorA8u> &colors )
@@ -472,6 +612,7 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 	}
 }
 
+#if ! defined( CINDER_ANDROID )
 void TextureFont::drawString( const std::string &str, const Vec2f &baseline, const DrawOptions &options )
 {
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );
@@ -485,6 +626,7 @@ void TextureFont::drawString( const std::string &str, const Rectf &fitRect, cons
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
 	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
 }
+#endif // ! defined(CINDER_ANDROID)
 
 #if defined( CINDER_COCOA )
 void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRect, const Vec2f &offset, const DrawOptions &options )
@@ -497,6 +639,8 @@ void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRec
 
 Vec2f TextureFont::measureString( const std::string &str, const DrawOptions &options ) const
 {
+#if ! defined(CINDER_ANDROID)
+
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );
 #if defined( CINDER_COCOA )
 	return tbox.measure();
@@ -513,6 +657,10 @@ Vec2f TextureFont::measureString( const std::string &str, const DrawOptions &opt
 		return Vec2f::zero();
 	}
 #endif
+
+#else
+    return Vec2f(0, 0);
+#endif // ! defined(CINDER_ANDROID)
 }
 
 #if defined( CINDER_COCOA )
@@ -525,14 +673,36 @@ Vec2f TextureFont::measureStringWrapped( const std::string &str, const Rectf &fi
 
 vector<pair<uint16_t,Vec2f> > TextureFont::getGlyphPlacements( const std::string &str, const DrawOptions &options ) const
 {
+// XXX TODO
+#if ! defined( CINDER_ANDROID )
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );
 	return tbox.measureGlyphs();
+#else
+	return vector<pair<uint16_t, Vec2f> >();
+#endif
 }
 
 vector<pair<uint16_t,Vec2f> > TextureFont::getGlyphPlacements( const std::string &str, const Rectf &fitRect, const DrawOptions &options ) const
 {
+// XXX TODO
+#if ! defined( CINDER_ANDROID )
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, fitRect.getWidth() ).ligate( options.getLigate() );
 	return tbox.measureGlyphs();
+#else
+	return vector<pair<uint16_t, Vec2f> >();
+#endif
 }
+
+#ifdef CINDER_ANDROID
+gl::Texture TextureFont::getTexture()
+{
+    if (mTextures.begin() != mTextures.end()) {
+        return *(mTextures.begin());
+    }
+    
+    return gl::Texture();
+}
+
+#endif
 
 } } // namespace cinder::gl
