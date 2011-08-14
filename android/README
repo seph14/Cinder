@@ -63,7 +63,8 @@ Status
 
 * console() output goes to the Android debug log
 * loadResource opens files embedded from the project "assets" folder
-* FreeImage image source, tested to work with PNG/JPG/BMP files so far
+* FreeImage image source, tested to work with PNG/JPEG/BMP files so far
+* stb_image image source, a smaller image backend compatible with PNG/JPEG/GIF
 * OpenGL ES2 supported at compile time with a restricted subset of gl methods
 
 
