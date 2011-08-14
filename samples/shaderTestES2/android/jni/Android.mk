@@ -4,6 +4,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE     := ShaderTestES2
 
+LOCAL_CFLAGS := -DCINDER_GLES2
 LOCAL_SRC_FILES := ../../shaderTestES2.cpp
 
 LOCAL_LDLIBS    := -landroid

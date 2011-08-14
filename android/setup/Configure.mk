@@ -12,5 +12,6 @@
 USE_STBIMAGE = yes
 USE_FREETYPE = yes
 
-# TODO: GLES selection
+# Build with GLES2 support (disables GLES1)
+USE_GLES2 = yes
 

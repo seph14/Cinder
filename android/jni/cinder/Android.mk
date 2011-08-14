@@ -402,11 +402,8 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/Renderer.cpp \
 					$(CINDER_SRC)/app/AppImplAndroidRendererGl.cpp \
 					$(CINDER_SRC)/gl/gl.cpp \
-					$(CINDER_SRC)/gl/gles2.cpp \
 					$(CINDER_SRC)/gl/Fbo.cpp \
-					$(CINDER_SRC)/gl/GlslProg.cpp \
 					$(CINDER_SRC)/gl/Texture.cpp \
-					$(CINDER_SRC)/gl/Vbo.cpp \
 					$(CINDER_SRC)/ip/Blend.cpp \
 					$(CINDER_SRC)/ip/EdgeDetect.cpp \
 					$(CINDER_SRC)/ip/Fill.cpp \
@@ -458,6 +455,20 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(TESS_SRC)/sweep.c \
 					$(TESS_SRC)/tess.c
 
+ifdef USE_GLES2
+LOCAL_SRC_FILES += $(CINDER_SRC)/gl/GlslProg.cpp \
+					$(CINDER_SRC)/gl/Vbo.cpp \
+					$(CINDER_SRC)/gl/gles2.cpp
+LOCAL_CFLAGS += -DCINDER_GLES2
+GLES_LDLIB = -lGLESv2
+else
+LOCAL_SRC_FILES += $(CINDER_SRC)/gl/Light.cpp \
+				   $(CINDER_SRC)/gl/Material.cpp \
+				   $(CINDER_SRC)/gl/TileRender.cpp
+LOCAL_CFLAGS += -DCINDER_GLES1
+GLES_LDLIB = -lGLESv1_CM
+endif
+
 ifdef USE_FREEIMAGE
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../FreeImage/Source
 LOCAL_SRC_FILES  += $(CINDER_SRC)/ImageSourceFileFreeImage.cpp
@@ -475,7 +486,7 @@ LOCAL_STATIC_LIBRARIES	:= android_native_app_glue
 
 # Module exports
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/boost
-LOCAL_EXPORT_LDLIBS := -llog -lEGL -lGLESv2 -lz
+LOCAL_EXPORT_LDLIBS := -llog -lEGL $(GLES_LDLIB) -lz
 
 include $(BUILD_STATIC_LIBRARY)
 

@@ -30,8 +30,12 @@
 #elif defined( CINDER_MSW )
 	#include "cinder/gl/GLee.h"
 #else
+    //  Android and iOS
 	#define CINDER_GLES
-	#define CINDER_GLES2
+    #if ! defined( CINDER_GLES1 ) && ! defined( CINDER_GLES2 )
+        //  Use CINDER_GLES1 by default
+        #define CINDER_GLES1
+    #endif
 #endif
 
 #include "cinder/Quaternion.h"
@@ -54,9 +58,16 @@
 #elif defined( CINDER_MAC )
 	#include <OpenGL/gl.h>
 #elif defined( CINDER_ANDROID )
-	#define GL_GLEXT_PROTOTYPES
-	#include <GLES2/gl2.h>
-	#include <GLES2/gl2ext.h>
+	#if defined( CINDER_GLES1 )
+		#include <GLES/gl.h>
+		#include <GLES/glext.h>
+	#elif defined( CINDER_GLES2 )
+		#define GL_GLEXT_PROTOTYPES
+		#include <GLES2/gl2.h>
+		#include <GLES2/gl2ext.h>
+	#else
+		#error "No CINDER_GLES version selected!"
+	#endif
 #endif
 
 // forward declarations
@@ -112,7 +123,7 @@ void setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft 
 //! Sets the viewport and the \c MODELVIEW and \c PROJECTION matrices to orthographic with the upper-left corner at \c [0,0] and the lower-right at \c [size.x,size.y] if \a originUpperLeft is \c true. Otherwise the origin is in the lower right.
 inline void setMatricesWindow( const Vec2i &screenSize, bool originUpperLeft = true ) { setMatricesWindow( screenSize.x, screenSize.y, originUpperLeft ); }
 
-#if ! defined( CINDER_GLES )
+#if ! defined( CINDER_GLES2 )
 //! Returns the current OpenGL Viewport as an Area
 Area getViewport();
 #endif
@@ -155,6 +166,9 @@ inline void vertex( float x, float y ) { glVertex2f( x, y ); }
 inline void vertex( const Vec3f &v ) { glVertex3fv( &v.x ); }
 //! Used between calls to \c glBegin and \c glEnd, appends a vertex to the current primitive.
 inline void vertex( float x, float y, float z ) { glVertex3f( x, y, z ); }
+#endif // ! defined( CINDER_GLES )
+
+#if ! defined( CINDER_GLES2 )
 //! Sets the current color and the alpha value to 1.0
 inline void color( float r, float g, float b ) { glColor4f( r, g, b, 1.0f ); }
 //! Sets the current color and alpha value
@@ -167,7 +181,7 @@ inline void color( const ColorA8u &c ) { glColor4ub( c.r, c.g, c.b, c.a ); }
 inline void color( const Color &c ) { glColor4f( c.r, c.g, c.b, 1.0f ); }
 //! Sets the current color and alpha value
 inline void color( const ColorA &c ) { glColor4f( c.r, c.g, c.b, c.a ); }
-#endif // ! defined( CINDER_GLES )
+#endif // ! defined( CINDER_GLES2 )
 
 //! Enables the OpenGL State \a state. Equivalent to calling to glEnable( state );
 inline void enable( GLenum state ) { glEnable( state ); }
@@ -203,7 +217,7 @@ void enableDepthRead( bool enable = true );
 //! Enables writing to the depth buffer when \a enable.
 void enableDepthWrite( bool enable = true );
 
-#if ! defined( CINDER_GLES )
+#if ! defined( CINDER_GLES2 )
 //! Draws a line from \a start to \a end
 void drawLine( const Vec2f &start, const Vec2f &end );
 //! Draws a line from \a start to \a end
@@ -279,7 +293,7 @@ void drawStringCentered( const std::string &str, const Vec2f &pos, const ColorA 
 //! Draws a right-justified string \a str with the center of its  located at \a pos. Optional \a font and \a color affect the style
 void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), Font font = Font() );
 
-#endif // ! defined( CINDER_GLES )
+#endif // ! defined( CINDER_GLES2 )
 
 //! Convenience class designed to push and pop the currently bound texture for a given texture unit
 struct SaveTextureBindState {
@@ -299,7 +313,7 @@ struct BoolState {
 	GLboolean	mOldValue;
 };
 
-#if ! defined( CINDER_GLES )
+#if ! defined( CINDER_GLES2 )
 //! Convenience class designed to push and pop a boolean OpenGL state
 struct ClientBoolState {
 	ClientBoolState( GLint target );

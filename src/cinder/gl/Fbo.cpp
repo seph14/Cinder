@@ -34,7 +34,7 @@ GLint Fbo::sMaxAttachments = -1;
 // Convenience macro to append either OES or EXT appropriately to a symbol based on OGLES vs. OGL
 #if defined( CINDER_GLES1 )
 	#define GL_SUFFIX(sym)  sym##OES
-	#define GL_SUFFIX_(sym) sym##OES
+	#define GL_SUFFIX_(sym) sym##_OES
 #elif defined( CINDER_GLES2 )
 	#define GL_SUFFIX(sym)  sym
 	#define GL_SUFFIX_(sym) sym
