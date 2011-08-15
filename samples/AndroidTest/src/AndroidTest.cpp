@@ -40,16 +40,17 @@ void AndroidTest::setup()
 
 	string fontFile("/system/fonts/DroidSans.ttf");
 	DataSourceRef fontData = loadFile(fontFile);
-	mFont = Font(fontData, 16);
+	mFont = Font(fontData, 12);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
 
-    mTexFont = gl::TextureFont::create( mFont );
+    gl::TextureFont::Format format;
+    format.textureWidth(512);
+    format.textureHeight(512);
+    format.premultiply(true);
+    mTexFont = gl::TextureFont::create( mFont, format );
+
     mFontTexture = mTexFont->getTexture();
-
-    gl::enableAlphaBlending(true);
-
-	// XXX uncomment to trigger a crash in Font destructor
-	// mFont = Font();
+    gl::enableAlphaBlending(format.getPremultiply());
 
 	// console() << "AndroidTest" << endl;
 	// DataSourceRef data = loadResource("hello.txt");
@@ -75,8 +76,9 @@ void AndroidTest::draw()
 
 	// if( mTexture )
 	// 	gl::draw( mTexture, Vec2f( 0, 0 ) );
-	if( mFontTexture )
+	if( mFontTexture ) {
 		gl::draw( mFontTexture, Vec2f( 0, 0 ) );
+    }
 }
 
 CINDER_APP_NATIVE( AndroidTest, RendererGl )

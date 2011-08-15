@@ -348,11 +348,12 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 
 		//  XXX Draw glyph to texture position on bitmap
 		FT_Face face = mFont.getFTFace();
-		int error = FT_Load_Glyph(face, *glyphIt, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT);
+		int error = FT_Load_Glyph(face, *glyphIt, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
         if( error ) {
             CI_LOGW("FT_Error (line %d, code 0x%02x) : %s\n",
                     __LINE__, FT_Errors[error].code, FT_Errors[error].message);
         }
+        error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
 		FT_GlyphSlot slot = face->glyph;
 
 		Area renderArea(ul, lr);
