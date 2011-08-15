@@ -330,23 +330,14 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 #endif
 
 	for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ) {
-		GlyphInfo newInfo;
-		newInfo.mTextureIndex = curTextureIndex;
-		Rectf bb = font.getGlyphBoundingBox( *glyphIt );
-		Vec2f ul = curOffset + Vec2f( 0, glyphExtents.y - bb.getHeight() );
-		Vec2f lr = curOffset + Vec2f( glyphExtents.x, glyphExtents.y );
-		newInfo.mTexCoords = Area( floor( ul.x ), floor( ul.y ), ceil( lr.x ) + 3, ceil( lr.y ) + 2 );
-		newInfo.mOriginOffset.x = floor(bb.x1) - 1;
-		newInfo.mOriginOffset.y = -(bb.getHeight()-1)-ceil( bb.y1+0.5f );
-		mGlyphMap[*glyphIt] = newInfo;
-		// renderGlyphs[curGlyphIndex] = *glyphIt;
-		// renderPositions[curGlyphIndex].x = curOffset.x - floor(bb.x1) + 1;
-		// renderPositions[curGlyphIndex].y = surface.getHeight() - (curOffset.y + glyphExtents.y) - ceil(bb.y1+0.5f);
-		Vec2f renderPosition(curOffset.x - floor(bb.x1) + 1,
-							 surface.getHeight() - (curOffset.y + glyphExtents.y) - ceil(bb.y1+0.5f));
-		curOffset += Vec2i( glyphExtents.x + 3, 0 );
+		// Rectf bb = font.getGlyphBoundingBox( *glyphIt );
+		// Vec2f ul = curOffset + Vec2f( 0, glyphExtents.y - bb.getHeight() );
+		// Vec2f lr = curOffset + Vec2f( glyphExtents.x, glyphExtents.y );
+		// newInfo.mTexCoords = Area( floor( ul.x ), floor( ul.y ), ceil( lr.x ) + 3, ceil( lr.y ) + 2 );
+		// newInfo.mOriginOffset.x = floor(bb.x1) - 1;
+		// newInfo.mOriginOffset.y = -(bb.getHeight()-1)-ceil( bb.y1+0.5f );
 
-		//  XXX Draw glyph to texture position on bitmap
+		//  Draw glyph 
 		FT_Face face = mFont.getFTFace();
 		int error = FT_Load_Glyph(face, *glyphIt, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
         if( error ) {
@@ -356,14 +347,31 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
         error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
 		FT_GlyphSlot slot = face->glyph;
 
-		Area renderArea(ul, lr);
-		CI_LOGW("Rendered face #%d glyph index %d bbox %.1f %.1f %.1f %.1f bm %d x %d", 
-				face->num_glyphs, *glyphIt, 
+		GlyphInfo newInfo;
+		newInfo.mTextureIndex = curTextureIndex;
+
+        Rectf bb = Rectf(0, 0, slot->bitmap.width, slot->bitmap.rows);
+		Vec2f ul = curOffset + Vec2f( 0, glyphExtents.y - bb.getHeight() );
+		Vec2f lr = curOffset + Vec2f( glyphExtents.x, glyphExtents.y );
+		newInfo.mTexCoords = Area( floor( ul.x ), floor( ul.y ), ceil( lr.x ) + 3, ceil( lr.y ) + 2 );
+		newInfo.mOriginOffset.x = slot->bitmap_left;
+		newInfo.mOriginOffset.y = slot->bitmap_top;
+
+		mGlyphMap[*glyphIt] = newInfo;
+
+		Vec2f renderPosition(curOffset.x - floor(bb.x1) + 1,
+							 surface.getHeight() - (curOffset.y + glyphExtents.y) - ceil(bb.y1+0.5f));
+		curOffset += Vec2i( glyphExtents.x + 3, 0 );
+
+		CI_LOGW("Rendered char '%c' index %d bbox %.1f %.1f %.1f %.1f bm %dx%d\n"
+                "uv %.1f %.1f %.1f %.1f origin (%.1f,%.1f)", 
+				(char) (*glyphIt & 0xff), *glyphIt, 
 				bb.x1, bb.y1, bb.x2, bb.y2,
-				slot->bitmap.width, slot->bitmap.rows);
+				slot->bitmap.width, slot->bitmap.rows,
+                newInfo.mTexCoords.x1, newInfo.mTexCoords.y1, newInfo.mTexCoords.x2, newInfo.mTexCoords.y2,
+                newInfo.mOriginOffset.x, newInfo.mOriginOffset.y);
 
 		Surface::Iter iter( surface, Area(ul, ul + Vec2f(slot->bitmap.width, slot->bitmap.rows)));
-
 		uint8_t* rowPtr = slot->bitmap.buffer;
 		while (iter.line()) {
 			uint8_t* pxPtr = rowPtr;
@@ -377,8 +385,6 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 
 		++glyphIt;
 		if( ( ++curGlyphIndex == glyphsWide * glyphsTall ) || ( glyphIt == glyphs.end() ) ) {
-			// ::CGContextShowGlyphsAtPositions( cgContext, renderGlyphs, renderPositions, curGlyphIndex );
-			
 			// pass premultiply and mipmapping preferences to Texture::Format
 			if( ! mFormat.getPremultiply() )
 				ip::unpremultiply( &surface );
@@ -388,7 +394,7 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 			textureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
 
 #if defined( CINDER_GLES )
-			// under iOS format and interalFormat must match, so let's make a block of LUMINANCE_ALPHA data
+			// under iOS format and internalFormat must match, so let's make a block of LUMINANCE_ALPHA data
 			Surface8u::ConstIter iter( surface, surface.getBounds() );
 			size_t offset = 0;
 			while( iter.line() ) {
