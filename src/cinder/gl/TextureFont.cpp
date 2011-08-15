@@ -301,16 +301,13 @@ void TextureFont::generateKerningPairs()
     FT_Library   library;
     FT_Face      face;
     FT_UInt      glyph_index, prev_index;
-    // TextureGlyph *glyph, *prev_glyph;
     FT_Vector    kerning;
 
-    // for( i=0; i<self->glyphs->size; ++i )
     for( boost::unordered_map<Font::Glyph, GlyphInfo>::iterator it = mGlyphMap.begin();
          it != mGlyphMap.end(); ++it )
     {
         FT_UInt glyph_index = it->first;
         GlyphInfo& glyph    = it->second;
-        // glyph = (TextureGlyph *) vector_get( self->glyphs, i );
         if( ! glyph.mKerning.empty() ) {
             glyph.mKerning.clear();
         }
