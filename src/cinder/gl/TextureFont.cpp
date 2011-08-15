@@ -312,7 +312,6 @@ void TextureFont::generateKerningPairs()
             glyph.mKerning.clear();
         }
 
-        count = 0;
         for( boost::unordered_map<Font::Glyph, GlyphInfo>::iterator it2 = mGlyphMap.begin();
              it2 != mGlyphMap.end(); ++it2 )
         {
