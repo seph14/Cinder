@@ -40,7 +40,7 @@ void AndroidTest::setup()
 
 	string fontFile("/system/fonts/DroidSans.ttf");
 	DataSourceRef fontData = loadFile(fontFile);
-	mFont = Font(fontData, 12);
+	mFont = Font(fontData, 16);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
 
     gl::TextureFont::Format format;

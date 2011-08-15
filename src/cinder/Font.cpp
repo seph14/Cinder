@@ -512,12 +512,19 @@ size_t Font::getNumGlyphs() const
 
 Font::Glyph Font::getGlyphChar( char c ) const
 {
-	return (Glyph) 0;
+	return (Glyph) c;
 }
 
 Font::Glyph Font::getGlyphIndex( size_t idx ) const
 {
-	return (Glyph) 0;
+    //  inefficient utf32 -> utf8, utf8 -> utf16
+    unsigned int utf32[] = { idx, 0 };
+    vector<unsigned char> utf8result;
+    utf8::utf32to8(utf32, utf32 + 1, std::back_inserter(utf8result));
+
+    vector<Glyph> utf16result;
+    utf8::utf8to16(utf8result.begin(), utf8result.end(), std::back_inserter(utf16result));
+	return utf16result.front();
 }
 
 vector<Font::Glyph> Font::getGlyphs( const string &utf8String ) const
