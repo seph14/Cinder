@@ -297,10 +297,6 @@ TextureFont::TextureFont( const Font &font, const string &utf8Chars, const Forma
 
 void TextureFont::generateKerningPairs()
 {
-    size_t i, j, k, count;
-    FT_Library   library;
-    FT_Face      face;
-    FT_UInt      glyph_index, prev_index;
     FT_Vector    kerning;
 
     for( boost::unordered_map<Font::Glyph, GlyphInfo>::iterator it = mGlyphMap.begin();
