@@ -150,6 +150,10 @@ class TextureFont {
 // XXX DEBUGGING, remove later
 #ifdef CINDER_ANDROID
     gl::Texture getTexture();
+	struct KerningPair {
+		Font::Glyph index;
+		float kerning;
+	};
 #endif
 
   protected:
@@ -159,12 +163,23 @@ class TextureFont {
 		uint8_t		mTextureIndex;
 		Area		mTexCoords;
 		Vec2f		mOriginOffset;
+#ifdef CINDER_ANDROID
+		//  TextureFont is also responsible for layout on Android
+		Vec2f		mSize;
+		Vec2f		mAdvance;
+		std::vector<KerningPair> mKerning;
+#endif
 	};
 	
 	boost::unordered_map<Font::Glyph, GlyphInfo>	mGlyphMap;
 	std::vector<gl::Texture>						mTextures;
 	Font											mFont;
 	Format											mFormat;
+
+#ifdef CINDER_ANDROID
+	//!  Generate kerning pairs for all glyphs
+	void generateKerningPairs();
+#endif
 };
 
 } } // namespace cinder::gl

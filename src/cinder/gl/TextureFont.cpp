@@ -294,6 +294,45 @@ TextureFont::TextureFont( const Font &font, const string &utf8Chars, const Forma
 	delete [] pBuff;
 }
 #elif defined( CINDER_ANDROID )
+
+void TextureFont::generateKerningPairs()
+{
+    size_t i, j, k, count;
+    FT_Library   library;
+    FT_Face      face;
+    FT_UInt      glyph_index, prev_index;
+    // TextureGlyph *glyph, *prev_glyph;
+    FT_Vector    kerning;
+
+    // for( i=0; i<self->glyphs->size; ++i )
+    for( boost::unordered_map<Font::Glyph, GlyphInfo>::iterator it = mGlyphMap.begin();
+         it != mGlyphMap.end(); ++it )
+    {
+        FT_UInt glyph_index = it->first;
+        GlyphInfo& glyph    = it->second;
+        // glyph = (TextureGlyph *) vector_get( self->glyphs, i );
+        if( ! glyph.mKerning.empty() ) {
+            glyph.mKerning.clear();
+        }
+
+        count = 0;
+        for( boost::unordered_map<Font::Glyph, GlyphInfo>::iterator it2 = mGlyphMap.begin();
+             it2 != mGlyphMap.end(); ++it2 )
+        {
+            FT_UInt prev_index    = it2->first;
+            GlyphInfo& prev_glyph = it2->second;
+            FT_Face face = mFont.getFTFace();
+            FT_Get_Kerning( face, prev_index, glyph_index, FT_KERNING_UNSCALED, &kerning );
+            if( kerning.x != 0.0 ) {
+                KerningPair kp;
+                kp.index = prev_index;
+                kp.kerning = kerning.x / 64.0f;
+                glyph.mKerning.push_back(kp);
+            }
+        }
+    }
+}
+
 TextureFont::TextureFont( const Font &font, const string &supportedChars, const TextureFont::Format &format )
 	: mFont( font ), mFormat( format )
 {
