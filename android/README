@@ -79,5 +79,20 @@ TODO
 * Better filesystem support
 
 
+Credits
+=======
+
+Portions of this software are copyright © 2011 The FreeType Project (www.freetype.org).  All rights reserved.
+
+stb_image (nothings.org) - public domain image library by Sean Barrett et al
+
+utf8-cpp (utfcpp.sourceforge.net) - Copyright 2006 Nemanja Trifunovic
+
+This software uses the FreeImage open source image library. See http://freeimage.sourceforge.net for details.
+FreeImage is used under the FIPL, version 1.0.
+
+Parts of the font rendering code are based on freetype-gl (http://code.google.com/p/freetype-gl/)
+Copyright 2011 Nicolas P. Rougier. All rights reserved
+
 safetydank 14/8/11
 
