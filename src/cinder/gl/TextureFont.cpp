@@ -313,10 +313,6 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 	glyphExtents.x = ceil( glyphExtents.x );
 	glyphExtents.y = ceil( glyphExtents.y );
 
-	// XXX debug, replace
-	glyphExtents.x = 32.0f;
-	glyphExtents.y = 32.0f;
-
 	CI_LOGW("XXX glyph extents set to %f x %f", glyphExtents.x, glyphExtents.y);
 
 	int glyphsWide = floor( mFormat.getTextureWidth() / (glyphExtents.x+3) );
@@ -336,9 +332,7 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 	for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ) {
 		GlyphInfo newInfo;
 		newInfo.mTextureIndex = curTextureIndex;
-		// Rectf bb = font.getGlyphBoundingBox( *glyphIt );
-		// XXX DEBUG
-		Rectf bb = Rectf(Vec2f(0, 0), glyphExtents);
+		Rectf bb = font.getGlyphBoundingBox( *glyphIt );
 		Vec2f ul = curOffset + Vec2f( 0, glyphExtents.y - bb.getHeight() );
 		Vec2f lr = curOffset + Vec2f( glyphExtents.x, glyphExtents.y );
 		newInfo.mTexCoords = Area( floor( ul.x ), floor( ul.y ), ceil( lr.x ) + 3, ceil( lr.y ) + 2 );
@@ -362,9 +356,9 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 		FT_GlyphSlot slot = face->glyph;
 
 		Area renderArea(ul, lr);
-		CI_LOGW("Rendered face #%d glyph index %d area %.1f %.1f %.1f %.1f bm %d x %d", 
+		CI_LOGW("Rendered face #%d glyph index %d bbox %.1f %.1f %.1f %.1f bm %d x %d", 
 				face->num_glyphs, *glyphIt, 
-				renderArea.x1, renderArea.y1, renderArea.x2, renderArea.y2,
+				bb.x1, bb.y1, bb.x2, bb.y2,
 				slot->bitmap.width, slot->bitmap.rows);
 
 		Surface::Iter iter( surface, Area(ul, ul + Vec2f(slot->bitmap.width, slot->bitmap.rows)));

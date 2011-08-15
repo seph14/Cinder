@@ -45,6 +45,7 @@
 	#include <iterator>
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
+    #include FT_GLYPH_H
 
     struct FTData {
         ci::IStreamRef	streamRef;
@@ -538,7 +539,15 @@ Shape2d Font::getGlyphShape( Glyph glyphIndex ) const
 
 Rectf Font::getGlyphBoundingBox( Glyph glyphIndex ) const
 {
-	return Rectf(0, 0, 0, 0);
+    FT_Glyph glyph;
+    FT_BBox bbox;
+
+    FT_Face face = getFTFace();
+    int error = FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT);
+    error = FT_Get_Glyph(face->glyph, &glyph);
+    //  get bounding box size in grid-fitted pixels
+    FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &bbox);
+	return Rectf(bbox.xMin, bbox.yMin, bbox.xMax, bbox.yMax);
 }
 
 #endif

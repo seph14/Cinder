@@ -46,6 +46,8 @@ void AndroidTest::setup()
     mTexFont = gl::TextureFont::create( mFont );
     mFontTexture = mTexFont->getTexture();
 
+    gl::enableAlphaBlending(true);
+
 	// XXX uncomment to trigger a crash in Font destructor
 	// mFont = Font();
 
