@@ -294,19 +294,64 @@ TextureFont::TextureFont( const Font &font, const string &utf8Chars, const Forma
 	delete [] pBuff;
 }
 #elif defined( CINDER_ANDROID )
+
 // Texture packing based on freetype-gl
 //
+void TextureFont::generateKerningPairs()
+{
+    FT_Vector    kerning;
+
+    for( boost::unordered_map<Font::Glyph, GlyphInfo>::iterator it = mGlyphMap.begin();
+         it != mGlyphMap.end(); ++it )
+    {
+        FT_UInt glyph_index = it->first;
+        GlyphInfo& glyph    = it->second;
+        if( ! glyph.mKerning.empty() ) {
+            glyph.mKerning.clear();
+        }
+
+        for( boost::unordered_map<Font::Glyph, GlyphInfo>::iterator it2 = mGlyphMap.begin();
+             it2 != mGlyphMap.end(); ++it2 )
+        {
+            FT_UInt prev_index    = it2->first;
+            GlyphInfo& prev_glyph = it2->second;
+            FT_Face face = mFont.getFTFace();
+            FT_Get_Kerning( face, prev_index, glyph_index, FT_KERNING_UNSCALED, &kerning );
+            if( kerning.x != 0.0 ) {
+                KerningPair kp;
+                kp.index = prev_index;
+                kp.kerning = kerning.x / 64.0f;
+                glyph.mKerning.push_back(kp);
+            }
+        }
+    }
+}
+
+float TextureFont::getKerning(const TextureFont::GlyphInfo& glyph, Font::Glyph prev)
+{
+	if (glyph.mKerning.empty())
+		return 0;
+
+	for (vector<KerningPair>::const_iterator it = glyph.mKerning.begin(); it != glyph.mKerning.end(); ++it) {
+		if (it->index == prev) {
+			return it->kerning;
+		}
+	}
+
+	return 0;
+}
+
 namespace {
+    struct Node
+    {
+        int x, y, width;
+    };
 
-struct Node
-{
-    int x, y, width;
-};
-
-struct Region
-{
-    int x, y, width, height;
-};
+    struct Region
+    {
+        int x, y, width, height;
+    };
+}
 
 /** Packs font bitmaps into a surface */
 class TextureAtlas
@@ -445,8 +490,6 @@ public:
 
     Surface& getSurface() { return mSurface; }
 };
-
-}
 
 TextureFont::TextureFont( const Font &font, const string &supportedChars, const TextureFont::Format &format )
 	: mFont( font ), mFormat( format )
@@ -773,6 +816,41 @@ Vec2f TextureFont::measureStringWrapped( const std::string &str, const Rectf &fi
 {
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( fitRect.getWidth(), fitRect.getHeight() ).ligate( options.getLigate() );
 	return tbox.measure();
+}
+#endif
+
+#if defined( CINDER_ANDROID )
+vector<pair<uint16_t,Vec2f> > TextureFont::measureGlyphs(const std::string& str)
+{
+	// XXX how does freetype handle whitespace?
+	vector<pair<uint16_t,Vec2f> > positions;
+	vector<Font::Glyph> glyphs = mFont.getGlyphs(str);
+
+	Vec2f pen(0, 0);
+
+	float kerning = 0;
+	vector<Font::Glyph>::iterator it = glyphs.begin();
+
+	Font::Glyph prevIndex = 0;
+
+	for (it = glyphs.begin(); it != glyphs.end(); ++it) {
+		boost::unordered_map<Font::Glyph, GlyphInfo>::const_iterator glyphInfoIt = mGlyphMap.find( *it );
+		if ( glyphInfoIt == mGlyphMap.end() )
+			continue;
+
+		const GlyphInfo& glyphInfo = glyphInfoIt->second;
+
+		if (prevIndex) {
+			pen.x += getKerning(glyphInfo, prevIndex);
+		}
+
+		positions.push_back(std::make_pair(*it, pen));
+		pen += glyphInfo.mAdvance;
+
+		prevIndex = *it;
+	}
+
+	return positions;
 }
 #endif
 
