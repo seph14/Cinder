@@ -38,9 +38,10 @@ void AndroidTest::setup()
 		console() << "unable to load the texture file!" << std::endl;
 	}
 
-	string fontFile("/system/fonts/DroidSans.ttf");
-	DataSourceRef fontData = loadFile(fontFile);
-	mFont = Font(fontData, 16);
+    // Bitstream Vera Sans has Freetype kerning information
+    // mFont = Font(loadResource("Vera.ttf"), 16);
+
+    mFont = Font(loadFile("/system/fonts/DroidSans.ttf"), 16);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
 
     gl::TextureFont::Format format;
@@ -78,6 +79,7 @@ void AndroidTest::draw()
 	// 	gl::draw( mTexture, Vec2f( 0, 0 ) );
 	if( mFontTexture ) {
 		gl::draw( mFontTexture, Vec2f( 0, 0 ) );
+        mTexFont->drawString("Beginningnrnr", Vec2f(0, 240));
     }
 }
 

@@ -103,13 +103,10 @@ class TextureFont {
 	static TextureFontRef		create( const Font &font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() )
 	{ return TextureFontRef( new TextureFont( font, supportedChars, format ) ); }
 	
-// XXX TODO
-#if ! defined( CINDER_ANDROID )
 	//! Draws string \a str at baseline \a baseline with DrawOptions \a options
 	void	drawString( const std::string &str, const Vec2f &baseline, const DrawOptions &options = DrawOptions() );
 	//! Draws string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options
 	void	drawString( const std::string &str, const Rectf &fitRect, const Vec2f &offset = Vec2f::zero(), const DrawOptions &options = DrawOptions() );
-#endif
 
 #if defined( CINDER_COCOA )
 	//! Draws word-wrapped string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options. Mac & iOS only.
@@ -178,11 +175,11 @@ class TextureFont {
 
 #ifdef CINDER_ANDROID
 	//!  Measure glyph positions, suitable for passing to drawGlyphs
-	std::vector<std::pair<uint16_t,Vec2f> > measureGlyphs(const std::string& str);
+	std::vector<std::pair<uint16_t,Vec2f> > measureGlyphs(const std::string& str) const;
 	//!  Generate kerning pairs for all glyphs
 	void generateKerningPairs();
 	//!  Get kerning information for a glyph pair
-	float getKerning(const GlyphInfo& glyph, Font::Glyph prev);
+	float getKerning(const GlyphInfo& glyph, Font::Glyph prev) const;
 #endif
 };
 
