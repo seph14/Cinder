@@ -848,9 +848,11 @@ Vec2f TextureFont::measureStringWrapped( const std::string &str, const Rectf &fi
 // sketching - shape a utf-8 string with harfbuzz
 vector<pair<uint16_t,Vec2f> > TextureFont::shapeGlyphs(const std::string& str) const
 {
+    FT_Face ft_face = mFont.getFTFace();
 	vector<pair<uint16_t,Vec2f> > placements;
 
-    // XXX access font buffer through Font 
+#if 0
+    // XXX create font from font buffer (access through Font?) 
     DataSourceRef fontData = loadFile("/system/fonts/DroidSans.ttf");
     Buffer fontBuffer = fontData.getBuffer();
 
@@ -864,6 +866,9 @@ vector<pair<uint16_t,Vec2f> > TextureFont::shapeGlyphs(const std::string& str) c
     hb_blob_destroy(blob);
 
     hb_font_set_scale(font, mFont.getSize(), mFont.getSize()); 
+#else
+    hb_font_t *hb_font = hb_ft_font_create(ft_face, NULL);
+#endif
 
     vector<int> utf32String;
     utf8::utf8to32(str.begin(), str.end(), std::back_inserter(utf32String));
@@ -885,7 +890,7 @@ vector<pair<uint16_t,Vec2f> > TextureFont::shapeGlyphs(const std::string& str) c
         Vec2f advance(positions[i].x_advance, positions[i].y_advance);
         Vec2f offset(positions[i].x_offset, positions[i].y_offset);
 
-        uint32_t glyphIndex = FT_Get_Char_Index(mFont.getFTFace(), glyphs[i].codepoint);
+        uint32_t glyphIndex = FT_Get_Char_Index(ft_face, glyphs[i].codepoint);
         placements.push_back(std::make_pair(glyphIndex, pen));
         pen += advance;
     }

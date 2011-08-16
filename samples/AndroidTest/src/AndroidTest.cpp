@@ -79,7 +79,7 @@ void AndroidTest::draw()
 	// 	gl::draw( mTexture, Vec2f( 0, 0 ) );
 	if( mFontTexture ) {
 		gl::draw( mFontTexture, Vec2f( 0, 0 ) );
-        mTexFont->drawString("Beginningnrnr", Vec2f(0, 240));
+        mTexFont->drawString("Droid Sans", Vec2f(0, 240));
     }
 }
 
