@@ -29,6 +29,7 @@ public:
 
 void AndroidTest::setup()
 {
+    CI_LOGW("XXX AndroidTest::setup");
 	try {
 		console() << "Loading logo image" << endl;
 		mTexture = gl::Texture( loadImage( loadResource("cinder_logo.png") ) );
@@ -76,8 +77,8 @@ void AndroidTest::draw()
 	gl::setMatricesWindow( getWindowSize() );
 	gl::clear( Color( 0.2f, 0.2f, 0.2f ) );
 
-	// if( mTexture )
-	// 	gl::draw( mTexture, Vec2f( 0, 0 ) );
+	if( mTexture )
+		gl::draw( mTexture, Vec2f( 0, 0 ) );
 	if( mFontTexture ) {
 		gl::draw( mFontTexture, Vec2f( 0, 0 ) );
         mTexFont->drawString("Hello world!", Vec2f(0, 240));

@@ -18,6 +18,7 @@ AppImplAndroidRendererGl::AppImplAndroidRendererGl( App *aApp, RendererGl *aRend
 
 void AppImplAndroidRendererGl::initialize( ANativeWindow* window, int32_t& width, int32_t& height )
 {
+    CI_LOGW("XXX AppImplAndroidRendererGl::initialize");
     //  Create GL context and surface
     const EGLint attribs[] = {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,

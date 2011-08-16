@@ -188,12 +188,14 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
+            CI_LOGW("XXX APP_CMD_SAVE_STATE");
             // The system has asked us to save our current state.  Do so.
             engine->state->savedState = malloc(sizeof(struct saved_state));
             *((struct saved_state*)engine->state->savedState) = engine->savedState;
             engine->state->savedStateSize = sizeof(struct saved_state);
             break;
         case APP_CMD_INIT_WINDOW:
+            CI_LOGW("XXX APP_CMD_INIT_WINDOW");
             // The window is being shown, get it ready.
             if (engine->state->window != NULL) {
                 cinderApp->getRenderer()->setup(cinderApp, engine->state->window, 
@@ -207,11 +209,13 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             }
             break;
         case APP_CMD_TERM_WINDOW:
+            CI_LOGW("XXX APP_CMD_TERM_WINDOW");
             // The window is being hidden or closed, clean it up.
             cinderApp->getRenderer()->teardown();
             engine->animating = 0;
             break;
         case APP_CMD_GAINED_FOCUS:
+            CI_LOGW("XXX APP_CMD_GAINED_FOCUS");
             engine->animating = 1;
 
             // Start monitoring the accelerometer.
@@ -220,11 +224,24 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             }
             break;
         case APP_CMD_LOST_FOCUS:
+            CI_LOGW("XXX APP_CMD_LOST_FOCUS");
             //  Disable accelerometer (saves power)
             engine_disable_accelerometer(engine);
 
             engine->animating = 0;
             engine_draw_frame(engine);
+            break;
+        case APP_CMD_RESUME:
+            CI_LOGW("XXX APP_CMD_RESUME");
+            break;
+        case APP_CMD_START:
+            CI_LOGW("XXX APP_CMD_START");
+            break;
+        case APP_CMD_PAUSE:
+            CI_LOGW("XXX APP_CMD_PAUSE");
+            break;
+        case APP_CMD_STOP:
+            CI_LOGW("XXX APP_CMD_STOP");
             break;
     }
 }
@@ -245,6 +262,8 @@ static void android_run(struct engine* engine)
             ASENSOR_TYPE_ACCELEROMETER);
     engine->sensorEventQueue = ASensorManager_createEventQueue(engine->sensorManager,
             state->looper, LOOPER_ID_USER, NULL, NULL);
+
+    CI_LOGW("XXX android_run");
 
     if (state->savedState != NULL) {
         // We are starting with a previous saved state; restore from it.
