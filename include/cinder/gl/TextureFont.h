@@ -180,6 +180,9 @@ class TextureFont {
 	void generateKerningPairs();
 	//!  Get kerning information for a glyph pair
 	float getKerning(const GlyphInfo& glyph, Font::Glyph prev) const;
+
+    size_t linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit);
+    int countLines(std::vector<Font::Glyph>& text, float width);
 #endif
 };
 

@@ -811,7 +811,6 @@ void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRec
 Vec2f TextureFont::measureString( const std::string &str, const DrawOptions &options ) const
 {
 #if ! defined(CINDER_ANDROID)
-
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );
 #if defined( CINDER_COCOA )
 	return tbox.measure();
@@ -900,6 +899,85 @@ vector<pair<uint16_t,Vec2f> > TextureFont::shapeGlyphs(const std::string& str) c
 }
 
 #else
+
+//  From Skia TextBox
+size_t TextureFont::linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit)
+{
+    FT_Face face = mFont.getFTFace();
+    const Font::Glyph ws = FT_Get_Char_Index(face, int(' '));
+
+    float w = 0;
+
+    const Font::Glyph* start = text;
+
+    const Font::Glyph* word_start = text;
+    bool         prevWS = true;
+
+    while (text < stop)
+    {
+        const Font::Glyph* prevText = text;
+        Font::Glyph uni = *(++text);
+        bool        currWS = uni == ws;
+        // const SkGlyph&  glyph = cache->getUnicharMetrics(uni);
+        const GlyphInfo& glyphInfo = mGlyphMap[uni];
+
+        if (!currWS && prevWS)
+            word_start = prevText;
+        prevWS = currWS;
+
+        w += getKerning(glyphInfo, *prevText) + glyphInfo.mAdvance.x;
+        if (w > limit)
+        {
+            if (currWS) // eat the rest of the whitespace
+            {
+                while (text < stop && *text == ws)
+                    ++text;
+            }
+            else    // backup until a whitespace (or 1 char)
+            {
+                if (word_start == start)
+                {
+                    if (prevText > start)
+                        text = prevText;
+                }
+                else
+                    text = word_start;
+            }
+            break;
+        }
+    }
+    return text - start;
+}
+
+int TextureFont::countLines(vector<Font::Glyph>& text, float width)
+{
+    Font::Glyph* start = &text[0];
+    Font::Glyph* stop = start + text.size();
+    int         count = 0;
+
+    if (width > 0) {
+        do {
+            count += 1;
+            start += linebreak(start, stop, width);
+        } while (start < stop);
+    }
+    return count;
+}
+
+/*
+    for (;;)
+    {
+        len = linebreak(text, textStop, paint, marginWidth);
+        if (y + metrics.fDescent + metrics.fLeading > 0)
+            canvas->drawText(text, len, x, y, paint);
+        text += len;
+        if (text >= textStop)
+            break;
+        y += scaledSpacing;
+        if (y + metrics.fAscent >= height)
+            break;
+    } 
+*/
 
 //  Shaping using freetype font data
 vector<pair<uint16_t,Vec2f> > TextureFont::shapeGlyphs(const std::string& str) const

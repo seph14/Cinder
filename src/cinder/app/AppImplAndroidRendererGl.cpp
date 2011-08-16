@@ -84,6 +84,7 @@ void AppImplAndroidRendererGl::swapBuffers()
 
 void AppImplAndroidRendererGl::defaultResize()
 {
+    CI_LOGW("Setting viewport to %d x %d", mApp->getWindowWidth(), mApp->getWindowHeight());
 	glViewport( 0, 0, mApp->getWindowWidth(), mApp->getWindowHeight() );
 	cinder::CameraPersp cam( mApp->getWindowWidth(), mApp->getWindowHeight(), 60.0f );
 
