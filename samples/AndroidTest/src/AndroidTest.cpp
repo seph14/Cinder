@@ -42,6 +42,7 @@ void AndroidTest::setup()
     // mFont = Font(loadResource("Vera.ttf"), 16);
 
     mFont = Font(loadFile("/system/fonts/DroidSans.ttf"), 16);
+    // mFont = Font(loadFile("/system/fonts/DroidSerif-Regular.ttf"), 12);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
 
     gl::TextureFont::Format format;
@@ -79,7 +80,7 @@ void AndroidTest::draw()
 	// 	gl::draw( mTexture, Vec2f( 0, 0 ) );
 	if( mFontTexture ) {
 		gl::draw( mFontTexture, Vec2f( 0, 0 ) );
-        mTexFont->drawString("Droid Sans", Vec2f(0, 240));
+        mTexFont->drawString("Hello world!", Vec2f(0, 240));
     }
 }
 

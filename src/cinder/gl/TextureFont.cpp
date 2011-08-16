@@ -508,8 +508,8 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
     size_t missed = 0;
     uint8_t curTextureIndex = 0;
 
-	// get the glyph indices we'll need
-	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars );
+	// get the glyph indices we'll need (including space character)
+	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars + string(" ") );
 	set<Font::Glyph> glyphs( tempGlyphs.begin(), tempGlyphs.end() );
 
     TextureAtlas atlas(mFormat.getTextureWidth(), mFormat.getTextureHeight());
@@ -929,8 +929,10 @@ vector<pair<uint16_t,Vec2f> > TextureFont::shapeGlyphs(const std::string& str) c
 		}
 
 		placements.push_back(std::make_pair(*it, pen));
-        // CI_LOGI("Glyph char %c pen %.1f,%.1f origin %f,%f kerns %d kerning %f", str[is], pen.x, pen.y, 
-        //         glyphInfo.mOriginOffset.x, glyphInfo.mOriginOffset.y, glyphInfo.mKerning.size(), kerning);
+        // CI_LOGI("Glyph char '%c' pen %.1f,%.1f origin %.1f,%.1f kerning %f, advance %.1f,.1f", 
+        //         str[is], pen.x, pen.y, 
+        //         glyphInfo.mOriginOffset.x, glyphInfo.mOriginOffset.y, kerning, 
+        //         glyphInfo.mAdvance.x, glyphInfo.mAdvance.y);
 		pen += glyphInfo.mAdvance;
 
 		prevIndex = *it;
@@ -974,7 +976,6 @@ gl::Texture TextureFont::getTexture()
     
     return gl::Texture();
 }
-
 #endif
 
 } } // namespace cinder::gl

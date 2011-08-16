@@ -535,6 +535,7 @@ vector<Font::Glyph> Font::getGlyphs( const string &utf8String ) const
 	for (vector<int>::iterator it = utf32String.begin(); it != utf32String.end(); ++it) {
 		result.push_back(FT_Get_Char_Index(getFTFace(), *it));
 	}
+    // CI_LOGI("XXX getGlyphs utf8 size %d utf32 size %d utf16 size %d", utf8String.size(), utf32String.size(), result.size());
 	return result;
 }
 
