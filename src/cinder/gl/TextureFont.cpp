@@ -38,7 +38,6 @@
 #if defined( CINDER_ANDROID )
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
-
 #undef __FTERRORS_H__
 #define FT_ERRORDEF( e, v, s )  { e, s },
 #define FT_ERROR_START_LIST     {
@@ -48,6 +47,9 @@ const struct {
     const char*  message;
 } FT_Errors[] =
 #include FT_ERRORS_H
+
+	#include <utf8.h>
+	#include <iterator>
 #endif
 
 #include <set>
@@ -778,7 +780,7 @@ void TextureFont::drawString( const std::string &str, const Vec2f &baseline, con
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
 #else
-	vector<pair<uint16_t,Vec2f> > glyphMeasures = measureGlyphs(str);
+	vector<pair<uint16_t,Vec2f> > glyphMeasures = shapeGlyphs(str);
     for(vector<pair<uint16_t,Vec2f> >::iterator it = glyphMeasures.begin(); it != glyphMeasures.end(); ++it) {
         Vec2f v = it->second;
     }
@@ -792,7 +794,7 @@ void TextureFont::drawString( const std::string &str, const Rectf &fitRect, cons
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, fitRect.getHeight() ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
 #else
-	vector<pair<uint16_t,Vec2f> > glyphMeasures = measureGlyphs(str);
+	vector<pair<uint16_t,Vec2f> > glyphMeasures = shapeGlyphs(str);
 #endif
 	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
 }
@@ -841,10 +843,64 @@ Vec2f TextureFont::measureStringWrapped( const std::string &str, const Rectf &fi
 #endif
 
 #if defined( CINDER_ANDROID )
-vector<pair<uint16_t,Vec2f> > TextureFont::measureGlyphs(const std::string& str) const
+
+#if defined( CINDER_HARFBUZZ )
+// sketching - shape a utf-8 string with harfbuzz
+vector<pair<uint16_t,Vec2f> > TextureFont::shapeGlyphs(const std::string& str) const
+{
+	vector<pair<uint16_t,Vec2f> > placements;
+
+    // XXX access font buffer through Font 
+    DataSourceRef fontData = loadFile("/system/fonts/DroidSans.ttf");
+    Buffer fontBuffer = fontData.getBuffer();
+
+    hb_blob_t* blob = hb_blob_create (fontBuffer->getData(), fontBuffer.getDataSize(),
+            HB_MEMORY_MODE_READONLY, this, NULL);
+
+    hb_face_t* face = hb_face_create(blob, 0);
+    hb_font_t* font = hb_font_create(face);
+
+    hb_face_destroy(face);
+    hb_blob_destroy(blob);
+
+    hb_font_set_scale(font, mFont.getSize(), mFont.getSize()); 
+
+    vector<int> utf32String;
+    utf8::utf8to32(str.begin(), str.end(), std::back_inserter(utf32String));
+
+    hb_buffer_t* buf = hb_buffer_create(0);
+    hb_buffer_add_utf32(buf, &utf32String[0], utf32String.size(), 0, utf32String.size());
+    hb_buffer_set_direction (buf, HB_DIRECTION_LTR);
+
+    hb_shape(font, buf, NULL, 0);
+
+    len = hb_buffer_get_length (buf);
+
+    hb_glyph_info_t *glyphs = hb_buffer_get_glyph_infos (buf, NULL);
+    hb_glyph_position_t *positions = hb_buffer_get_glyph_positions (buf, NULL);
+
+    Vec2f pen(0,0);
+
+    for (int i=0; i < len; ++i) {
+        Vec2f advance(positions[i].x_advance, positions[i].y_advance);
+        Vec2f offset(positions[i].x_offset, positions[i].y_offset);
+
+        uint32_t glyphIndex = FT_Get_Char_Index(mFont.getFTFace(), glyphs[i].codepoint);
+        placements.push_back(std::make_pair(glyphIndex, pen));
+        pen += advance;
+    }
+
+    hb_buffer_destroy(buf);
+    hb_font_destroy(font);
+}
+
+#else
+
+//  Shaping using freetype font data
+vector<pair<uint16_t,Vec2f> > TextureFont::shapeGlyphs(const std::string& str) const
 {
 	// XXX how does freetype handle whitespace?
-	vector<pair<uint16_t,Vec2f> > positions;
+	vector<pair<uint16_t,Vec2f> > placements;
 	vector<Font::Glyph> glyphs = mFont.getGlyphs(str);
 
 	Vec2f pen(0, 0);
@@ -867,7 +923,7 @@ vector<pair<uint16_t,Vec2f> > TextureFont::measureGlyphs(const std::string& str)
 			pen.x += kerning;
 		}
 
-		positions.push_back(std::make_pair(*it, pen));
+		placements.push_back(std::make_pair(*it, pen));
         // CI_LOGI("Glyph char %c pen %.1f,%.1f origin %f,%f kerns %d kerning %f", str[is], pen.x, pen.y, 
         //         glyphInfo.mOriginOffset.x, glyphInfo.mOriginOffset.y, glyphInfo.mKerning.size(), kerning);
 		pen += glyphInfo.mAdvance;
@@ -875,8 +931,11 @@ vector<pair<uint16_t,Vec2f> > TextureFont::measureGlyphs(const std::string& str)
 		prevIndex = *it;
 	}
 
-	return positions;
+	return placements;
 }
+
+#endif // defined( CINDER_HARFBUZZ )
+
 #endif
 
 vector<pair<uint16_t,Vec2f> > TextureFont::getGlyphPlacements( const std::string &str, const DrawOptions &options ) const
@@ -886,7 +945,7 @@ vector<pair<uint16_t,Vec2f> > TextureFont::getGlyphPlacements( const std::string
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );
 	return tbox.measureGlyphs();
 #else
-    return measureGlyphs(str);
+    return shapeGlyphs(str);
 #endif
 }
 
@@ -897,7 +956,7 @@ vector<pair<uint16_t,Vec2f> > TextureFont::getGlyphPlacements( const std::string
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, fitRect.getWidth() ).ligate( options.getLigate() );
 	return tbox.measureGlyphs();
 #else
-    return measureGlyphs(str);
+    return shapeGlyphs(str);
 #endif
 }
 

@@ -175,7 +175,7 @@ class TextureFont {
 
 #ifdef CINDER_ANDROID
 	//!  Measure glyph positions, suitable for passing to drawGlyphs
-	std::vector<std::pair<uint16_t,Vec2f> > measureGlyphs(const std::string& str) const;
+	std::vector<std::pair<uint16_t,Vec2f> > shapeGlyphs(const std::string& str) const;
 	//!  Generate kerning pairs for all glyphs
 	void generateKerningPairs();
 	//!  Get kerning information for a glyph pair
