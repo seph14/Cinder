@@ -69,15 +69,11 @@ void TextureFontApp::draw()
 
 	gl::color( ColorA( 1, 0.5f, 0.25f, 1.0f ) );
 
-#if defined( CINDER_COCOA )
+    gl::drawStrokedRect( boundsRect );
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 	mTextureFont->drawStringWrapped( str, boundsRect );
 #else
-    gl::drawStrokedRect( boundsRect );
 	mTextureFont->drawString( str, boundsRect );
-    float yoffset = getWindowHeight() / 2.0f;
-	mTextureFont->drawString( str, Vec2f(0, yoffset + mFont.getAscent()) );
-    mTextureFont->drawString( str, Vec2f(0, yoffset + 2 * mFont.getAscent()) );
-    // CI_LOGI("Font ascent %f", mFont.getAscent());
 #endif	
 
 	// Draw FPS

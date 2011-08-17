@@ -155,8 +155,8 @@ class TextBox {
 
 	mutable std::wstring	mWideText;
 #elif defined( CINDER_ANDROID)
-    size_t linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit);
-    int countLines(std::vector<Font::Glyph>& text, float width);
+    size_t linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit) const;
+    int countLines(std::vector<Font::Glyph>& text, float width) const;
 #endif
 };
 

@@ -768,7 +768,7 @@ Surface	TextBox::render( Vec2f offset )
 #elif defined( CINDER_ANDROID )
 
 //  From Skia TextBox
-size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit)
+size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit) const
 {
     FT_Face face = mFont.getFTFace();
     const Font::Glyph ws = FT_Get_Char_Index(face, int(' '));
@@ -816,7 +816,7 @@ size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, floa
     return text - start;
 }
 
-int TextBox::countLines(vector<Font::Glyph>& text, float width)
+int TextBox::countLines(vector<Font::Glyph>& text, float width) const
 {
     Font::Glyph* start = &text[0];
     Font::Glyph* stop = start + text.size();
@@ -849,6 +849,7 @@ int TextBox::countLines(vector<Font::Glyph>& text, float width)
 
 Vec2f TextBox::measure() const
 {
+    // not implemented
 }
 
 #if ! defined( CINDER_HARFBUZZ )
@@ -857,21 +858,47 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
     vector<pair<uint16_t,Vec2f> > placements;
     vector<Font::Glyph> glyphs = mFont.getGlyphs(mText);
 
-    Vec2f pen(0, 0);
-    pen.y += mFont.getAscent();
+    // if (mSize.x != GROW) {
+    //     CI_LOGI("Split into %d lines", countLines(glyphs, mSize.x));
+    // }
 
-    Font::Glyph prevIndex = 0;
+    Font::Glyph* start = &glyphs[0];
+    Font::Glyph* end = start + glyphs.size();
 
-    for (vector<Font::Glyph>::iterator it = glyphs.begin(); it != glyphs.end(); ++it) {
-        if (prevIndex) {
-            float kerning = mFont.getKerning(*it, prevIndex);
-            pen.x += kerning;
+    Vec2f pen(0, mFont.getAscent());
+
+    while (start < end) {
+        Font::Glyph prevIndex = 0;
+
+        int lineLength = mSize.x == GROW ? glyphs.size() : linebreak(start, end, mSize.x);
+        Font::Glyph* stop = start + lineLength;
+
+        for (Font::Glyph* it = start; it != stop; ++it) {
+            if (prevIndex) {
+                float kerning = mFont.getKerning(*it, prevIndex);
+                pen.x += kerning;
+            }
+
+            placements.push_back(std::make_pair(*it, pen));
+            pen += mFont.getAdvance(*it);
+            prevIndex = *it;
         }
 
-        placements.push_back(std::make_pair(*it, pen));
-        pen += mFont.getAdvance(*it);
-        prevIndex = *it;
+        start += lineLength;
+        pen.x = 0;
+        pen.y += mFont.getLeading();
     }
+
+    // for (vector<Font::Glyph>::iterator it = glyphs.begin(); it != glyphs.end(); ++it) {
+    //     if (prevIndex) {
+    //         float kerning = mFont.getKerning(*it, prevIndex);
+    //         pen.x += kerning;
+    //     }
+
+    //     placements.push_back(std::make_pair(*it, pen));
+    //     pen += mFont.getAdvance(*it);
+    //     prevIndex = *it;
+    // }
 
     return placements;
 }

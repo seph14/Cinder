@@ -455,8 +455,8 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
     size_t missed = 0;
     uint8_t curTextureIndex = 0;
 
-	// get the glyph indices we'll need (including space character)
-	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars + string(" ") );
+	// get the glyph indices we'll need
+	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars );
 	set<Font::Glyph> glyphs( tempGlyphs.begin(), tempGlyphs.end() );
 
     TextureAtlas atlas(mFormat.getTextureWidth(), mFormat.getTextureHeight());
@@ -734,12 +734,16 @@ void TextureFont::drawString( const std::string &str, const Rectf &fitRect, cons
 	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
 }
 
-#if defined( CINDER_COCOA )
+#if defined( CINDER_COCOA ) || defined ( CINDER_ANDROID )
 void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRect, const Vec2f &offset, const DrawOptions &options )
 {
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( fitRect.getWidth(), fitRect.getHeight() ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
+#if defined( CINDER_COCOA )
 	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
+#else
+	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
+#endif
 }
 #endif
 
