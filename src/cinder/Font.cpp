@@ -481,6 +481,41 @@ FT_Face& Font::getFTFace() const
 	return mObj->mFTData->face;
 }
 
+Font::GlyphMetrics& Font::getGlyphMetrics(Glyph glyph) const
+{
+	boost::unordered_map<Font::Glyph, GlyphMetrics>::iterator it = mObj->mGlyphMetrics.find(glyph);
+	if (it != mObj->mGlyphMetrics.end()) {
+		return it->second;
+	}
+
+	FT_Face face = getFTFace();
+	int error = FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
+	FT_GlyphSlot slot = face->glyph;
+
+	GlyphMetrics gm;
+	gm.mAdvance = Vec2f(slot->advance.x / 64.0f, slot->advance.y / 64.0f);
+	mObj->mGlyphMetrics[glyph] = gm;
+	return mObj->mGlyphMetrics[glyph];
+}
+
+Vec2f& Font::getAdvance(Glyph glyph) const
+{
+	GlyphMetrics& gm = getGlyphMetrics(glyph);
+	return gm.mAdvance;
+}
+
+float Font::getKerning(Glyph glyph, Glyph prev) const
+{
+	//  Cache kerning info?
+	if (mObj->mHasKerning) {
+		FT_Vector kerning;
+		FT_Get_Kerning(getFTFace(), prev, glyph, FT_KERNING_UNSCALED, &kerning);
+		return kerning.x;
+	}
+
+	return 0;
+}
+
 // XXX implement these!
 std::string Font::getFullName() const
 {
@@ -727,6 +762,7 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
         //  XXX error handling
 		error = FT_Set_Char_Size( face, size * 64, 0, dpi, dpi );
         FT_Set_Transform( face, &matrix, NULL );
+		mHasKerning = bool( face->face_flags & FT_FACE_FLAG_KERNING );
 	}
 #endif
 }

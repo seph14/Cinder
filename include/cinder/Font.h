@@ -47,6 +47,7 @@
 	struct FTData;
 	struct FT_FaceRec_;
 	typedef struct FT_FaceRec_* FT_Face;
+	#include <boost/unordered_map.hpp>
 #endif
 
 namespace cinder {
@@ -94,7 +95,17 @@ class Font {
 	const Gdiplus::Font*	getGdiplusFont() const { return mObj->mGdiplusFont.get(); }
 	static HDC				getGlobalDc();
 #elif defined( CINDER_ANDROID )
-	FT_Face&				getFTFace() const;
+    struct GlyphMetrics {
+		//  TextureFont is also responsible for layout on Android
+		Vec2f		mAdvance;
+		// std::vector<KerningPair> mKerning;
+    };
+	FT_Face&		getFTFace() const;
+
+    //  Cache and return font metrics for the given glyph
+    GlyphMetrics&   getGlyphMetrics(Glyph glyph) const;
+	Vec2f&			getAdvance(Glyph glyph) const;
+	float 			getKerning(Glyph glyph, Glyph prev) const;
 #endif
 
  private:
@@ -122,6 +133,9 @@ class Font {
 #elif defined( CINDER_ANDROID )
 		std::shared_ptr<FTData>	mFTData;
 		size_t					mNumGlyphs;
+        //  cached glyph metrics
+        boost::unordered_map<Font::Glyph, GlyphMetrics> mGlyphMetrics;
+        bool                    mHasKerning;
 #endif 		
 	};
 

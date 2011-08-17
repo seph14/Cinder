@@ -41,6 +41,9 @@
 	#include "cinder/msw/CinderMsw.h"
 	#include "cinder/msw/CinderMswGdiPlus.h"
 	#pragma comment(lib, "gdiplus")
+#elif defined( CINDER_ANDROID )
+	#include <ft2build.h>
+	#include FT_FREETYPE_H
 #endif
 
 #include <boost/noncopyable.hpp>
@@ -762,6 +765,177 @@ Surface	TextBox::render( Vec2f offset )
 	return result;
 }
 
-#endif // defined( CINDER_MSW )
+#elif defined( CINDER_ANDROID )
+
+//  From Skia TextBox
+size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit)
+{
+    FT_Face face = mFont.getFTFace();
+    const Font::Glyph ws = FT_Get_Char_Index(face, int(' '));
+
+    float w = 0;
+
+    const Font::Glyph* start = text;
+
+    const Font::Glyph* word_start = text;
+    bool         prevWS = true;
+
+    while (text < stop)
+    {
+        const Font::Glyph* prevText = text;
+        Font::Glyph uni = *(++text);
+        bool        currWS = uni == ws;
+        // const SkGlyph&  glyph = cache->getUnicharMetrics(uni);
+        // const GlyphInfo& glyphInfo = mGlyphMap[uni];
+
+        if (!currWS && prevWS)
+            word_start = prevText;
+        prevWS = currWS;
+
+        w += mFont.getKerning(uni, *prevText) + mFont.getAdvance(uni).x;
+        if (w > limit)
+        {
+            if (currWS) // eat the rest of the whitespace
+            {
+                while (text < stop && *text == ws)
+                    ++text;
+            }
+            else    // backup until a whitespace (or 1 char)
+            {
+                if (word_start == start)
+                {
+                    if (prevText > start)
+                        text = prevText;
+                }
+                else
+                    text = word_start;
+            }
+            break;
+        }
+    }
+    return text - start;
+}
+
+int TextBox::countLines(vector<Font::Glyph>& text, float width)
+{
+    Font::Glyph* start = &text[0];
+    Font::Glyph* stop = start + text.size();
+    int         count = 0;
+
+    if (width > 0) {
+        do {
+            count += 1;
+            start += linebreak(start, stop, width);
+        } while (start < stop);
+    }
+    return count;
+}
+
+/*
+    for (;;)
+    {
+        len = linebreak(text, textStop, paint, marginWidth);
+        if (y + metrics.fDescent + metrics.fLeading > 0)
+            canvas->drawText(text, len, x, y, paint);
+        text += len;
+        if (text >= textStop)
+            break;
+        y += scaledSpacing;
+        if (y + metrics.fAscent >= height)
+            break;
+    } 
+*/
+
+
+Vec2f TextBox::measure() const
+{
+}
+
+#if ! defined( CINDER_HARFBUZZ )
+vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
+{
+    vector<pair<uint16_t,Vec2f> > placements;
+    vector<Font::Glyph> glyphs = mFont.getGlyphs(mText);
+
+    Vec2f pen(0, 0);
+    Font::Glyph prevIndex = 0;
+
+    for (vector<Font::Glyph>::iterator it = glyphs.begin(); it != glyphs.end(); ++it) {
+        if (prevIndex) {
+            float kerning = mFont.getKerning(*it, prevIndex);
+            pen.x += kerning;
+        }
+
+        placements.push_back(std::make_pair(*it, pen));
+        pen += mFont.getAdvance(*it);
+        prevIndex = *it;
+    }
+
+    return placements;
+}
+#else
+
+// sketching - shape a utf-8 string with harfbuzz
+vector<pair<uint16_t,Vec2f> > Text::shapeGlyphs() const
+{
+    FT_Face ft_face = mFont.getFTFace();
+	vector<pair<uint16_t,Vec2f> > placements;
+
+#if 0
+    // XXX create font from font buffer (access through Font?) 
+    DataSourceRef fontData = loadFile("/system/fonts/DroidSans.ttf");
+    Buffer fontBuffer = fontData.getBuffer();
+
+    hb_blob_t* blob = hb_blob_create (fontBuffer->getData(), fontBuffer.getDataSize(),
+            HB_MEMORY_MODE_READONLY, this, NULL);
+
+    hb_face_t* face = hb_face_create(blob, 0);
+    hb_font_t* font = hb_font_create(face);
+
+    hb_face_destroy(face);
+    hb_blob_destroy(blob);
+
+    hb_font_set_scale(font, mFont.getSize(), mFont.getSize()); 
+#else
+    hb_font_t *hb_font = hb_ft_font_create(ft_face, NULL);
+#endif
+
+    vector<int> utf32String;
+    utf8::utf8to32(mText.begin(), mText.end(), std::back_inserter(utf32String));
+
+    hb_buffer_t* buf = hb_buffer_create(0);
+    hb_buffer_add_utf32(buf, &utf32String[0], utf32String.size(), 0, utf32String.size());
+    hb_buffer_set_direction (buf, HB_DIRECTION_LTR);
+
+    hb_shape(font, buf, NULL, 0);
+
+    len = hb_buffer_get_length (buf);
+
+    hb_glyph_info_t *glyphs = hb_buffer_get_glyph_infos (buf, NULL);
+    hb_glyph_position_t *positions = hb_buffer_get_glyph_positions (buf, NULL);
+
+    Vec2f pen(0,0);
+
+    for (int i=0; i < len; ++i) {
+        Vec2f advance(positions[i].x_advance, positions[i].y_advance);
+        Vec2f offset(positions[i].x_offset, positions[i].y_offset);
+
+        uint32_t glyphIndex = FT_Get_Char_Index(ft_face, glyphs[i].codepoint);
+        placements.push_back(std::make_pair(glyphIndex, pen));
+        pen += advance;
+    }
+
+    hb_buffer_destroy(buf);
+    hb_font_destroy(font);
+}
+
+#endif // ! defined( CINDER_HARFBUZZ )
+
+Surface	TextBox::render( Vec2f offset )
+{
+    //  XXX not implemented 
+}
+
+#endif // defined( CINDER_ANDROID )
 
 } // namespace cinder
