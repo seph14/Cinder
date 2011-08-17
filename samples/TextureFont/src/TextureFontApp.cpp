@@ -69,7 +69,6 @@ void TextureFontApp::draw()
 
 	gl::color( ColorA( 1, 0.5f, 0.25f, 1.0f ) );
 
-    gl::drawStrokedRect( boundsRect );
 #if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 	mTextureFont->drawStringWrapped( str, boundsRect );
 #else

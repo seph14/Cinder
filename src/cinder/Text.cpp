@@ -780,19 +780,19 @@ size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, floa
     const Font::Glyph* word_start = text;
     bool         prevWS = true;
 
+    // "Hello world"
+
     while (text < stop)
     {
         const Font::Glyph* prevText = text;
         Font::Glyph uni = *(++text);
         bool        currWS = uni == ws;
-        // const SkGlyph&  glyph = cache->getUnicharMetrics(uni);
-        // const GlyphInfo& glyphInfo = mGlyphMap[uni];
 
         if (!currWS && prevWS)
-            word_start = prevText;
+            word_start = text;
         prevWS = currWS;
 
-        w += mFont.getKerning(uni, *prevText) + mFont.getAdvance(uni).x;
+        w += mFont.getKerning(uni, *prevText) + mFont.getAdvance(*prevText).x;
         if (w > limit)
         {
             if (currWS) // eat the rest of the whitespace
@@ -873,6 +873,7 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
         int lineLength = mSize.x == GROW ? glyphs.size() : linebreak(start, end, mSize.x);
         Font::Glyph* stop = start + lineLength;
 
+        CI_LOGI("XXX Line start glyph %d", *start);
         for (Font::Glyph* it = start; it != stop; ++it) {
             if (prevIndex) {
                 float kerning = mFont.getKerning(*it, prevIndex);
@@ -888,6 +889,7 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
         pen.x = 0;
         pen.y += mFont.getLeading();
     }
+    CI_LOGI("XXX End measure");
 
     // for (vector<Font::Glyph>::iterator it = glyphs.begin(); it != glyphs.end(); ++it) {
     //     if (prevIndex) {
