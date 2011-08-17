@@ -858,6 +858,8 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
     vector<Font::Glyph> glyphs = mFont.getGlyphs(mText);
 
     Vec2f pen(0, 0);
+    pen.y += mFont.getAscent();
+
     Font::Glyph prevIndex = 0;
 
     for (vector<Font::Glyph>::iterator it = glyphs.begin(); it != glyphs.end(); ++it) {

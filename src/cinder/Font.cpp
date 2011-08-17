@@ -525,19 +525,22 @@ std::string Font::getFullName() const
 float Font::getLeading() const
 {
 	FT_Face face = getFTFace();
-	return float(face->ascender - face->descender - face->units_per_EM) / face->units_per_EM * mObj->mSize;
+	// return float(face->ascender - face->descender - face->units_per_EM) / face->units_per_EM * mObj->mSize;
+	return face->size->metrics.height / 64.0f;
 }
 
 float Font::getAscent() const
 {
 	FT_Face face = getFTFace();
-	return float(face->ascender) / face->units_per_EM * mObj->mSize;
+	// return float(face->ascender) / face->units_per_EM * mObj->mSize;
+	return face->size->metrics.ascender / 64.0f;
 }
 
 float Font::getDescent() const
 {
 	FT_Face face = getFTFace();
-	return float(face->descender) / face->units_per_EM * mObj->mSize;
+	return  (-face->size->metrics.descender) / 64.0f;
+	// return float(face->descender) / face->units_per_EM * mObj->mSize;
 }
 
 size_t Font::getNumGlyphs() const
@@ -757,7 +760,7 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 		mName = string(face->family_name);
 		mNumGlyphs = face->num_glyphs;
 		CI_LOGI("Opened font: family name %s", mName.c_str());
-		const int dpi = 200;  //  XXX query device capabilities
+		const int dpi = 72;  //  XXX query device capabilities
         error = FT_Select_Charmap( face, FT_ENCODING_UNICODE );
         //  XXX error handling
 		error = FT_Set_Char_Size( face, size * 64, 0, dpi, dpi );
