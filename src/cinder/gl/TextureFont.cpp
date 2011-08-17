@@ -742,7 +742,11 @@ void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRec
 #if defined( CINDER_COCOA )
 	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
 #else
-	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
+	// drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
+
+    // Clipping affects italicized fonts on Android, so use baseline
+    // but have to compensate for rectangle upper border/ascent (?)
+	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset + Vec2f(0, mFont.getAscent() ), options );
 #endif
 }
 #endif

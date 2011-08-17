@@ -30,6 +30,7 @@ void TextureFontApp::setup()
 	mFont = Font( "BigCaslon-Medium", 24 );
 #elif defined( CINDER_ANDROID )
     mFont = Font( loadFile("/system/fonts/DroidSans.ttf"), 24 );
+    // mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 24 );
 #else
 	mFont = Font( "Times New Roman", 24 );
 #endif
