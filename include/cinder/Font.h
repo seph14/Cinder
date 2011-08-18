@@ -98,6 +98,7 @@ class Font {
     struct GlyphMetrics {
 		//  TextureFont is also responsible for layout on Android
 		Vec2f		mAdvance;
+        Rectf       mBounds;
 		// std::vector<KerningPair> mKerning;
     };
 	FT_Face&		getFTFace() const;

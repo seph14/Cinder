@@ -29,8 +29,8 @@ void TextureFontApp::setup()
 #elif defined( CINDER_COCOA )
 	mFont = Font( "BigCaslon-Medium", 24 );
 #elif defined( CINDER_ANDROID )
-    mFont = Font( loadFile("/system/fonts/DroidSans.ttf"), 24 );
-    // mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 24 );
+    // mFont = Font( loadFile("/system/fonts/DroidSans.ttf"), 24 );
+    mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 24 );
 #else
 	mFont = Font( "Times New Roman", 24 );
 #endif
@@ -70,6 +70,7 @@ void TextureFontApp::draw()
 
 	gl::color( ColorA( 1, 0.5f, 0.25f, 1.0f ) );
 
+    // gl::drawStrokedRect( boundsRect );
 #if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 	mTextureFont->drawStringWrapped( str, boundsRect );
 #else

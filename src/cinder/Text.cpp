@@ -767,33 +767,32 @@ Surface	TextBox::render( Vec2f offset )
 
 #elif defined( CINDER_ANDROID )
 
-//  From Skia TextBox
+//  Adapted from Skia TextBox code
 size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit) const
 {
-    FT_Face face = mFont.getFTFace();
-    const Font::Glyph ws = FT_Get_Char_Index(face, int(' '));
+    // FT_Face face = mFont.getFTFace();
+    // const Font::Glyph ws = FT_Get_Char_Index(face, int(' '));
+    const Font::Glyph ws = mFont.getGlyphChar(' ');
 
     float w = 0;
 
-    const Font::Glyph* start = text;
-
+    const Font::Glyph* start      = text;
     const Font::Glyph* word_start = text;
-    bool         prevWS = true;
-
-    // "Hello world"
+    bool  prevWS                  = true;
 
     while (text < stop)
     {
         const Font::Glyph* prevText = text;
-        Font::Glyph uni = *(++text);
-        bool        currWS = uni == ws;
+        Font::Glyph        uni      = *(++text);
+        bool               currWS   = uni == ws;
 
         if (!currWS && prevWS)
             word_start = text;
         prevWS = currWS;
 
         w += mFont.getKerning(uni, *prevText) + mFont.getAdvance(*prevText).x;
-        if (w > limit)
+
+        if (w + mFont.getAdvance(uni).x > limit)
         {
             if (currWS) // eat the rest of the whitespace
             {
@@ -802,8 +801,7 @@ size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, floa
             }
             else    // backup until a whitespace (or 1 char)
             {
-                if (word_start == start)
-                {
+                if (word_start == start) {
                     if (prevText > start)
                         text = prevText;
                 }
@@ -858,10 +856,6 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
     vector<pair<uint16_t,Vec2f> > placements;
     vector<Font::Glyph> glyphs = mFont.getGlyphs(mText);
 
-    // if (mSize.x != GROW) {
-    //     CI_LOGI("Split into %d lines", countLines(glyphs, mSize.x));
-    // }
-
     Font::Glyph* start = &glyphs[0];
     Font::Glyph* end = start + glyphs.size();
 
@@ -873,7 +867,6 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
         int lineLength = mSize.x == GROW ? glyphs.size() : linebreak(start, end, mSize.x);
         Font::Glyph* stop = start + lineLength;
 
-        CI_LOGI("XXX Line start glyph %d", *start);
         for (Font::Glyph* it = start; it != stop; ++it) {
             if (prevIndex) {
                 float kerning = mFont.getKerning(*it, prevIndex);
@@ -889,18 +882,6 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
         pen.x = 0;
         pen.y += mFont.getLeading();
     }
-    CI_LOGI("XXX End measure");
-
-    // for (vector<Font::Glyph>::iterator it = glyphs.begin(); it != glyphs.end(); ++it) {
-    //     if (prevIndex) {
-    //         float kerning = mFont.getKerning(*it, prevIndex);
-    //         pen.x += kerning;
-    //     }
-
-    //     placements.push_back(std::make_pair(*it, pen));
-    //     pen += mFont.getAdvance(*it);
-    //     prevIndex = *it;
-    // }
 
     return placements;
 }

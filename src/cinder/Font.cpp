@@ -488,14 +488,31 @@ Font::GlyphMetrics& Font::getGlyphMetrics(Glyph glyph) const
 		return it->second;
 	}
 
+	GlyphMetrics gm;
 	FT_Face face = getFTFace();
 	int error = FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
 	FT_GlyphSlot slot = face->glyph;
 
-	GlyphMetrics gm;
-	gm.mAdvance = Vec2f(slot->advance.x / 64.0f, slot->advance.y / 64.0f);
-	mObj->mGlyphMetrics[glyph] = gm;
-	return mObj->mGlyphMetrics[glyph];
+    if (error == 0) {
+        gm.mAdvance = Vec2f(slot->advance.x / 64.0f, slot->advance.y / 64.0f);
+    }
+
+    FT_Glyph ftglyph;
+    FT_BBox  bbox;
+    error = FT_Get_Glyph(slot, &ftglyph);
+    if (error == 0) {
+        FT_Glyph_Get_CBox(ftglyph, FT_GLYPH_BBOX_GRIDFIT, &bbox);
+        gm.mBounds = Rectf(bbox.xMin / 64.0f, bbox.yMin / 64.0f, bbox.xMax / 64.0f, bbox.yMax / 64.0f);
+    }
+    else {
+        CI_LOGI("XXX error calling FT_Get_Glyph %d", glyph);
+    }
+
+	GlyphMetrics& metrics = mObj->mGlyphMetrics[glyph] = gm;
+    // CI_LOGI("mAdvance %.1f,%.1f mBounds %.1f %.1f %.1f %.1f",
+    //         gm.mAdvance.x, gm.mAdvance.y,
+    //         gm.mBounds.x1,gm.mBounds.y1,gm.mBounds.x2,gm.mBounds.y2);
+	return metrics;
 }
 
 Vec2f& Font::getAdvance(Glyph glyph) const
@@ -550,7 +567,8 @@ size_t Font::getNumGlyphs() const
 
 Font::Glyph Font::getGlyphChar( char c ) const
 {
-	return (Glyph) c;
+    FT_Face face = getFTFace();
+	return (Glyph) FT_Get_Char_Index(face, (int) c);
 }
 
 Font::Glyph Font::getGlyphIndex( size_t idx ) const
@@ -585,15 +603,8 @@ Shape2d Font::getGlyphShape( Glyph glyphIndex ) const
 
 Rectf Font::getGlyphBoundingBox( Glyph glyphIndex ) const
 {
-    FT_Glyph glyph;
-    FT_BBox bbox;
-
-    FT_Face face = getFTFace();
-    int error = FT_Load_Glyph(face, glyphIndex, FT_LOAD_DEFAULT);
-    error = FT_Get_Glyph(face->glyph, &glyph);
-    //  get bounding box size in grid-fitted pixels
-    FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &bbox);
-	return Rectf(bbox.xMin, bbox.yMin, bbox.xMax, bbox.yMax);
+	GlyphMetrics& gm = getGlyphMetrics(glyphIndex);
+	return gm.mBounds;
 }
 
 #endif
