@@ -86,5 +86,4 @@ void TextureFontApp::draw()
 	mTextureFont->drawString( mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
 }
 
-
 CINDER_APP_NATIVE( TextureFontApp, RendererGl(0) )

@@ -58,6 +58,11 @@ struct engine {
     //  accelerometer
     bool  accelEnabled;
     float accelUpdateFrequency;
+
+    bool  initialized;
+    bool  paused;
+    bool  resumed;
+    bool  renewContext;
 };
 
 static void engine_draw_frame(struct engine* engine) {
@@ -200,11 +205,19 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             if (engine->state->window != NULL) {
                 cinderApp->getRenderer()->setup(cinderApp, engine->state->window, 
                         engine->width, engine->height);
-
-                cinderApp->privateSetup__();
                 cinderApp->privateResize__(ci::Vec2i(engine->width, engine->height));
 
-                engine_draw_frame(engine);
+                if (!engine->initialized) {
+                    //  First time setup
+                    cinderApp->privateSetup__();
+                    engine->initialized = true;
+                }
+                else if (engine->paused) {
+                    //  Resumed and recreated context
+                    engine->renewContext = true;
+                }
+
+                // engine_draw_frame(engine);
                 engine->animating = 1;
             }
             break;
@@ -222,6 +235,15 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             if (engine->accelerometerSensor != NULL && engine->accelEnabled) {
                 engine_enable_accelerometer(engine);
             }
+
+            if (engine->resumed) {
+                cinderApp->privateResume__(engine->renewContext);
+            }
+
+            engine->paused       = false;
+            engine->resumed      = false;
+            engine->renewContext = false;
+
             break;
         case APP_CMD_LOST_FOCUS:
             CI_LOGW("XXX APP_CMD_LOST_FOCUS");
@@ -233,15 +255,24 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
         case APP_CMD_RESUME:
             CI_LOGW("XXX APP_CMD_RESUME");
+            engine->resumed = true;
             break;
         case APP_CMD_START:
             CI_LOGW("XXX APP_CMD_START");
             break;
         case APP_CMD_PAUSE:
             CI_LOGW("XXX APP_CMD_PAUSE");
+            engine->paused = true;
+            cinderApp->privatePause__();
             break;
         case APP_CMD_STOP:
             CI_LOGW("XXX APP_CMD_STOP");
+            break;
+        case APP_CMD_DESTROY:
+            //  app has been destroyed, will crash if we attempt to do anything else
+            CI_LOGW("XXX APP_CMD_DESTROY");
+            engine->initialized = false;
+            engine->paused = engine->resumed = false;
             break;
     }
 }
@@ -305,8 +336,10 @@ static void android_run(struct engine* engine)
             // Update input
             // Check if we are exiting.
             if (state->destroyRequested != 0) {
-                ci::app::AppAndroid& app = *(engine->cinderApp);
-                app.getRenderer()->teardown();
+                // XXX frequently crashes in teardown when orientation is locked 
+                // to landscape
+                // ci::app::AppAndroid& app = *(engine->cinderApp);
+                // app.getRenderer()->teardown();
                 engine->animating = 0;
                 return;
             }
@@ -339,6 +372,25 @@ AppAndroid::AppAndroid()
     mEngine->accelEnabled = false;
 	clock_gettime(CLOCK_MONOTONIC, &(mEngine->mStartTime));
 	mLastAccel = mLastRawAccel = Vec3f::zero();
+
+    //  Activity state tracking
+    mEngine->initialized  = false;
+    mEngine->paused       = false;
+    mEngine->resumed      = false;
+    mEngine->renewContext = false;
+}
+
+void AppAndroid::pause()
+{
+}
+
+void AppAndroid::resume( bool renewContext )
+{
+    //  Override this to handle lost/recreated GL context
+    //  You should recreate your GL context in this method
+    if (renewContext) {
+        setup();
+    }
 }
 
 void AppAndroid::setAppState( struct android_app* state )
@@ -431,6 +483,16 @@ void AppAndroid::quit()
 void AppAndroid::privatePrepareSettings__()
 {
 	prepareSettings( &mSettings );
+}
+
+void AppAndroid::privatePause__()
+{
+    pause();
+}
+
+void AppAndroid::privateResume__(bool renewContext) 
+{
+    resume(renewContext);
 }
 
 void AppAndroid::privateTouchesBegan__( const TouchEvent &event )

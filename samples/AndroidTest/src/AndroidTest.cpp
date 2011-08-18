@@ -19,8 +19,9 @@ class AndroidTest : public AppNative {
 public:
 	void setup();
 	void draw();
+	void resume(bool renewContext);
 	
-	gl::Texture		mTexture;	
+	gl::Texture		   mTexture;	
 
 	Font               mFont;
 	gl::TextureFontRef mTexFont;
@@ -42,7 +43,7 @@ void AndroidTest::setup()
     // Bitstream Vera Sans has Freetype kerning information
     // mFont = Font(loadResource("Vera.ttf"), 16);
 
-    mFont = Font(loadFile("/system/fonts/DroidSans.ttf"), 16);
+    mFont = Font(loadFile("/system/fonts/DroidSans.ttf"), 40);
     // mFont = Font(loadFile("/system/fonts/DroidSerif-Regular.ttf"), 12);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
 
@@ -70,6 +71,13 @@ void AndroidTest::setup()
 	// string text;
 	// stream->readFixedString(&text, size);
 	// console() << "Read from hello.txt: " << text << endl;
+}
+
+void AndroidTest::resume(bool renewContext)
+{
+	if (renewContext) {
+		setup();
+	}
 }
 
 void AndroidTest::draw()
