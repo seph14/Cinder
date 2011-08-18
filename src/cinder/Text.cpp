@@ -770,8 +770,6 @@ Surface	TextBox::render( Vec2f offset )
 //  Adapted from Skia TextBox code
 size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, float limit) const
 {
-    // FT_Face face = mFont.getFTFace();
-    // const Font::Glyph ws = FT_Get_Char_Index(face, int(' '));
     const Font::Glyph ws = mFont.getGlyphChar(' ');
 
     float w = 0;
@@ -783,7 +781,7 @@ size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, floa
     while (text < stop)
     {
         const Font::Glyph* prevText = text;
-        Font::Glyph        uni      = *(++text);
+        Font::Glyph        uni      = *(++text);  // XXX handle text == (stop-1)
         bool               currWS   = uni == ws;
 
         if (!currWS && prevWS)
@@ -792,15 +790,14 @@ size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, floa
 
         w += mFont.getKerning(uni, *prevText) + mFont.getAdvance(*prevText).x;
 
-        if (w + mFont.getAdvance(uni).x > limit)
-        {
-            if (currWS) // eat the rest of the whitespace
-            {
+        if (w + mFont.getAdvance(uni).x > limit) {
+            if (currWS) {
+                // eat the rest of the whitespace
                 while (text < stop && *text == ws)
                     ++text;
             }
-            else    // backup until a whitespace (or 1 char)
-            {
+            else {
+                // backup until a whitespace (or 1 char)
                 if (word_start == start) {
                     if (prevText > start)
                         text = prevText;
@@ -828,22 +825,6 @@ int TextBox::countLines(vector<Font::Glyph>& text, float width) const
     }
     return count;
 }
-
-/*
-    for (;;)
-    {
-        len = linebreak(text, textStop, paint, marginWidth);
-        if (y + metrics.fDescent + metrics.fLeading > 0)
-            canvas->drawText(text, len, x, y, paint);
-        text += len;
-        if (text >= textStop)
-            break;
-        y += scaledSpacing;
-        if (y + metrics.fAscent >= height)
-            break;
-    } 
-*/
-
 
 Vec2f TextBox::measure() const
 {
