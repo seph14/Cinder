@@ -394,7 +394,7 @@ void rotate( const Quatf &quat )
 		glRotatef( toDegrees( angle ), axis.x, axis.y, axis.z );
 }
 
-#endif // ! defined( CINDER_GLES )
+#endif // ! defined( CINDER_GLES2 )
 
 void enableAlphaBlending( bool premultiplied )
 {

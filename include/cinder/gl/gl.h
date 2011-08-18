@@ -130,7 +130,7 @@ Area getViewport();
 //! Sets the current OpenGL Viewport to \a area
 void setViewport( const Area &area );
 
-#if ! defined( CINDER_GLES )
+#if ! defined( CINDER_GLES2 )
 //! Produces a translation by \a pos in the current matrix.
 void translate( const Vec2f &pos );
 //! Produces a translation by \a x and \a y in the current matrix.
