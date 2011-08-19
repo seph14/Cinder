@@ -61,6 +61,12 @@ void AndroidTestES2::draw()
     context->attr().drawSolidCircle( Vec2f(getWindowWidth() / 2.0f, getWindowHeight() / 2.0f), 
                                      40.0f, 32);
 
+    if (mTexture) {
+        context->color(ColorA(1.0f, 1.0f, 1.0f, 1.0f));
+        Vec2f lr(getWindowWidth(), getWindowHeight());
+        context->attr().draw(mTexture, Rectf(lr.x-100.0f, lr.y-100.0f, lr.x, lr.y));
+    }
+
     context->unbind();
 }
 

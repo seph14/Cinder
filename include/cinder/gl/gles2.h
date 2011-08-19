@@ -114,13 +114,14 @@ public:
     virtual void selectAttrs(uint32_t activeAttrs) = 0; 
 };
 
-//  Shader attributes and draw methods that use them
+//  Shader attributes and draw method implementations
 struct GlesAttr 
 {
     GLuint mVertex;
     GLuint mTexCoord;
     GLuint mColor;
     GLuint mNormal;
+    GLuint mTexSampler;
 
     SelectAttrCallback* mSelectAttr;
 

@@ -723,6 +723,7 @@ void GlesAttr::draw( const Texture &texture, const Area &srcArea, const Rectf &d
     // ClientBoolState vertexArrayState( GL_VERTEX_ARRAY );
     // ClientBoolState texCoordArrayState( GL_TEXTURE_COORD_ARRAY );	
     texture.enableAndBind();
+    glUniform1i(mTexSampler, 0);
 
     glEnableVertexAttribArray(mVertex);
     GLfloat verts[12];
@@ -757,30 +758,48 @@ public:
 
 const char* CinderProgES2::verts = 
         "attribute vec3 aPosition;\n"
-        "\n"
+        "attribute vec4 aColor;\n"
+        "attribute vec2 aTexCoord;\n"
+
         "uniform mat4 uProjection;\n"
         "uniform mat4 uModelView;\n"
         "uniform vec4 uVertexColor;\n"
-        "\n"
+
         "uniform bool uHasVertexAttr;\n"
         "uniform bool uHasTexCoordAttr;\n"
         "uniform bool uHasColorAttr;\n"
         "uniform bool uHasNormalAttr;\n"
-        "\n"
+
         "varying vec4 vColor;\n"
-        "\n"
+        "varying vec2 vTexCoord;\n"
+
         "void main() {\n"
         "  vColor = uVertexColor;\n"
+        "  if (uHasColorAttr) {\n"
+        "    vColor *= aColor;\n"
+        "  }\n"
+        "  if (uHasTexCoordAttr) {\n"
+        "    vTexCoord = aTexCoord;\n"
+        "  }\n"
         "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n"
         "}\n";
 
 const char* CinderProgES2::frags = 
         "precision mediump float;\n"
-        "\n"
+
+        "uniform bool uHasTexCoordAttr;\n"
+        "uniform sampler2D sTexture;\n"
+
         "varying vec4 vColor;\n"
-        "\n"
+        "varying vec2 vTexCoord;\n"
+
         "void main() {\n"
-        "    gl_FragColor = vColor;\n"
+        "    if (uHasTexCoordAttr) {\n"
+        "      gl_FragColor = vColor * texture2D(sTexture, vTexCoord);\n"
+        "    }\n"
+        "    else {\n"
+        "      gl_FragColor = vColor;\n"
+        "    }\n"
         "}\n";
 
 GlesContext::GlesContext()
@@ -790,7 +809,10 @@ GlesContext::GlesContext()
     // mProg = CinderProgES2();
 	try {
         mProg = CinderProgES2();
-        mAttr = GlesAttr(mProg.getAttribLocation("aPosition"));
+        mAttr = GlesAttr(mProg.getAttribLocation("aPosition"),
+                         mProg.getAttribLocation("aTexCoord"),
+                         mProg.getAttribLocation("aColor"));
+        mAttr.mTexSampler = mProg.getUniformLocation("sTexture");
         //  XXX use a setter
         mAttr.mSelectAttr = this;
     }
