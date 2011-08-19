@@ -86,6 +86,7 @@ bool isExtensionAvailable( const std::string &extName );
 //! Clears the OpenGL color buffer using \a color and optionally clears the depth buffer when \a clearDepthBuffer
 void clear( const ColorA &color = ColorA::black(), bool clearDepthBuffer = true );
 
+#if ! defined( CINDER_GLES2 )
 //! Sets the \c MODELVIEW and \c PROJECTION matrices to reflect the values of \a cam. Leaves the \c MatrixMode as \c MODELVIEW.
 void setMatrices( const Camera &cam );
 //! Sets the \c MODELVIEW matrix to reflect the values of \a cam. Leaves the \c MatrixMode as \c MODELVIEW.
@@ -113,7 +114,7 @@ Matrix44f getModelView();
 //! Returns the value of the current \c PROJECTION matrix as a Matrix44f.
 Matrix44f getProjection();
 
-//! Sets the viepwort and \c MODELVIEW and \c PROJECTION matrices to be a perspective projection with the upper-left corner at \c [0,0] and the lower-right at \c [screenWidth,screenHeight], but flipped vertically if not \a originUpperLeft.
+//! Sets the viewport and \c MODELVIEW and \c PROJECTION matrices to be a perspective projection with the upper-left corner at \c [0,0] and the lower-right at \c [screenWidth,screenHeight], but flipped vertically if not \a originUpperLeft.
 void setMatricesWindowPersp( int screenWidth, int screenHeight, float fovDegrees = 60.0f, float nearPlane = 1.0f, float farPlane = 1000.0f, bool originUpperLeft = true );
 //! Sets the viewport and \c MODELVIEW and \c PROJECTION matrices to be a perspective projection with the upper-left corner at \c [0,0] and the lower-right at \c [screenWidth,screenHeight], but flipped vertically if not \a originUpperLeft.
 inline void setMatricesWindowPersp( const Vec2i &screenSize, float fovDegrees = 60.0f, float nearPlane = 1.0f, float farPlane = 1000.0f, bool originUpperLeft = true )
@@ -123,7 +124,6 @@ void setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft 
 //! Sets the viewport and the \c MODELVIEW and \c PROJECTION matrices to orthographic with the upper-left corner at \c [0,0] and the lower-right at \c [size.x,size.y] if \a originUpperLeft is \c true. Otherwise the origin is in the lower right.
 inline void setMatricesWindow( const Vec2i &screenSize, bool originUpperLeft = true ) { setMatricesWindow( screenSize.x, screenSize.y, originUpperLeft ); }
 
-#if ! defined( CINDER_GLES2 )
 //! Returns the current OpenGL Viewport as an Area
 Area getViewport();
 #endif

@@ -1,4 +1,5 @@
 #include "cinder/gl/gles2.h"
+
 #include "cinder/gl/GlslProg.h"
 #include "cinder/gl/Vbo.h"
 #include "cinder/CinderMath.h"
@@ -16,60 +17,29 @@ using std::shared_ptr;
 
 namespace cinder { namespace gl {
 
-GlesAttr::GlesAttr()
-    : vertex(0), texCoord(0), color(0), normal(0)
+GlesAttr::GlesAttr(GLuint vertex, GLuint texCoord, GLuint color, GLuint normal)
+   : mVertex(vertex), mTexCoord(texCoord), mColor(color), mNormal(normal)
+{ }
+
+void GlesAttr::drawLine( const Vec2f &start, const Vec2f &end )
 {
+    drawLine(Vec3f(start.x, start.y, 0), Vec3f(end.x, end.y, 0));
 }
 
-GlesState::Obj::Obj()
+void GlesAttr::drawLine( const Vec3f &start, const Vec3f &end )
 {
-}
-
-GlesState::Obj::~Obj()
-{
-}
-
-GlesState::GlesState()
-    : mObj( shared_ptr<Obj>( new Obj() ) )
-{
-}
-
-GlesState::GlesState(GlslProg& shader)
-    : mObj( shared_ptr<Obj>( new Obj() ) )
-{
-}
-
-void drawLine( GlesState& state, const Vec2f &start, const Vec2f &end )
-{
-    GlesAttr& attr = state.attr();
-
-	float lineVerts[2*2];
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer(attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, lineVerts);
-	lineVerts[0] = start.x; lineVerts[1] = start.y;
-	lineVerts[2] = end.x; lineVerts[3] = end.y;
-    glDrawArrays(GL_LINES, 0, 2);
-    glDisableVertexAttribArray(attr.vertex);
-}
-
-
-void drawLine( GlesState& state, const Vec3f &start, const Vec3f &end )
-{
-    GlesAttr& attr = state.attr();
-
-	float lineVerts[3*2];
-	glEnableVertexAttribArray(attr.vertex);
-	glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, lineVerts );
-	lineVerts[0] = start.x; lineVerts[1] = start.y; lineVerts[2] = start.z;
-	lineVerts[3] = end.x; lineVerts[4] = end.y; lineVerts[5] = end.z; 
-	glDrawArrays( GL_LINES, 0, 2 );
-    glDisableVertexAttribArray(attr.vertex);
+    float lineVerts[3*2];
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, lineVerts );
+    lineVerts[0] = start.x; lineVerts[1] = start.y; lineVerts[2] = start.z;
+    lineVerts[3] = end.x; lineVerts[4] = end.y; lineVerts[5] = end.z; 
+    glDrawArrays( GL_LINES, 0, 2 );
+    glDisableVertexAttribArray(mVertex);
 }
 
 namespace {
-void drawCubeImpl( GlesState& state, const Vec3f &c, const Vec3f &size, bool drawColors )
+void drawCubeImpl( GlesAttr& attr, const Vec3f &c, const Vec3f &size, bool drawColors )
 {
-    GlesAttr& attr = state.attr();
 
 	GLfloat sx = size.x * 0.5f;
 	GLfloat sy = size.y * 0.5f;
@@ -110,70 +80,68 @@ void drawCubeImpl( GlesState& state, const Vec3f &c, const Vec3f &size, bool dra
 									16,17,18,16,18,19,
 									20,21,22,20,22,23 };
 
-    glEnableVertexAttribArray(attr.normal);
-    glVertexAttribPointer( attr.normal, 3, GL_FLOAT, GL_FALSE, 0, normals );
+    glEnableVertexAttribArray(attr.mNormal);
+    glVertexAttribPointer( attr.mNormal, 3, GL_FLOAT, GL_FALSE, 0, normals );
 
-    glEnableVertexAttribArray(attr.texCoord);
-    glVertexAttribPointer( attr.texCoord, 2, GL_FLOAT, GL_FALSE, 0, texs );
+    glEnableVertexAttribArray(attr.mTexCoord);
+    glVertexAttribPointer( attr.mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, texs );
 
 	if( drawColors ) {
-        glEnableVertexAttribArray(attr.color);
-        glVertexAttribPointer( attr.color, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, colors );
+        glEnableVertexAttribArray(attr.mColor);
+        glVertexAttribPointer( attr.mColor, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, colors );
 	}
 
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, vertices );
+    glEnableVertexAttribArray(attr.mVertex);
+    glVertexAttribPointer( attr.mVertex, 3, GL_FLOAT, GL_FALSE, 0, vertices );
 
 	glDrawElements( GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, elements );
 
-	glDisableVertexAttribArray( attr.vertex );
-	glDisableVertexAttribArray( attr.texCoord );	 
-	glDisableVertexAttribArray( attr.normal );
+	glDisableVertexAttribArray( attr.mVertex );
+	glDisableVertexAttribArray( attr.mTexCoord );	 
+	glDisableVertexAttribArray( attr.mNormal );
 	if( drawColors )
-		glDisableVertexAttribArray( attr.color );
+		glDisableVertexAttribArray( attr.mColor );
 	 
 }
 } // anonymous namespace
 
-void drawCube( GlesState& state, const Vec3f &center, const Vec3f &size )
+void GlesAttr::drawCube( const Vec3f &center, const Vec3f &size )
 {
-	drawCubeImpl( state, center, size, false );
+	drawCubeImpl( *this, center, size, false );
 }
 
 
-void drawColorCube( GlesState& state, const Vec3f &center, const Vec3f &size )
+void GlesAttr::drawColorCube( const Vec3f &center, const Vec3f &size )
 {
-	drawCubeImpl( state, center, size, true );
+	drawCubeImpl( *this, center, size, true );
 }
 
 
-void drawStrokedCube( GlesState& state, const Vec3f &center, const Vec3f &size )
+void GlesAttr::drawStrokedCube( const Vec3f &center, const Vec3f &size )
 {
-    GlesAttr& attr = state.attr();
 
 	Vec3f min = center - size * 0.5f;
 	Vec3f max = center + size * 0.5f;
 
-	gl::drawLine( state, Vec3f(min.x, min.y, min.z), Vec3f(max.x, min.y, min.z) );
-	gl::drawLine( state, Vec3f(max.x, min.y, min.z), Vec3f(max.x, max.y, min.z) );
-	gl::drawLine( state, Vec3f(max.x, max.y, min.z), Vec3f(min.x, max.y, min.z) );
-	gl::drawLine( state, Vec3f(min.x, max.y, min.z), Vec3f(min.x, min.y, min.z) );
+	drawLine( Vec3f(min.x, min.y, min.z), Vec3f(max.x, min.y, min.z) );
+	drawLine( Vec3f(max.x, min.y, min.z), Vec3f(max.x, max.y, min.z) );
+	drawLine( Vec3f(max.x, max.y, min.z), Vec3f(min.x, max.y, min.z) );
+	drawLine( Vec3f(min.x, max.y, min.z), Vec3f(min.x, min.y, min.z) );
 	
-	gl::drawLine( state, Vec3f(min.x, min.y, max.z), Vec3f(max.x, min.y, max.z) );
-	gl::drawLine( state, Vec3f(max.x, min.y, max.z), Vec3f(max.x, max.y, max.z) );
-	gl::drawLine( state, Vec3f(max.x, max.y, max.z), Vec3f(min.x, max.y, max.z) );
-	gl::drawLine( state, Vec3f(min.x, max.y, max.z), Vec3f(min.x, min.y, max.z) );
+	drawLine( Vec3f(min.x, min.y, max.z), Vec3f(max.x, min.y, max.z) );
+	drawLine( Vec3f(max.x, min.y, max.z), Vec3f(max.x, max.y, max.z) );
+	drawLine( Vec3f(max.x, max.y, max.z), Vec3f(min.x, max.y, max.z) );
+	drawLine( Vec3f(min.x, max.y, max.z), Vec3f(min.x, min.y, max.z) );
 	
-	gl::drawLine( state, Vec3f(min.x, min.y, min.z), Vec3f(min.x, min.y, max.z) );
-	gl::drawLine( state, Vec3f(min.x, max.y, min.z), Vec3f(min.x, max.y, max.z) );
-	gl::drawLine( state, Vec3f(max.x, max.y, min.z), Vec3f(max.x, max.y, max.z) );
-	gl::drawLine( state, Vec3f(max.x, min.y, min.z), Vec3f(max.x, min.y, max.z) );
+	drawLine( Vec3f(min.x, min.y, min.z), Vec3f(min.x, min.y, max.z) );
+	drawLine( Vec3f(min.x, max.y, min.z), Vec3f(min.x, max.y, max.z) );
+	drawLine( Vec3f(max.x, max.y, min.z), Vec3f(max.x, max.y, max.z) );
+	drawLine( Vec3f(max.x, min.y, min.z), Vec3f(max.x, min.y, max.z) );
 }
 
 
-void drawSphere( GlesState& state, const Vec3f &center, float radius, int segments )
+void GlesAttr::drawSphere( const Vec3f &center, float radius, int segments )
 {
-    GlesAttr& attr = state.attr();
 
 	if( segments < 0 )
 		return;
@@ -182,12 +150,12 @@ void drawSphere( GlesState& state, const Vec3f &center, float radius, int segmen
 	float *normals = new float[(segments+1)*2*3];
 	float *texCoords = new float[(segments+1)*2*2];
 
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
-    glEnableVertexAttribArray(attr.texCoord);
-    glVertexAttribPointer( attr.texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
-    glEnableVertexAttribArray(attr.normal);
-    glVertexAttribPointer( attr.normal, 3, GL_FLOAT, GL_FALSE, 0, normals );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
+    glEnableVertexAttribArray(mTexCoord);
+    glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
+    glEnableVertexAttribArray(mNormal);
+    glVertexAttribPointer( mNormal, 3, GL_FLOAT, GL_FALSE, 0, normals );
 
 	for( int j = 0; j < segments / 2; j++ ) {
 		float theta1 = j * 2 * 3.14159f / segments - ( 3.14159f / 2.0f );
@@ -216,9 +184,9 @@ void drawSphere( GlesState& state, const Vec3f &center, float radius, int segmen
 		glDrawArrays( GL_TRIANGLE_STRIP, 0, (segments + 1)*2 );
 	}
 
-    glDisableVertexAttribArray( attr.vertex );
-    glDisableVertexAttribArray( attr.texCoord );
-    glDisableVertexAttribArray( attr.normal );
+    glDisableVertexAttribArray( mVertex );
+    glDisableVertexAttribArray( mTexCoord );
+    glDisableVertexAttribArray( mNormal );
 	
 	delete [] verts;
 	delete [] normals;
@@ -226,17 +194,15 @@ void drawSphere( GlesState& state, const Vec3f &center, float radius, int segmen
 }
 
 
-void draw( GlesState& state, const class Sphere &sphere, int segments )
+void GlesAttr::draw( const class Sphere &sphere, int segments )
 {
-    GlesAttr& attr = state.attr();
 
-	drawSphere( state, sphere.getCenter(), sphere.getRadius(), segments );
+	drawSphere( sphere.getCenter(), sphere.getRadius(), segments );
 }
 
 
-void drawSolidCircle( GlesState& state, const Vec2f &center, float radius, int numSegments )
+void GlesAttr::drawSolidCircle( const Vec2f &center, float radius, int numSegments )
 {
-    GlesAttr& attr = state.attr();
 
 	// automatically determine the number of segments from the circumference
 	if( numSegments <= 0 ) {
@@ -244,25 +210,26 @@ void drawSolidCircle( GlesState& state, const Vec2f &center, float radius, int n
 	}
 	if( numSegments < 2 ) numSegments = 2;
 	
-	GLfloat *verts = new float[(numSegments+2)*2];
+	GLfloat *verts = new float[(numSegments+2)*3];
 	verts[0] = center.x;
 	verts[1] = center.y;
+    verts[2] = 0;
 	for( int s = 0; s <= numSegments; s++ ) {
 		float t = s / (float)numSegments * 2.0f * 3.14159f;
-		verts[(s+1)*2+0] = center.x + math<float>::cos( t ) * radius;
-		verts[(s+1)*2+1] = center.y + math<float>::sin( t ) * radius;
+		verts[(s+1)*3+0] = center.x + math<float>::cos( t ) * radius;
+		verts[(s+1)*3+1] = center.y + math<float>::sin( t ) * radius;
+		verts[(s+1)*3+2] = 0;
 	}
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, verts );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
 	glDrawArrays( GL_TRIANGLE_FAN, 0, numSegments + 2 );
-    glDisableVertexAttribArray(attr.vertex);
+    glDisableVertexAttribArray(mVertex);
 	delete [] verts;
 }
 
 
-void drawStrokedCircle( GlesState& state, const Vec2f &center, float radius, int numSegments )
+void GlesAttr::drawStrokedCircle( const Vec2f &center, float radius, int numSegments )
 {
-    GlesAttr& attr = state.attr();
 
 	// automatically determine the number of segments from the circumference
 	if( numSegments <= 0 ) {
@@ -270,82 +237,83 @@ void drawStrokedCircle( GlesState& state, const Vec2f &center, float radius, int
 	}
 	if( numSegments < 2 ) numSegments = 2;
 	
-	GLfloat *verts = new float[numSegments*2];
+	GLfloat *verts = new float[numSegments*3];
 	for( int s = 0; s < numSegments; s++ ) {
 		float t = s / (float)numSegments * 2.0f * 3.14159f;
-		verts[s*2+0] = center.x + math<float>::cos( t ) * radius;
-		verts[s*2+1] = center.y + math<float>::sin( t ) * radius;
+		verts[s*3+0] = center.x + math<float>::cos( t ) * radius;
+		verts[s*3+1] = center.y + math<float>::sin( t ) * radius;
+		verts[s*3+2] = 0;
 	}
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, verts );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
 	glDrawArrays( GL_LINE_LOOP, 0, numSegments );
-    glDisableVertexAttribArray(attr.vertex);
+    glDisableVertexAttribArray(mVertex);
 	delete [] verts;
 }
 
 
-void drawSolidRect( GlesState& state, const Rectf &rect, bool textureRectangle )
+void GlesAttr::drawSolidRect( const Rectf &rect, bool textureRectangle )
 {
-    GlesAttr& attr = state.attr();
 
-    glEnableVertexAttribArray(attr.vertex);
-	GLfloat verts[8];
-    glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, verts );
-    glEnableVertexAttribArray(attr.texCoord);
+    glEnableVertexAttribArray(mVertex);
+	GLfloat verts[12];
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
+    glEnableVertexAttribArray(mTexCoord);
 	GLfloat texCoords[8];
-    glVertexAttribPointer( attr.texCoord, 2, GL_FLOAT, GL_FALSE, 0, verts );
-	verts[0*2+0] = rect.getX2(); texCoords[0*2+0] = ( textureRectangle ) ? rect.getX2() : 1;
-	verts[0*2+1] = rect.getY1(); texCoords[0*2+1] = ( textureRectangle ) ? rect.getY1() : 0;
-	verts[1*2+0] = rect.getX1(); texCoords[1*2+0] = ( textureRectangle ) ? rect.getX1() : 0;
-	verts[1*2+1] = rect.getY1(); texCoords[1*2+1] = ( textureRectangle ) ? rect.getY1() : 0;
-	verts[2*2+0] = rect.getX2(); texCoords[2*2+0] = ( textureRectangle ) ? rect.getX2() : 1;
-	verts[2*2+1] = rect.getY2(); texCoords[2*2+1] = ( textureRectangle ) ? rect.getY2() : 1;
-	verts[3*2+0] = rect.getX1(); texCoords[3*2+0] = ( textureRectangle ) ? rect.getX1() : 0;
-	verts[3*2+1] = rect.getY2(); texCoords[3*2+1] = ( textureRectangle ) ? rect.getY2() : 1;
+    glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, verts );
+	verts[0*3+0] = rect.getX2(); texCoords[0*2+0] = ( textureRectangle ) ? rect.getX2() : 1;
+	verts[0*3+1] = rect.getY1(); texCoords[0*2+1] = ( textureRectangle ) ? rect.getY1() : 0;
+    verts[0*3+2] = 0;
+	verts[1*3+0] = rect.getX1(); texCoords[1*2+0] = ( textureRectangle ) ? rect.getX1() : 0;
+	verts[1*3+1] = rect.getY1(); texCoords[1*2+1] = ( textureRectangle ) ? rect.getY1() : 0;
+    verts[1*3+2] = 0;
+	verts[2*3+0] = rect.getX2(); texCoords[2*2+0] = ( textureRectangle ) ? rect.getX2() : 1;
+	verts[2*3+1] = rect.getY2(); texCoords[2*2+1] = ( textureRectangle ) ? rect.getY2() : 1;
+    verts[2*3+2] = 0;
+	verts[3*3+0] = rect.getX1(); texCoords[3*2+0] = ( textureRectangle ) ? rect.getX1() : 0;
+	verts[3*3+1] = rect.getY2(); texCoords[3*2+1] = ( textureRectangle ) ? rect.getY2() : 1;
+    verts[3*3+2] = 0;
 
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 
-    glDisableVertexAttribArray(attr.vertex);
-    glDisableVertexAttribArray(attr.texCoord);	 
+    glDisableVertexAttribArray(mVertex);
+    glDisableVertexAttribArray(mTexCoord);	 
 }
 
 
-void drawStrokedRect( GlesState& state, const Rectf &rect )
+void GlesAttr::drawStrokedRect( const Rectf &rect )
 {
-    GlesAttr& attr = state.attr();
-
-	GLfloat verts[8];
-	verts[0] = rect.getX1();	verts[1] = rect.getY1();
-	verts[2] = rect.getX2();	verts[3] = rect.getY1();
-	verts[4] = rect.getX2();	verts[5] = rect.getY2();
-	verts[6] = rect.getX1();	verts[7] = rect.getY2();
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, verts );
+	GLfloat verts[12];
+	verts[ 0] = rect.getX1();	verts[ 1] = rect.getY1();    verts[ 2] = 0;
+	verts[ 3] = rect.getX2();	verts[ 4] = rect.getY1();    verts[ 5] = 0;
+	verts[ 6] = rect.getX2();	verts[ 7] = rect.getY2();    verts[ 8] = 0;
+	verts[ 9] = rect.getX1();	verts[10] = rect.getY2();    verts[11] = 0;
+    glEnableVertexAttribArray( mVertex );
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
 	glDrawArrays( GL_LINE_LOOP, 0, 4 );
-    glDisableVertexAttribArray(attr.vertex);
+    glDisableVertexAttribArray(mVertex);
 }
 
 
-void drawCoordinateFrame( GlesState& state, float axisLength, float headLength, float headRadius )
+void GlesAttr::drawCoordinateFrame( float axisLength, float headLength, float headRadius )
 {
 	// XXX glColor4ub( 255, 0, 0, 255 );
-	drawVector( state, Vec3f::zero(), Vec3f::xAxis() * axisLength, headLength, headRadius );
+	drawVector( Vec3f::zero(), Vec3f::xAxis() * axisLength, headLength, headRadius );
 	// XXX glColor4ub( 0, 255, 0, 255 );
-	drawVector( state, Vec3f::zero(), Vec3f::yAxis() * axisLength, headLength, headRadius );
+	drawVector( Vec3f::zero(), Vec3f::yAxis() * axisLength, headLength, headRadius );
 	// XXX glColor4ub( 0, 0, 255, 255 );
-	drawVector( state, Vec3f::zero(), Vec3f::zAxis() * axisLength, headLength, headRadius );
+	drawVector( Vec3f::zero(), Vec3f::zAxis() * axisLength, headLength, headRadius );
 }
 
 
-void drawVector( GlesState& state, const Vec3f &start, const Vec3f &end, float headLength, float headRadius )
+void GlesAttr::drawVector( const Vec3f &start, const Vec3f &end, float headLength, float headRadius )
 {
-    GlesAttr& attr = state.attr();
 
 	const int NUM_SEGMENTS = 32;
 	float lineVerts[3*2];
 	Vec3f coneVerts[NUM_SEGMENTS+2];
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, lineVerts );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, lineVerts );
 	lineVerts[0] = start.x; lineVerts[1] = start.y; lineVerts[2] = start.z;
 	lineVerts[3] = end.x; lineVerts[4] = end.y; lineVerts[5] = end.z;	
 	glDrawArrays( GL_LINES, 0, 2 );
@@ -356,7 +324,7 @@ void drawVector( GlesState& state, const Vec3f &start, const Vec3f &end, float h
 	Vec3f left = axis.cross( temp ).normalized();
 	Vec3f up = axis.cross( left ).normalized();
 
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, &coneVerts[0].x );
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &coneVerts[0].x );
 	coneVerts[0] = Vec3f( end + axis * headLength );
 	for( int s = 0; s <= NUM_SEGMENTS; ++s ) {
 		float t = s / (float)NUM_SEGMENTS;
@@ -366,7 +334,7 @@ void drawVector( GlesState& state, const Vec3f &start, const Vec3f &end, float h
 	glDrawArrays( GL_TRIANGLE_FAN, 0, NUM_SEGMENTS+2 );
 
 	// draw the cap
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, &coneVerts[0].x );
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &coneVerts[0].x );
 	coneVerts[0] = end;
 	for( int s = 0; s <= NUM_SEGMENTS; ++s ) {
 		float t = s / (float)NUM_SEGMENTS;
@@ -375,13 +343,12 @@ void drawVector( GlesState& state, const Vec3f &start, const Vec3f &end, float h
 	}
 	glDrawArrays( GL_TRIANGLE_FAN, 0, NUM_SEGMENTS+2 );
 
-    glDisableVertexAttribArray(attr.vertex);
+    glDisableVertexAttribArray(mVertex);
 }
 
 
-void drawFrustum( GlesState& state, const Camera &cam )
+void GlesAttr::drawFrustum( const Camera &cam )
 {
-    GlesAttr& attr = state.attr();
 
 	Vec3f vertex[8];
 	Vec3f nearTopLeft, nearTopRight, nearBottomLeft, nearBottomRight;
@@ -390,8 +357,8 @@ void drawFrustum( GlesState& state, const Camera &cam )
 	Vec3f farTopLeft, farTopRight, farBottomLeft, farBottomRight;
 	cam.getFarClipCoordinates( &farTopLeft, &farTopRight, &farBottomLeft, &farBottomRight );
 	
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, &vertex[0].x );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &vertex[0].x );
 	
 	vertex[0] = cam.getEyePoint();
 	vertex[1] = nearTopLeft;
@@ -427,13 +394,12 @@ void drawFrustum( GlesState& state, const Camera &cam )
 	glDrawArrays( GL_LINE_LOOP, 0, 4 );
 	
 	glLineWidth( 1.0f );
-    glDisableVertexAttribArray(attr.vertex);
+    glDisableVertexAttribArray(mVertex);
 }
 
 
-void drawTorus( GlesState& state, float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments )
+void GlesAttr::drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments )
 {
-    GlesAttr& attr = state.attr();
 
 	longitudeSegments = std::min( std::max( 7, longitudeSegments ) + 1, 255 );
 	latitudeSegments = std::min( std::max( 7, latitudeSegments ) + 1, 255 );
@@ -445,12 +411,12 @@ void drawTorus( GlesState& state, float outterRadius, float innerRadius, int lon
 	GLushort *indices = new GLushort[latitudeSegments * 2];
 	float ct, st, cp, sp;
 
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, vertex );
-    glEnableVertexAttribArray(attr.texCoord);
-    glVertexAttribPointer( attr.texCoord, 2, GL_FLOAT, GL_FALSE, 0, tex );
-    glEnableVertexAttribArray(attr.normal);
-    glVertexAttribPointer( attr.normal, 3, GL_FLOAT, GL_FALSE, 0, normal );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, vertex );
+    glEnableVertexAttribArray(mTexCoord);
+    glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tex );
+    glEnableVertexAttribArray(mNormal);
+    glVertexAttribPointer( mNormal, 3, GL_FLOAT, GL_FALSE, 0, normal );
 
 	for( i = 0; i < longitudeSegments; i++ ) {
 		ct = cos(2.0f * (float)M_PI * (float)i / (float)(longitudeSegments - 1));
@@ -481,9 +447,9 @@ void drawTorus( GlesState& state, float outterRadius, float innerRadius, int lon
 		glDrawElements( GL_TRIANGLE_STRIP, (latitudeSegments)*2, GL_UNSIGNED_SHORT, indices );
 	}
 
-    glDisableVertexAttribArray( attr.vertex );
-    glDisableVertexAttribArray( attr.texCoord );
-    glDisableVertexAttribArray( attr.normal );
+    glDisableVertexAttribArray( mVertex );
+    glDisableVertexAttribArray( mTexCoord );
+    glDisableVertexAttribArray( mNormal );
 	
 	
 	delete [] normal;
@@ -493,9 +459,8 @@ void drawTorus( GlesState& state, float outterRadius, float innerRadius, int lon
 }
 
 
-void drawCylinder( GlesState& state, float baseRadius, float topRadius, float height, int slices, int stacks )
+void GlesAttr::drawCylinder( float baseRadius, float topRadius, float height, int slices, int stacks )
 {
-    GlesAttr& attr = state.attr();
 
 	stacks = math<int>::max(2, stacks + 1);	// minimum of 1 stack
 	slices = math<int>::max(4, slices + 1);	// minimum of 3 slices
@@ -506,12 +471,12 @@ void drawCylinder( GlesState& state, float baseRadius, float topRadius, float he
 	float *tex = new float[stacks * slices * 2];
 	GLushort *indices = new GLushort[slices * 2];
 
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, vertex );
-    glEnableVertexAttribArray(attr.texCoord);
-    glVertexAttribPointer( attr.texCoord, 2, GL_FLOAT, GL_FALSE, 0, tex );
-    glEnableVertexAttribArray(attr.normal);
-    glVertexAttribPointer( attr.normal, 3, GL_FLOAT, GL_FALSE, 0, normal );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, vertex );
+    glEnableVertexAttribArray(mTexCoord);
+    glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tex );
+    glEnableVertexAttribArray(mNormal);
+    glVertexAttribPointer( mNormal, 3, GL_FLOAT, GL_FALSE, 0, normal );
 
 	for(i=0;i<slices;i++) {
 		float u = (float)i / (float)(slices - 1);
@@ -545,9 +510,9 @@ void drawCylinder( GlesState& state, float baseRadius, float topRadius, float he
 		glDrawElements( GL_TRIANGLE_STRIP, (slices)*2, GL_UNSIGNED_SHORT, indices );
 	}
 
-    glDisableVertexAttribArray( attr.vertex );
-    glDisableVertexAttribArray( attr.texCoord );
-    glDisableVertexAttribArray( attr.normal );
+    glDisableVertexAttribArray( mVertex );
+    glDisableVertexAttribArray( mTexCoord );
+    glDisableVertexAttribArray( mNormal );
 
 	delete [] normal;
 	delete [] tex;
@@ -555,155 +520,151 @@ void drawCylinder( GlesState& state, float baseRadius, float topRadius, float he
 	delete [] indices;
 }
 
-
-void draw( GlesState& state, const class PolyLine<Vec2f> &polyLine )
-{
-    GlesAttr& attr = state.attr();
-
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, &(polyLine.getPoints()[0]) );
-	glDrawArrays( ( polyLine.isClosed() ) ? GL_LINE_LOOP : GL_LINE_STRIP, 0, polyLine.size() );
-    glDisableVertexAttribArray( attr.vertex );
+namespace {
+    //  Helper to convert a vector of Vec2f to Vec3f, minimizing copies
+    void v3Fromv2(std::vector<Vec3f>& v3, std::vector<Vec2f>& v2)
+    {
+        std::vector<Vec3f> result;
+        for (std::vector<Vec2f>::iterator it = v2.begin(); it != v2.end(); ++it) {
+            result.push_back(Vec3f(it->x, it->y, 0));
+        }
+        v3.swap(result);
+    }
 }
 
+// void GlesAttr::draw( const class PolyLine<Vec2f> &polyLine )
+// {
+// 
+//     glEnableVertexAttribArray(mVertex);
+//     glVertexAttribPointer( mVertex, 2, GL_FLOAT, GL_FALSE, 0, &(polyLine.getPoints()[0]) );
+//     glDrawArrays( ( polyLine.isClosed() ) ? GL_LINE_LOOP : GL_LINE_STRIP, 0, polyLine.size() );
+//     glDisableVertexAttribArray( mVertex );
+// }
 
-void draw( GlesState& state, const class PolyLine<Vec3f> &polyLine )
+
+void GlesAttr::draw( const class PolyLine<Vec3f> &polyLine )
 {
-    GlesAttr& attr = state.attr();
 
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, &(polyLine.getPoints()[0]) );
-	glDrawArrays( ( polyLine.isClosed() ) ? GL_LINE_LOOP : GL_LINE_STRIP, 0, polyLine.size() );
-    glDisableVertexAttribArray( attr.vertex );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &(polyLine.getPoints()[0]) );
+    glDrawArrays( ( polyLine.isClosed() ) ? GL_LINE_LOOP : GL_LINE_STRIP, 0, polyLine.size() );
+    glDisableVertexAttribArray( mVertex );
 }
 
-
-void draw( GlesState& state, const class Path2d &path2d, float approximationScale )
+void GlesAttr::draw( const class Path2d &path2d, float approximationScale )
 {
-    GlesAttr& attr = state.attr();
 
 	if( path2d.getNumSegments() == 0 )
 		return;
-	std::vector<Vec2f> points = path2d.subdivide( approximationScale );
-    glEnableVertexAttribArray(attr.vertex);
-    glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, &(points[0]) );
+	std::vector<Vec2f> points2f = path2d.subdivide( approximationScale );
+    std::vector<Vec3f> points;
+    v3Fromv2( points, points2f );
+    glEnableVertexAttribArray(mVertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &(points[0]) );
 	glDrawArrays( GL_LINE_STRIP, 0, points.size() );
-    glDisableVertexAttribArray( attr.vertex );
+    glDisableVertexAttribArray( mVertex );
 }
 
 
-void draw( GlesState& state, const class Shape2d &shape2d, float approximationScale )
+void GlesAttr::draw( const class Shape2d &shape2d, float approximationScale )
 {
-    GlesAttr& attr = state.attr();
 
-    glEnableVertexAttribArray(attr.vertex);
+    glEnableVertexAttribArray(mVertex);
 	for( std::vector<Path2d>::const_iterator contourIt = shape2d.getContours().begin(); contourIt != shape2d.getContours().end(); ++contourIt ) {
 		if( contourIt->getNumSegments() == 0 )
 			continue;
-		std::vector<Vec2f> points = contourIt->subdivide( approximationScale );
-        glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, &(points[0]) );
+		std::vector<Vec2f> points2f = contourIt->subdivide( approximationScale );
+        std::vector<Vec3f> points;
+        v3Fromv2( points, points2f );
+        glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &(points[0]) );
 		glDrawArrays( GL_LINE_STRIP, 0, points.size() );
 	}
-    glDisableVertexAttribArray( attr.vertex );
+    glDisableVertexAttribArray( mVertex );
 }
 
 
 
-void drawSolid( GlesState& state, const class Path2d &path2d, float approximationScale )
+// void GlesAttr::drawSolid( const class Path2d &path2d, float approximationScale )
+// {
+// 
+// 	if( path2d.getNumSegments() == 0 )
+// 		return;
+// 	std::vector<Vec2f> points = path2d.subdivide( approximationScale );
+//     glEnableVertexAttribArray(mVertex);
+//     glVertexAttribPointer( mVertex, 2, GL_FLOAT, GL_FALSE, 0, &(points[0]) );
+// 	glDrawArrays( GL_POLYGON, 0, points.size() );
+//     glDisableVertexAttribArray( mVertex );
+// }
+
+
+
+void GlesAttr::draw( const TriMesh &mesh )
 {
-    GlesAttr& attr = state.attr();
 
-	// if( path2d.getNumSegments() == 0 )
-	// 	return;
-	// std::vector<Vec2f> points = path2d.subdivide( approximationScale );
-    // glEnableVertexAttribArray(attr.vertex);
-    // glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, &(points[0]) );
-	// glDrawArrays( GL_POLYGON, 0, points.size() );
-    // glDisableVertexAttribArray( attr.vertex );
-}
-
-
-
-void draw( GlesState& state, const TriMesh &mesh )
-{
-    GlesAttr& attr = state.attr();
-
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, &(mesh.getVertices()[0]) );
-    glEnableVertexAttribArray(attr.vertex);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &(mesh.getVertices()[0]) );
+    glEnableVertexAttribArray(mVertex);
 
 	if( mesh.hasNormals() ) {
-        glVertexAttribPointer( attr.normal, 3, GL_FLOAT, GL_FALSE, 0, &(mesh.getNormals()[0]) );
-        glEnableVertexAttribArray(attr.normal);
+        glVertexAttribPointer( mNormal, 3, GL_FLOAT, GL_FALSE, 0, &(mesh.getNormals()[0]) );
+        glEnableVertexAttribArray(mNormal);
 	}
 	else
-		glDisableVertexAttribArray(attr.normal);
+		glDisableVertexAttribArray(mNormal);
 	
 	if( mesh.hasColorsRGB() ) {
         
-        glVertexAttribPointer( attr.color, 3, GL_UNSIGNED_BYTE, GL_FALSE, 0, &(mesh.getColorsRGB()[0]) );
-        glEnableVertexAttribArray(attr.color);
+        glVertexAttribPointer( mColor, 3, GL_UNSIGNED_BYTE, GL_FALSE, 0, &(mesh.getColorsRGB()[0]) );
+        glEnableVertexAttribArray(mColor);
 	}
 	else if( mesh.hasColorsRGBA() ) {
-        glVertexAttribPointer( attr.color, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, &(mesh.getColorsRGBA()[0]) );
-        glEnableVertexAttribArray(attr.color);
+        glVertexAttribPointer( mColor, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, &(mesh.getColorsRGBA()[0]) );
+        glEnableVertexAttribArray(mColor);
 	}
 	else 
-        glDisableVertexAttribArray(attr.color);
+        glDisableVertexAttribArray(mColor);
 
 	if( mesh.hasTexCoords() ) {
-        glVertexAttribPointer( attr.texCoord, 2, GL_FLOAT, GL_FALSE, 0, &(mesh.getTexCoords()[0]) );
-		glEnableVertexAttribArray( attr.texCoord );
+        glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, &(mesh.getTexCoords()[0]) );
+		glEnableVertexAttribArray( mTexCoord );
 	}
 	else
-		glDisableVertexAttribArray( attr.texCoord );
+		glDisableVertexAttribArray( mTexCoord );
 	glDrawElements( GL_TRIANGLES, mesh.getNumIndices(), GL_UNSIGNED_INT, &(mesh.getIndices()[0]) );
 
-    glDisableVertexAttribArray( attr.vertex );
-    glDisableVertexAttribArray( attr.normal );
-    glDisableVertexAttribArray( attr.color );
-    glDisableVertexAttribArray( attr.texCoord );
+    glDisableVertexAttribArray( mVertex );
+    glDisableVertexAttribArray( mNormal );
+    glDisableVertexAttribArray( mColor );
+    glDisableVertexAttribArray( mTexCoord );
 }
 
 
-void drawRange( GlesState& state, const TriMesh &mesh, size_t startTriangle, size_t triangleCount )
+void GlesAttr::drawRange( const TriMesh &mesh, size_t startTriangle, size_t triangleCount )
 {
-    GlesAttr& attr = state.attr();
-
 }
 
 
-void draw( GlesState& state, const VboMesh &vbo )
+void GlesAttr::draw( const VboMesh &vbo )
 {
-    GlesAttr& attr = state.attr();
-
 }
 
 
-void drawRange( GlesState& state, const VboMesh &vbo, size_t startIndex, size_t indexCount, int vertexStart, int vertexEnd )
+void GlesAttr::drawRange( const VboMesh &vbo, size_t startIndex, size_t indexCount, int vertexStart, int vertexEnd )
 {
-    GlesAttr& attr = state.attr();
-
 }
 
-
-void drawArrays( GlesState& state, const VboMesh &vbo, GLint first, GLsizei count )
+void GlesAttr::drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
 {
-    GlesAttr& attr = state.attr();
-
 }
 
-
-
-void drawBillboard( GlesState& state, const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
+void GlesAttr::drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
 {
-    GlesAttr& attr = state.attr();
 
-    glEnableVertexAttribArray(attr.vertex);
+    glEnableVertexAttribArray(mVertex);
 	Vec3f verts[4];
-    glVertexAttribPointer( attr.vertex, 3, GL_FLOAT, GL_FALSE, 0, &verts[0] );
-    glEnableVertexAttribArray(attr.texCoord);
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &verts[0] );
+    glEnableVertexAttribArray(mTexCoord);
 	GLfloat texCoords[8] = { 0, 0, 0, 1, 1, 0, 1, 1 };
-    glVertexAttribPointer( attr.texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
+    glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
 
 	float sinA = math<float>::sin( toRadians( rotationDegrees ) );
 	float cosA = math<float>::cos( toRadians( rotationDegrees ) );
@@ -715,60 +676,188 @@ void drawBillboard( GlesState& state, const Vec3f &pos, const Vec2f &scale, floa
 
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 
-    glDisableVertexAttribArray( attr.vertex );
-    glDisableVertexAttribArray( attr.texCoord );
+    glDisableVertexAttribArray( mVertex );
+    glDisableVertexAttribArray( mTexCoord );
 }
 
 
-void draw( GlesState& state, const Texture &texture )
+void GlesAttr::draw( const Texture &texture )
 {
-	draw( state, texture, Area( texture.getCleanBounds() ), texture.getCleanBounds() );
+	draw( texture, Area( texture.getCleanBounds() ), texture.getCleanBounds() );
 }
 
 
-void draw( GlesState& state, const Texture &texture, const Vec2f &pos )
+void GlesAttr::draw( const Texture &texture, const Vec2f &pos )
 {
-	draw( state, texture, texture.getCleanBounds(), Rectf( pos.x, pos.y, pos.x + texture.getCleanWidth(), pos.y + texture.getCleanHeight() ) );
+	draw( texture, texture.getCleanBounds(), Rectf( pos.x, pos.y, pos.x + texture.getCleanWidth(), pos.y + texture.getCleanHeight() ) );
 }
 
 
-void draw( GlesState& state, const Texture &texture, const Rectf &rect )
+void GlesAttr::draw( const Texture &texture, const Rectf &rect )
 {
-	draw( state, texture, texture.getCleanBounds(), rect );
+	draw( texture, texture.getCleanBounds(), rect );
 }
 
 
-void draw( GlesState& state, const Texture &texture, const Area &srcArea, const Rectf &destRect )
+void GlesAttr::draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
 {
-    GlesAttr& attr = state.attr();
+   // XXX save state?
+   // SaveTextureBindState saveBindState( texture.getTarget() );
+   // BoolState saveEnabledState( texture.getTarget() );
+   // ClientBoolState vertexArrayState( GL_VERTEX_ARRAY );
+   // ClientBoolState texCoordArrayState( GL_TEXTURE_COORD_ARRAY );	
+   texture.enableAndBind();
 
-    // XXX save state?
-	// SaveTextureBindState saveBindState( texture.getTarget() );
-	// BoolState saveEnabledState( texture.getTarget() );
-	// ClientBoolState vertexArrayState( GL_VERTEX_ARRAY );
-	// ClientBoolState texCoordArrayState( GL_TEXTURE_COORD_ARRAY );	
-	texture.enableAndBind();
+   glEnableVertexAttribArray(mVertex);
+   GLfloat verts[12];
+   glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
+   glEnableVertexAttribArray(mTexCoord);
+   GLfloat texCoords[8];
+   glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
 
-    glEnableVertexAttribArray(attr.vertex);
-	GLfloat verts[8];
-    glVertexAttribPointer( attr.vertex, 2, GL_FLOAT, GL_FALSE, 0, verts );
-    glEnableVertexAttribArray(attr.texCoord);
-	GLfloat texCoords[8];
-    glVertexAttribPointer( attr.texCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
+   verts[0*3+0] = destRect.getX2(); verts[0*3+1] = destRect.getY1(); verts[0*3+2] = 0;
+   verts[1*3+0] = destRect.getX1(); verts[1*3+1] = destRect.getY1(); verts[1*3+2] = 0;
+   verts[2*3+0] = destRect.getX2(); verts[2*3+1] = destRect.getY2(); verts[2*3+2] = 0;
+   verts[3*3+0] = destRect.getX1(); verts[3*3+1] = destRect.getY2(); verts[3*3+2] = 0;
 
-	verts[0*2+0] = destRect.getX2(); verts[0*2+1] = destRect.getY1();	
-	verts[1*2+0] = destRect.getX1(); verts[1*2+1] = destRect.getY1();	
-	verts[2*2+0] = destRect.getX2(); verts[2*2+1] = destRect.getY2();	
-	verts[3*2+0] = destRect.getX1(); verts[3*2+1] = destRect.getY2();	
+   const Rectf srcCoords = texture.getAreaTexCoords( srcArea );
+   texCoords[0*2+0] = srcCoords.getX2(); texCoords[0*2+1] = srcCoords.getY1();	
+   texCoords[1*2+0] = srcCoords.getX1(); texCoords[1*2+1] = srcCoords.getY1();	
+   texCoords[2*2+0] = srcCoords.getX2(); texCoords[2*2+1] = srcCoords.getY2();	
+   texCoords[3*2+0] = srcCoords.getX1(); texCoords[3*2+1] = srcCoords.getY2();	
 
-	const Rectf srcCoords = texture.getAreaTexCoords( srcArea );
-	texCoords[0*2+0] = srcCoords.getX2(); texCoords[0*2+1] = srcCoords.getY1();	
-	texCoords[1*2+0] = srcCoords.getX1(); texCoords[1*2+1] = srcCoords.getY1();	
-	texCoords[2*2+0] = srcCoords.getX2(); texCoords[2*2+1] = srcCoords.getY2();	
-	texCoords[3*2+0] = srcCoords.getX1(); texCoords[3*2+1] = srcCoords.getY2();	
+   glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+   // XXX restore state?
+}
 
-	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-    // XXX restore state?
+class CinderProgES2 : public GlslProg
+{
+public:
+    static const char* verts; 
+    static const char* frags; 
+
+    CinderProgES2() : GlslProg(verts, frags) 
+    { }
+};
+
+const char* CinderProgES2::verts = 
+        "attribute vec3 aPosition;\n"
+        "\n"
+        "uniform mat4 uProjection;\n"
+        "uniform mat4 uModelView;\n"
+        "\n"
+        "void main() {\n"
+        "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n"
+        "}\n";
+
+const char* CinderProgES2::frags = 
+        "precision mediump float;\n"
+        "\n"
+        "void main() {\n"
+        "    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+        "}\n";
+
+GlesContext::GlesContext()
+    : mBound(false)
+{
+    CI_LOGW("Initializing CinderProgES2 shader");
+    // mProg = CinderProgES2();
+	try {
+        mProg = GlslProg(CinderProgES2::verts, CinderProgES2::frags);
+        mAttr = GlesAttr(mProg.getAttribLocation("aPosition"));
+    }
+    catch( gl::GlslProgCompileExc &exc ) {
+        CI_LOGW("Shader compile error: \n");
+        CI_LOGW("%s\n", exc.what());
+    }
+    catch( ... ) {
+        CI_LOGW("Unable to load shader\n");
+    }
+
+
+    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = true;
+}
+
+GlesContext::GlesContext(GlslProg shader)
+    : mBound(false), mProg(shader)
+{
+    // mAttr = GlesAttr(mProg.getAttribLocation("aPosition"));
+    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = true;
+}
+
+void GlesContext::bind()
+{
+    mBound = true;
+    mProg.bind();
+    updateUniforms();
+}
+
+void GlesContext::unbind()
+{
+    mBound = false;
+    mProg.unbind();
+    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = true;
+}
+
+GlesAttr& GlesContext::attr()
+{
+    return mAttr;
+}
+
+void GlesContext::setMatrices( const Camera &cam )
+{
+    mModelView = cam.getModelViewMatrix();
+    mModelViewDirty = true;
+    mProj = cam.getProjectionMatrix();
+    mProjDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::setModelView( const Camera &cam )
+{
+    mModelView = cam.getModelViewMatrix();
+    mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::setProjection( const Camera &cam )
+{
+    mProj = cam.getProjectionMatrix();
+    mProjDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft)
+{
+    CameraOrtho cam;
+
+    if (originUpperLeft) {
+        cam.setOrtho(0, screenWidth, screenHeight, 0, 1.0f, -1.0f);
+    }
+    else {
+        cam.setOrtho(0, screenWidth, 0, screenHeight, 1.0f, -1.0f);
+    }
+
+    mProj = cam.getProjectionMatrix();
+    mModelView = Matrix44f::identity();
+    glViewport( 0, 0, screenWidth, screenHeight );
+
+    mProjDirty = mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::updateUniforms()
+{
+    if (!mBound)
+        return;
+
+    if (mProjDirty)
+        mProg.uniform("uProjection", mProj);
+
+    if (mModelViewDirty)
+        mProg.uniform("uModelView",  mModelView);
+
+    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = false;
 }
 
 } }

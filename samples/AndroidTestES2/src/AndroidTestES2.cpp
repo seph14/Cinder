@@ -6,6 +6,7 @@
 #include "cinder/Stream.h"
 
 #include "cinder/gl/Texture.h"
+#include "cinder/gl/gles2.h"
 
 #include "cinder/Font.h"
 
@@ -16,15 +17,19 @@ using namespace std;
 
 class AndroidTestES2 : public AppNative {
 public:
+    gl::GlesContext* context;
+
 	void setup();
 	void draw();
 	
-	gl::Texture		mTexture;	
+	gl::Texture	mTexture;	
 	Font mFont;
 };
 
 void AndroidTestES2::setup()
 {
+    context = new gl::GlesContext();
+
 	try {
 		console() << "Loading logo image" << endl;
 		mTexture = gl::Texture( loadImage( loadResource("cinder_logo.png") ) );
@@ -38,29 +43,19 @@ void AndroidTestES2::setup()
 	DataSourceRef fontData = loadFile(fontFile);
 	mFont = Font(fontData, 16);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
-    //  release font, tests FT_Done_Face works
-	mFont = Font();
 
-	// console() << "AndroidTestES2" << endl;
-	// DataSourceRef data = loadResource("hello.txt");
-	// console() << "Loaded hello.txt" << endl;
-	// IStreamRef stream = data->createStream();
-	// int size = stream->size();
-	// console() << "Stream size: " << size << endl;
-	// char* input = new char[size+1];
-	// int read = stream->readDataAvailable(input, 1024);
-	// input[read] = '\0';
-	// console() << "Read " << read << " bytes from stream" << endl;
-	// console() << "value: " << input << endl;
-
-	// string text;
-	// stream->readFixedString(&text, size);
-	// console() << "Read from hello.txt: " << text << endl;
+    context->setMatricesWindow(getWindowWidth(), getWindowHeight());
 }
 
 void AndroidTestES2::draw()
 {
-	gl::clear( Color( 0.8f, 0.8f, 0.2f ) );
+    context->bind();
+
+	gl::clear( Color( 0.2f, 0.2f, 0.2f ) );
+
+    context->attr().drawLine(Vec2f(0, 0), Vec2f(200, 200));
+
+    context->unbind();
 }
 
 CINDER_APP_NATIVE( AndroidTestES2, RendererGl )
