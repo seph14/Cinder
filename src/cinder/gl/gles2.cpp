@@ -888,6 +888,104 @@ void GlesContext::setProjection( const Camera &cam )
     updateUniforms();
 }
 
+void GlesContext::pushModelView()
+{
+    mModelViewStack.push_back(mModelView);
+    mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::popModelView()
+{
+    if (!mModelViewStack.empty()) {
+        mModelView = mModelViewStack.back();
+        mModelViewStack.pop_back();
+        mModelViewDirty = true;
+        updateUniforms();
+    }
+}
+
+void GlesContext::pushModelView( const Camera &cam )
+{
+    mModelViewStack.push_back(cam.getModelViewMatrix().m);
+    mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::pushProjection( const Camera &cam )
+{
+    mProjStack.push_back(mProj);
+    mProjDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::pushMatrices()
+{
+    mModelViewStack.push_back(mModelView);
+    mModelViewDirty = true;
+    mProjStack.push_back(mProj);
+    mProjDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::popMatrices()
+{
+    if (!mModelViewStack.empty()) {
+        mModelView = mModelViewStack.back();
+        mModelViewStack.pop_back();
+        mModelViewDirty = true;
+    }
+    if (!mProjStack.empty()) {
+        mProj = mProjStack.back();
+        mProjStack.pop_back();
+        mProjDirty = true;
+    }
+
+    if (mModelViewDirty || mProjDirty)
+        updateUniforms();
+}
+
+void GlesContext::multModelView( const Matrix44f &mtx )
+{
+    mModelView *= mtx;
+    mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::multProjection( const Matrix44f &mtx )
+{
+    mProj *= mtx;
+    mProjDirty = true;
+    updateUniforms();
+}
+
+Matrix44f GlesContext::getModelView()
+{
+    return mModelView;
+}
+
+Matrix44f GlesContext::getProjection()
+{
+    return mProj;
+}
+
+void GlesContext::setMatricesWindowPersp( int screenWidth, int screenHeight, float fovDegrees, float nearPlane, float farPlane, bool originUpperLeft )
+{
+	CameraPersp cam( screenWidth, screenHeight, fovDegrees, nearPlane, farPlane );
+
+    mProj = cam.getProjectionMatrix();
+    mModelView = cam.getModelViewMatrix();
+
+	if( originUpperLeft ) {
+        scale(Vec3f(1.0f, -1.0f, 1.0f));  // invert Y axis so increasing Y goes down.
+        translate(1.0f, -1.0f, 1.0f);     // shift origin up to upper-left corner.
+		glViewport( 0, 0, screenWidth, screenHeight );
+	}
+
+    mProjDirty = mModelViewDirty = true;
+    updateUniforms();
+}
+
 void GlesContext::setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft)
 {
     CameraOrtho cam;
@@ -905,6 +1003,47 @@ void GlesContext::setMatricesWindow( int screenWidth, int screenHeight, bool ori
 
     mProjDirty = mModelViewDirty = true;
     updateUniforms();
+}
+
+void GlesContext::translate( const Vec2f &pos )
+{
+    mModelView.translate(Vec3f(pos.x, pos.y, 0));
+    mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::translate( const Vec3f &pos )
+{
+    mModelView.translate(pos);
+    mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::scale( const Vec3f &scl )
+{
+    mModelView.scale(scl);
+    mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::rotate( const Vec3f &xyz )
+{
+    Vec3f xyzrad(toRadians(xyz.x), toRadians(xyz.y), toRadians(xyz.z));
+    mModelView.rotate(xyzrad);
+    mModelViewDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::rotate( const Quatf &quat )
+{
+	Vec3f axis;
+	float angle;
+	quat.getAxisAngle( &axis, &angle );
+    if( math<float>::abs( angle ) > EPSILON_VALUE ) {
+		mModelView.rotate( Vec3f(axis.x, axis.y, axis.z), angle );
+        mModelViewDirty = true;
+        updateUniforms();
+    }
 }
 
 void GlesContext::color( float r, float g, float b )

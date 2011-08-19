@@ -182,36 +182,38 @@ public:
     void setMatrices( const Camera &cam );
     void setModelView( const Camera &cam );
     void setProjection( const Camera &cam );
-    // void pushModelView();
-    // void popModelView();
-    // void pushModelView( const Camera &cam );
-    // void pushProjection( const Camera &cam );
-    // void pushMatrices();
-    // void popMatrices();
-    // void multModelView( const Matrix44f &mtx );
-    // void multProjection( const Matrix44f &mtx );
-    // Matrix44f getModelView();
-    // Matrix44f getProjection();
+    void pushModelView();
+    void popModelView();
+    void pushModelView( const Camera &cam );
+    void pushProjection( const Camera &cam );
+    void pushMatrices();
+    void popMatrices();
+    void multModelView( const Matrix44f &mtx );
+    void multProjection( const Matrix44f &mtx );
+    Matrix44f getModelView();
+    Matrix44f getProjection();
 
-    // void setMatricesWindowPersp( int screenWidth, int screenHeight, float fovDegrees = 60.0f, float nearPlane = 1.0f, float farPlane = 1000.0f, bool originUpperLeft = true );
-    // inline void setMatricesWindowPersp( const Vec2i &screenSize, float fovDegrees = 60.0f, float nearPlane = 1.0f, float farPlane = 1000.0f, bool originUpperLeft = true )
-    // { setMatricesWindowPersp( screenSize.x, screenSize.y, fovDegrees, nearPlane, farPlane ); }
+    void setMatricesWindowPersp( int screenWidth, int screenHeight, float fovDegrees = 60.0f, float nearPlane = 1.0f, float farPlane = 1000.0f, bool originUpperLeft = true );
+    inline void setMatricesWindowPersp( const Vec2i &screenSize, float fovDegrees = 60.0f, float nearPlane = 1.0f, float farPlane = 1000.0f, bool originUpperLeft = true )
+    { setMatricesWindowPersp( screenSize.x, screenSize.y, fovDegrees, nearPlane, farPlane ); }
     void setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft = true );
     inline void setMatricesWindow( const Vec2i &screenSize, bool originUpperLeft = true ) { setMatricesWindow( screenSize.x, screenSize.y, originUpperLeft ); }
 
-    // void translate( const Vec2f &pos );
-    // inline void translate( float x, float y ) { translate( Vec2f( x, y ) ); }
-    // void translate( const Vec3f &pos );
-    // inline void translate( float x, float y, float z ) { translate( Vec3f( x, y, z ) ); }
+    //  assuming we'll always be working on the modelview matrix, otherwise can add
+    //  matrix mode tracking later...
+    void translate( const Vec2f &pos );
+    inline void translate( float x, float y ) { translate( Vec2f( x, y ) ); }
+    void translate( const Vec3f &pos );
+    inline void translate( float x, float y, float z ) { translate( Vec3f( x, y, z ) ); }
 
-    // void scale( const Vec3f &scl );
-    // inline void scale( const Vec2f &scl ) { scale( Vec3f( scl.x, scl.y, 0 ) ); }
-    // inline void scale( float x, float y ) { scale( Vec3f( x, y, 0 ) ); }
-    // inline void scale( float x, float y, float z ) { scale( Vec3f( x, y, z ) ); }
+    void scale( const Vec3f &scl );
+    inline void scale( const Vec2f &scl ) { scale( Vec3f( scl.x, scl.y, 0 ) ); }
+    inline void scale( float x, float y ) { scale( Vec3f( x, y, 0 ) ); }
+    inline void scale( float x, float y, float z ) { scale( Vec3f( x, y, z ) ); }
 
-    // void rotate( const Vec3f &xyz );
-    // void rotate( const Quatf &quat );
-    // inline void rotate( float degrees ) { rotate( Vec3f( 0, 0, degrees ) ); }
+    void rotate( const Vec3f &xyz );
+    void rotate( const Quatf &quat );
+    inline void rotate( float degrees ) { rotate( Vec3f( 0, 0, degrees ) ); }
 
     void color( float r, float g, float b );
     void color( float r, float g, float b, float a );
@@ -243,6 +245,9 @@ protected:
     bool mColorDirty;
     bool mTextureDirty;
     bool mActiveAttrsDirty;
+
+    std::vector<Matrix44f> mModelViewStack;
+    std::vector<Matrix44f> mProjStack;
 };
 
 } }
