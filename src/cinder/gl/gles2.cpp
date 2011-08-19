@@ -18,7 +18,7 @@ using std::shared_ptr;
 namespace cinder { namespace gl {
 
 GlesAttr::GlesAttr(GLuint vertex, GLuint texCoord, GLuint color, GLuint normal)
-   : mVertex(vertex), mTexCoord(texCoord), mColor(color), mNormal(normal)
+   : mVertex(vertex), mTexCoord(texCoord), mColor(color), mNormal(normal), mSelectAttr(NULL)
 { }
 
 void GlesAttr::drawLine( const Vec2f &start, const Vec2f &end )
@@ -28,6 +28,7 @@ void GlesAttr::drawLine( const Vec2f &start, const Vec2f &end )
 
 void GlesAttr::drawLine( const Vec3f &start, const Vec3f &end )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
     float lineVerts[3*2];
     glEnableVertexAttribArray(mVertex);
     glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, lineVerts );
@@ -40,7 +41,7 @@ void GlesAttr::drawLine( const Vec3f &start, const Vec3f &end )
 namespace {
 void drawCubeImpl( GlesAttr& attr, const Vec3f &c, const Vec3f &size, bool drawColors )
 {
-
+    attr.selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_COLOR | ES2_ATTR_NORMAL );
 	GLfloat sx = size.x * 0.5f;
 	GLfloat sy = size.y * 0.5f;
 	GLfloat sz = size.z * 0.5f;
@@ -142,6 +143,7 @@ void GlesAttr::drawStrokedCube( const Vec3f &center, const Vec3f &size )
 
 void GlesAttr::drawSphere( const Vec3f &center, float radius, int segments )
 {
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_NORMAL );
 
 	if( segments < 0 )
 		return;
@@ -196,13 +198,13 @@ void GlesAttr::drawSphere( const Vec3f &center, float radius, int segments )
 
 void GlesAttr::draw( const class Sphere &sphere, int segments )
 {
-
 	drawSphere( sphere.getCenter(), sphere.getRadius(), segments );
 }
 
 
 void GlesAttr::drawSolidCircle( const Vec2f &center, float radius, int numSegments )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
 
 	// automatically determine the number of segments from the circumference
 	if( numSegments <= 0 ) {
@@ -230,6 +232,7 @@ void GlesAttr::drawSolidCircle( const Vec2f &center, float radius, int numSegmen
 
 void GlesAttr::drawStrokedCircle( const Vec2f &center, float radius, int numSegments )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
 
 	// automatically determine the number of segments from the circumference
 	if( numSegments <= 0 ) {
@@ -254,6 +257,7 @@ void GlesAttr::drawStrokedCircle( const Vec2f &center, float radius, int numSegm
 
 void GlesAttr::drawSolidRect( const Rectf &rect, bool textureRectangle )
 {
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD );
 
     glEnableVertexAttribArray(mVertex);
 	GLfloat verts[12];
@@ -283,6 +287,7 @@ void GlesAttr::drawSolidRect( const Rectf &rect, bool textureRectangle )
 
 void GlesAttr::drawStrokedRect( const Rectf &rect )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
 	GLfloat verts[12];
 	verts[ 0] = rect.getX1();	verts[ 1] = rect.getY1();    verts[ 2] = 0;
 	verts[ 3] = rect.getX2();	verts[ 4] = rect.getY1();    verts[ 5] = 0;
@@ -308,6 +313,7 @@ void GlesAttr::drawCoordinateFrame( float axisLength, float headLength, float he
 
 void GlesAttr::drawVector( const Vec3f &start, const Vec3f &end, float headLength, float headRadius )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
 
 	const int NUM_SEGMENTS = 32;
 	float lineVerts[3*2];
@@ -349,6 +355,7 @@ void GlesAttr::drawVector( const Vec3f &start, const Vec3f &end, float headLengt
 
 void GlesAttr::drawFrustum( const Camera &cam )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
 
 	Vec3f vertex[8];
 	Vec3f nearTopLeft, nearTopRight, nearBottomLeft, nearBottomRight;
@@ -400,6 +407,7 @@ void GlesAttr::drawFrustum( const Camera &cam )
 
 void GlesAttr::drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments )
 {
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_NORMAL );
 
 	longitudeSegments = std::min( std::max( 7, longitudeSegments ) + 1, 255 );
 	latitudeSegments = std::min( std::max( 7, latitudeSegments ) + 1, 255 );
@@ -461,6 +469,7 @@ void GlesAttr::drawTorus( float outterRadius, float innerRadius, int longitudeSe
 
 void GlesAttr::drawCylinder( float baseRadius, float topRadius, float height, int slices, int stacks )
 {
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_NORMAL );
 
 	stacks = math<int>::max(2, stacks + 1);	// minimum of 1 stack
 	slices = math<int>::max(4, slices + 1);	// minimum of 3 slices
@@ -544,6 +553,7 @@ namespace {
 
 void GlesAttr::draw( const class PolyLine<Vec3f> &polyLine )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
 
     glEnableVertexAttribArray(mVertex);
     glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &(polyLine.getPoints()[0]) );
@@ -553,6 +563,7 @@ void GlesAttr::draw( const class PolyLine<Vec3f> &polyLine )
 
 void GlesAttr::draw( const class Path2d &path2d, float approximationScale )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
 
 	if( path2d.getNumSegments() == 0 )
 		return;
@@ -568,6 +579,7 @@ void GlesAttr::draw( const class Path2d &path2d, float approximationScale )
 
 void GlesAttr::draw( const class Shape2d &shape2d, float approximationScale )
 {
+    selectAttrs( ES2_ATTR_VERTEX );
 
     glEnableVertexAttribArray(mVertex);
 	for( std::vector<Path2d>::const_iterator contourIt = shape2d.getContours().begin(); contourIt != shape2d.getContours().end(); ++contourIt ) {
@@ -600,6 +612,7 @@ void GlesAttr::draw( const class Shape2d &shape2d, float approximationScale )
 
 void GlesAttr::draw( const TriMesh &mesh )
 {
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_COLOR | ES2_ATTR_NORMAL );
 
     glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &(mesh.getVertices()[0]) );
     glEnableVertexAttribArray(mVertex);
@@ -658,6 +671,7 @@ void GlesAttr::drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
 
 void GlesAttr::drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
 {
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD );
 
     glEnableVertexAttribArray(mVertex);
 	Vec3f verts[4];
@@ -701,33 +715,34 @@ void GlesAttr::draw( const Texture &texture, const Rectf &rect )
 
 void GlesAttr::draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
 {
-   // XXX save state?
-   // SaveTextureBindState saveBindState( texture.getTarget() );
-   // BoolState saveEnabledState( texture.getTarget() );
-   // ClientBoolState vertexArrayState( GL_VERTEX_ARRAY );
-   // ClientBoolState texCoordArrayState( GL_TEXTURE_COORD_ARRAY );	
-   texture.enableAndBind();
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD );
 
-   glEnableVertexAttribArray(mVertex);
-   GLfloat verts[12];
-   glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
-   glEnableVertexAttribArray(mTexCoord);
-   GLfloat texCoords[8];
-   glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
+    // XXX save state?
+    // SaveTextureBindState saveBindState( texture.getTarget() );
+    // BoolState saveEnabledState( texture.getTarget() );
+    // ClientBoolState vertexArrayState( GL_VERTEX_ARRAY );
+    // ClientBoolState texCoordArrayState( GL_TEXTURE_COORD_ARRAY );	
+    texture.enableAndBind();
 
-   verts[0*3+0] = destRect.getX2(); verts[0*3+1] = destRect.getY1(); verts[0*3+2] = 0;
-   verts[1*3+0] = destRect.getX1(); verts[1*3+1] = destRect.getY1(); verts[1*3+2] = 0;
-   verts[2*3+0] = destRect.getX2(); verts[2*3+1] = destRect.getY2(); verts[2*3+2] = 0;
-   verts[3*3+0] = destRect.getX1(); verts[3*3+1] = destRect.getY2(); verts[3*3+2] = 0;
+    glEnableVertexAttribArray(mVertex);
+    GLfloat verts[12];
+    glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
+    glEnableVertexAttribArray(mTexCoord);
+    GLfloat texCoords[8];
+    glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
 
-   const Rectf srcCoords = texture.getAreaTexCoords( srcArea );
-   texCoords[0*2+0] = srcCoords.getX2(); texCoords[0*2+1] = srcCoords.getY1();	
-   texCoords[1*2+0] = srcCoords.getX1(); texCoords[1*2+1] = srcCoords.getY1();	
-   texCoords[2*2+0] = srcCoords.getX2(); texCoords[2*2+1] = srcCoords.getY2();	
-   texCoords[3*2+0] = srcCoords.getX1(); texCoords[3*2+1] = srcCoords.getY2();	
+    verts[0*3+0] = destRect.getX2(); verts[0*3+1] = destRect.getY1(); verts[0*3+2] = 0;
+    verts[1*3+0] = destRect.getX1(); verts[1*3+1] = destRect.getY1(); verts[1*3+2] = 0;
+    verts[2*3+0] = destRect.getX2(); verts[2*3+1] = destRect.getY2(); verts[2*3+2] = 0;
+    verts[3*3+0] = destRect.getX1(); verts[3*3+1] = destRect.getY2(); verts[3*3+2] = 0;
 
-   glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-   // XXX restore state?
+    const Rectf srcCoords = texture.getAreaTexCoords( srcArea );
+    texCoords[0*2+0] = srcCoords.getX2(); texCoords[0*2+1] = srcCoords.getY1();	
+    texCoords[1*2+0] = srcCoords.getX1(); texCoords[1*2+1] = srcCoords.getY1();	
+    texCoords[2*2+0] = srcCoords.getX2(); texCoords[2*2+1] = srcCoords.getY2();	
+    texCoords[3*2+0] = srcCoords.getX1(); texCoords[3*2+1] = srcCoords.getY2();	
+
+    glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 }
 
 class CinderProgES2 : public GlslProg
@@ -745,16 +760,27 @@ const char* CinderProgES2::verts =
         "\n"
         "uniform mat4 uProjection;\n"
         "uniform mat4 uModelView;\n"
+        "uniform vec4 uVertexColor;\n"
+        "\n"
+        "uniform bool uHasVertexAttr;\n"
+        "uniform bool uHasTexCoordAttr;\n"
+        "uniform bool uHasColorAttr;\n"
+        "uniform bool uHasNormalAttr;\n"
+        "\n"
+        "varying vec4 vColor;\n"
         "\n"
         "void main() {\n"
+        "  vColor = uVertexColor;\n"
         "  gl_Position = uProjection * uModelView * vec4(aPosition, 1.0);\n"
         "}\n";
 
 const char* CinderProgES2::frags = 
         "precision mediump float;\n"
         "\n"
+        "varying vec4 vColor;\n"
+        "\n"
         "void main() {\n"
-        "    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);\n"
+        "    gl_FragColor = vColor;\n"
         "}\n";
 
 GlesContext::GlesContext()
@@ -763,8 +789,10 @@ GlesContext::GlesContext()
     CI_LOGW("Initializing CinderProgES2 shader");
     // mProg = CinderProgES2();
 	try {
-        mProg = GlslProg(CinderProgES2::verts, CinderProgES2::frags);
+        mProg = CinderProgES2();
         mAttr = GlesAttr(mProg.getAttribLocation("aPosition"));
+        //  XXX use a setter
+        mAttr.mSelectAttr = this;
     }
     catch( gl::GlslProgCompileExc &exc ) {
         CI_LOGW("Shader compile error: \n");
@@ -774,15 +802,15 @@ GlesContext::GlesContext()
         CI_LOGW("Unable to load shader\n");
     }
 
-
-    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = true;
+    mColor = ColorA::white();
+    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = mActiveAttrsDirty = true;
 }
 
 GlesContext::GlesContext(GlslProg shader)
     : mBound(false), mProg(shader)
 {
     // mAttr = GlesAttr(mProg.getAttribLocation("aPosition"));
-    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = true;
+    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = mActiveAttrsDirty = true;
 }
 
 void GlesContext::bind()
@@ -796,7 +824,18 @@ void GlesContext::unbind()
 {
     mBound = false;
     mProg.unbind();
-    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = true;
+    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = mActiveAttrsDirty = true;
+    mActiveAttrs = 0;
+}
+
+void GlesContext::selectAttrs(uint32_t activeAttrs)
+{
+    if (mActiveAttrs != activeAttrs) {
+        // CI_LOGW("XXX New attributes set: %d", activeAttrs);
+        mActiveAttrsDirty = true;
+    }
+    mActiveAttrs = activeAttrs;
+    updateUniforms();
 }
 
 GlesAttr& GlesContext::attr()
@@ -846,6 +885,34 @@ void GlesContext::setMatricesWindow( int screenWidth, int screenHeight, bool ori
     updateUniforms();
 }
 
+void GlesContext::color( float r, float g, float b )
+{
+    mColor = ColorA( r, g, b, 1.0f );
+    mColorDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::color( float r, float g, float b, float a )
+{
+    mColor = ColorA( r, g, b, a );
+    mColorDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::color( const Color &c )
+{ 
+    mColor = c;
+    mColorDirty = true;
+    updateUniforms();
+}
+
+void GlesContext::color( const ColorA &c ) 
+{ 
+    mColor = c;
+    mColorDirty = true;
+    updateUniforms();
+}
+
 void GlesContext::updateUniforms()
 {
     if (!mBound)
@@ -857,7 +924,17 @@ void GlesContext::updateUniforms()
     if (mModelViewDirty)
         mProg.uniform("uModelView",  mModelView);
 
-    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = false;
+    if (mColorDirty)
+        mProg.uniform("uVertexColor", mColor);
+
+    if (mActiveAttrsDirty) {
+        mProg.uniform("uHasVertexAttr",   bool(mActiveAttrs & ES2_ATTR_VERTEX));
+        mProg.uniform("uHasTexCoordAttr", bool(mActiveAttrs & ES2_ATTR_TEXCOORD));
+        mProg.uniform("uHasColorAttr",    bool(mActiveAttrs & ES2_ATTR_COLOR));
+        mProg.uniform("uHasNormalAttr",   bool(mActiveAttrs & ES2_ATTR_NORMAL));
+    }
+
+    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = mActiveAttrsDirty = false;
 }
 
 } }

@@ -720,6 +720,11 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 	}
 }
 
+TextureFontRef		TextureFont::create( const Font &font, const Format &format, const std::string &supportedChars )
+{ 
+	return TextureFontRef( new TextureFont( font, supportedChars, format ) ); 
+}
+
 void TextureFont::drawString( const std::string &str, const Vec2f &baseline, const DrawOptions &options )
 {
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );

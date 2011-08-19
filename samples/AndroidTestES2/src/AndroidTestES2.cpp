@@ -45,6 +45,7 @@ void AndroidTestES2::setup()
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
 
     context->setMatricesWindow(getWindowWidth(), getWindowHeight());
+    glDisable(GL_CULL_FACE);
 }
 
 void AndroidTestES2::draw()
@@ -53,7 +54,12 @@ void AndroidTestES2::draw()
 
 	gl::clear( Color( 0.2f, 0.2f, 0.2f ) );
 
+    context->color(ColorA(1.0f, 1.0f, 0, 1.0f));
     context->attr().drawLine(Vec2f(0, 0), Vec2f(200, 200));
+
+    context->color(ColorA(1.0f, 0, 0, 1.0f));
+    context->attr().drawSolidCircle( Vec2f(getWindowWidth() / 2.0f, getWindowHeight() / 2.0f), 
+                                     40.0f, 32);
 
     context->unbind();
 }

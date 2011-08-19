@@ -100,6 +100,20 @@ void draw( const Texture &texture, const Rectf &rect );
 //! Draws the pixels inside \a srcArea of \a texture on the XY-plane in the rectangle defined by \a destRect
 void draw( const Texture &texture, const Area &srcArea, const Rectf &destRect );
 
+//  Attributes used by the draw* methods
+enum ShaderAttrs
+{
+    ES2_ATTR_VERTEX   = 1 << 0,
+    ES2_ATTR_TEXCOORD = 1 << 1,
+    ES2_ATTR_COLOR    = 1 << 2,
+    ES2_ATTR_NORMAL   = 1 << 3,
+};
+
+class SelectAttrCallback {
+public:
+    virtual void selectAttrs(uint32_t activeAttrs) = 0; 
+};
+
 //  Shader attributes and draw methods that use them
 struct GlesAttr 
 {
@@ -108,7 +122,10 @@ struct GlesAttr
     GLuint mColor;
     GLuint mNormal;
 
+    SelectAttrCallback* mSelectAttr;
+
     GlesAttr(GLuint vertex=0, GLuint texCoord=0, GLuint color=0, GLuint normal=0);
+    inline void selectAttrs(uint32_t activeAttrs) { if ( mSelectAttr ) mSelectAttr->selectAttrs( activeAttrs ); }
 
     void drawLine( const Vec2f &start, const Vec2f &end );
     void drawLine( const Vec3f &start, const Vec3f &end );
@@ -147,7 +164,7 @@ struct GlesAttr
 };
 
 //  Emulates a GL context
-class GlesContext
+class GlesContext : public SelectAttrCallback
 {
 public:
     GlesContext();
@@ -155,6 +172,9 @@ public:
 
     void bind();
     void unbind();
+
+    //  SelectAttrCallback implementation
+    virtual void selectAttrs(uint32_t activeAttrs);
 
     GlesAttr& attr();
 
@@ -192,6 +212,13 @@ public:
     // void rotate( const Quatf &quat );
     // inline void rotate( float degrees ) { rotate( Vec3f( 0, 0, degrees ) ); }
 
+    void color( float r, float g, float b );
+    void color( float r, float g, float b, float a );
+    // void color( const Color8u &c );
+    // void color( const ColorA8u &c );
+    void color( const Color &c );
+    void color( const ColorA &c );
+
 protected:
     void updateUniforms();
 
@@ -204,8 +231,9 @@ protected:
     //  Uniforms
     Matrix44f mProj;
     Matrix44f mModelView;
-    ColorA mColor;
-    Texture mTexture;
+    ColorA    mColor;
+    Texture   mTexture;
+    uint32_t  mActiveAttrs;
 
     bool mBound;
 
@@ -213,6 +241,7 @@ protected:
     bool mModelViewDirty;
     bool mColorDirty;
     bool mTextureDirty;
+    bool mActiveAttrsDirty;
 };
 
 } }
