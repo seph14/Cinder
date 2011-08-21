@@ -837,15 +837,19 @@ GlesContext::GlesContext(GlslProg shader)
 
 void GlesContext::bind()
 {
-    mBound = true;
-    mProg.bind();
+    if ( ! mBound ) {
+        mBound = true;
+        mProg.bind();
+    }
     updateUniforms();
 }
 
 void GlesContext::unbind()
 {
+    if ( mBound )
+        mProg.unbind();
+
     mBound = false;
-    mProg.unbind();
     mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = mActiveAttrsDirty = true;
     mActiveAttrs = 0;
 }
@@ -1096,6 +1100,329 @@ void GlesContext::updateUniforms()
     }
 
     mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = mActiveAttrsDirty = false;
+}
+
+static shared_ptr<GlesContext> sContext;
+
+GlesContextRef setGlesContext(GlesContextRef context)
+{
+    if (context) {
+        sContext = context;
+    }
+    else {
+        //  Use default context
+        sContext = GlesContextRef(new GlesContext());
+    }
+
+    return sContext;
+}
+
+GlesContextRef getGlesContext()
+{
+    return sContext;
+}
+
+void releaseGlesContext()
+{
+    if (sContext) {
+        sContext = GlesContextRef();
+    }
+}
+
+void drawLine( const Vec2f &start, const Vec2f &end )
+{
+    if (sContext) sContext->attr().drawLine(start, end);
+}
+
+void drawLine( const Vec3f &start, const Vec3f &end )
+{
+    if (sContext) sContext->attr().drawLine(start, end);
+}
+
+void drawCube( const Vec3f &center, const Vec3f &size )
+{
+    if (sContext) sContext->attr().drawCube(center, size);
+}
+
+void drawColorCube( const Vec3f &center, const Vec3f &size )
+{
+    if (sContext) sContext->attr().drawColorCube(center, size);
+}
+
+void drawStrokedCube( const Vec3f &center, const Vec3f &size )
+{
+    if (sContext) sContext->attr().drawStrokedCube(center, size);
+}
+
+// void drawStrokedCube( const AxisAlignedBox3f &aab ) 
+// {
+//     if (sContext) sContext->attr().drawStrokedCube(aab);
+// }
+
+void drawSphere( const Vec3f &center, float radius, int segments )
+{
+    if (sContext) sContext->attr().drawSphere(center, radius, segments);
+}
+
+void draw( const class Sphere &sphere, int segments )
+{
+    if (sContext) sContext->attr().draw(sphere, segments);
+}
+
+void drawSolidCircle( const Vec2f &center, float radius, int numSegments )
+{
+    if (sContext) sContext->attr().drawSolidCircle(center, radius, numSegments);
+}
+
+void drawStrokedCircle( const Vec2f &center, float radius, int numSegments )
+{
+    if (sContext) sContext->attr().drawStrokedCircle(center, radius, numSegments);
+}
+
+void drawSolidRect( const Rectf &rect, bool textureRectangle )
+{
+    if (sContext) sContext->attr().drawSolidRect(rect, textureRectangle);
+}
+
+void drawStrokedRect( const Rectf &rect )
+{
+    if (sContext) sContext->attr().drawStrokedRect(rect);
+}
+
+void drawCoordinateFrame( float axisLength, float headLength, float headRadius )
+{
+    if (sContext) sContext->attr().drawCoordinateFrame(axisLength, headLength, headRadius);
+}
+
+void drawVector( const Vec3f &start, const Vec3f &end, float headLength, float headRadius )
+{
+    if (sContext) sContext->attr().drawVector(start, end, headLength, headRadius);
+}
+
+void drawFrustum( const Camera &cam )
+{
+    if (sContext) sContext->attr().drawFrustum(cam);
+}
+
+void drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments )
+{
+    if (sContext) sContext->attr().drawTorus(outterRadius, innerRadius, longitudeSegments, latitudeSegments);
+}
+
+void drawCylinder( float baseRadius, float topRadius, float height, int slices, int stacks )
+{
+    if (sContext) sContext->attr().drawCylinder(baseRadius, topRadius, height, slices, stacks);
+}
+
+// void draw( const class PolyLine<Vec2f> &polyLine )
+// {
+// }
+//
+
+void draw( const class PolyLine<Vec3f> &polyLine )
+{
+    if (sContext) sContext->attr().draw(polyLine);
+}
+
+void draw( const class Path2d &path2d, float approximationScale )
+{
+    if (sContext) sContext->attr().draw(path2d, approximationScale);
+}
+
+void draw( const class Shape2d &shape2d, float approximationScale )
+{
+    if (sContext) sContext->attr().draw(shape2d, approximationScale);
+}
+
+// void drawSolid( const class Path2d &path2d, float approximationScale = 1.0f )
+// {
+// }
+//
+
+void draw( const TriMesh &mesh )
+{
+    if (sContext) sContext->attr().draw(mesh);
+}
+
+// void drawRange( const TriMesh &mesh, size_t startTriangle, size_t triangleCount )
+// {
+//     if (sContext) sContext->attr().draw(mesh, startTriangle, triangleCount);
+// }
+
+void draw( const VboMesh &vbo )
+{
+    if (sContext) sContext->attr().draw(vbo);
+}
+
+void drawRange( const VboMesh &vbo, size_t startIndex, size_t indexCount, int vertexStart, int vertexEnd )
+{
+    if (sContext) sContext->attr().drawRange(vbo, startIndex, indexCount, vertexStart, vertexEnd);
+}
+
+void drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
+{
+    if (sContext) sContext->attr().drawArrays(vbo, first, count);
+}
+
+void drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
+{
+    if (sContext) sContext->attr().drawBillboard(pos, scale, rotationDegrees, bbRight, bbUp);
+}
+
+void draw( const Texture &texture )
+{
+    if (sContext) sContext->attr().draw(texture);
+}
+
+void draw( const Texture &texture, const Vec2f &pos )
+{
+    if (sContext) sContext->attr().draw(texture, pos);
+}
+
+void draw( const Texture &texture, const Rectf &rect )
+{
+    if (sContext) sContext->attr().draw(texture, rect);
+}
+
+void draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
+{
+    if (sContext) sContext->attr().draw(texture, srcArea, destRect);
+}
+
+void setMatrices( const Camera &cam )
+{
+    if (sContext) sContext->setMatrices(cam);
+}
+
+void setModelView( const Camera &cam )
+{
+    if (sContext) sContext->setModelView(cam);
+}
+
+void setProjection( const Camera &cam )
+{
+    if (sContext) sContext->setProjection(cam);
+}
+
+void pushModelView()
+{
+    if (sContext) sContext->pushModelView();
+}
+
+void popModelView()
+{
+    if (sContext) sContext->popModelView();
+}
+
+void pushModelView( const Camera &cam )
+{
+    if (sContext) sContext->pushModelView(cam);
+}
+
+void pushProjection( const Camera &cam )
+{
+    if (sContext) sContext->pushProjection(cam);
+}
+
+void pushMatrices()
+{
+    if (sContext) sContext->pushMatrices();
+}
+
+void popMatrices()
+{
+    if (sContext) sContext->popMatrices();
+}
+
+void multModelView( const Matrix44f &mtx )
+{
+    if (sContext) sContext->multModelView(mtx);
+}
+
+void multProjection( const Matrix44f &mtx )
+{
+    if (sContext) sContext->multProjection(mtx);
+}
+
+Matrix44f getModelView()
+{
+    if (sContext) sContext->getModelView();
+}
+
+Matrix44f getProjection()
+{
+    if (sContext) sContext->getProjection();
+}
+
+void setMatricesWindowPersp( int screenWidth, int screenHeight, float fovDegrees, float nearPlane, float farPlane, bool originUpperLeft )
+{
+    if (sContext) sContext->setMatricesWindowPersp(screenWidth, screenHeight, fovDegrees, nearPlane, farPlane, originUpperLeft);
+}
+
+void setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft )
+{
+    if (sContext) sContext->setMatricesWindow(screenWidth, screenHeight, originUpperLeft);
+}
+
+void translate( const Vec2f &pos )
+{
+    if (sContext) sContext->translate(pos);
+}
+
+void translate( const Vec3f &pos )
+{
+    if (sContext) sContext->translate(pos);
+}
+
+void scale( const Vec3f &scl )
+{
+    if (sContext) sContext->scale(scl);
+}
+
+void rotate( const Vec3f &xyz )
+{
+    if (sContext) sContext->rotate(xyz);
+}
+
+void rotate( const Quatf &quat )
+{
+    if (sContext) sContext->rotate(quat);
+}
+
+void color( float r, float g, float b )
+{
+    if (sContext) sContext->color(r, g, b);
+}
+
+void color( float r, float g, float b, float a )
+{
+    if (sContext) sContext->color(r, g, b, a);
+}
+
+// void color( const Color8u &c );
+// void color( const ColorA8u &c );
+void color( const Color &c )
+{
+    if (sContext) sContext->color(c);
+}
+
+void color( const ColorA &c )
+{
+    if (sContext) sContext->color(c);
+}
+
+ClientBoolState::ClientBoolState( GLint target )
+	: mTarget( target )
+{
+    //  XXX
+    //  map GL_VERTEX_ARRAY, GL_COLOR_ARRAY, GL_TEXTURE_COORD_ARRAY
+    //  to ES2_ATTR_VERTEX, ES2_ATTR_COLOR, ES2_ATTR_TEXCOORD
+}
+
+ClientBoolState::~ClientBoolState()
+{
+    //  XXX
+    //  restore state bit
 }
 
 } }

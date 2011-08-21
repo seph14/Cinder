@@ -6,6 +6,10 @@
 #include "cinder/gl/TextureFont.h"
 #include "cinder/Utilities.h"
 
+#if defined( CINDER_GLES2 )
+    #include "cinder/gl/gles2.h"
+#endif
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -20,10 +24,17 @@ class TextureFontApp : public AppNative {
 
 	Font				mFont;
 	gl::TextureFontRef	mTextureFont;
+#if defined( CINDER_GLES2 )
+    gl::GlesContextRef  mContext;
+#endif
 };
 
 void TextureFontApp::setup()
 {
+#if defined( CINDER_GLES2 )
+    mContext = gl::setGlesContext();
+#endif
+
 #if defined( CINDER_COCOA_TOUCH )
 	mFont = Font( "Cochin-Italic", 24 );
 #elif defined( CINDER_COCOA )
@@ -61,6 +72,10 @@ void TextureFontApp::mouseDown( MouseEvent event )
 
 void TextureFontApp::draw()
 {
+#if defined( CINDER_GLES2 )
+    mContext->bind();
+#endif
+
 	gl::setMatricesWindow( getWindowSize() );
 	gl::enableAlphaBlending();
 	gl::clear( Color( 0, 0, 0 ) );
@@ -84,6 +99,10 @@ void TextureFontApp::draw()
     // Draw Font Name
 	float fontNameWidth = mTextureFont->measureString( mTextureFont->getName() ).x;
 	mTextureFont->drawString( mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
+
+#if defined( CINDER_GLES2 )
+    mContext->unbind();
+#endif
 }
 
 CINDER_APP_NATIVE( TextureFontApp, RendererGl(0) )

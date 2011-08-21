@@ -404,6 +404,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/gl/gl.cpp \
 					$(CINDER_SRC)/gl/Fbo.cpp \
 					$(CINDER_SRC)/gl/Texture.cpp \
+					$(CINDER_SRC)/gl/TextureFont.cpp \
 					$(CINDER_SRC)/ip/Blend.cpp \
 					$(CINDER_SRC)/ip/EdgeDetect.cpp \
 					$(CINDER_SRC)/ip/Fill.cpp \
@@ -465,7 +466,6 @@ GLES_LDLIB = -lGLESv2
 else
 LOCAL_SRC_FILES += $(CINDER_SRC)/gl/Light.cpp \
 					$(CINDER_SRC)/gl/Material.cpp \
-					$(CINDER_SRC)/gl/TextureFont.cpp \
 					$(CINDER_SRC)/gl/TileRender.cpp
 LOCAL_CFLAGS += -DCINDER_GLES1
 GLES_LDLIB = -lGLESv1_CM

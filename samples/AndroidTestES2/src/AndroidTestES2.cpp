@@ -12,27 +12,27 @@
 
 using namespace ci;
 using namespace ci::app;
+using namespace ci::gl;
 
 using namespace std;
 
 class AndroidTestES2 : public AppNative {
 public:
-    gl::GlesContext* context;
-
 	void setup();
 	void draw();
 	
-	gl::Texture	mTexture;	
+    GlesContextRef mContext;
+	Texture	       mTexture;	
 	Font mFont;
 };
 
 void AndroidTestES2::setup()
 {
-    context = new gl::GlesContext();
+    mContext = setGlesContext();
 
 	try {
 		console() << "Loading logo image" << endl;
-		mTexture = gl::Texture( loadImage( loadResource("cinder_logo.png") ) );
+		mTexture = Texture( loadImage( loadResource("cinder_logo.png") ) );
 		console() << "success!!!" << endl;
 	}
 	catch( ... ) {
@@ -44,30 +44,30 @@ void AndroidTestES2::setup()
 	mFont = Font(fontData, 16);
 	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
 
-    context->setMatricesWindow(getWindowWidth(), getWindowHeight());
+    setMatricesWindow(getWindowWidth(), getWindowHeight());
     glDisable(GL_CULL_FACE);
 }
 
 void AndroidTestES2::draw()
 {
-    context->bind();
+    mContext->bind();
 
-	gl::clear( Color( 0.2f, 0.2f, 0.2f ) );
+	clear( Color( 0.2f, 0.2f, 0.2f ) );
 
-    context->color(ColorA(1.0f, 1.0f, 0, 1.0f));
-    context->attr().drawLine(Vec2f(0, 0), Vec2f(200, 200));
+    color(ColorA(1.0f, 1.0f, 0, 1.0f));
+    drawLine(Vec2f(0, 0), Vec2f(200, 200));
 
-    context->color(ColorA(1.0f, 0, 0, 1.0f));
-    context->attr().drawSolidCircle( Vec2f(getWindowWidth() / 2.0f, getWindowHeight() / 2.0f), 
+    color(ColorA(1.0f, 0, 0, 1.0f));
+    drawSolidCircle( Vec2f(getWindowWidth() / 2.0f, getWindowHeight() / 2.0f), 
                                      40.0f, 32);
 
     if (mTexture) {
-        context->color(ColorA(1.0f, 1.0f, 1.0f, 1.0f));
+        color(ColorA(1.0f, 1.0f, 1.0f, 1.0f));
         Vec2f lr(getWindowWidth(), getWindowHeight());
-        context->attr().draw(mTexture, Rectf(lr.x-100.0f, lr.y-100.0f, lr.x, lr.y));
+        gl::draw(mTexture, Rectf(lr.x-100.0f, lr.y-100.0f, lr.x, lr.y));
     }
 
-    context->unbind();
+    mContext->unbind();
 }
 
 CINDER_APP_NATIVE( AndroidTestES2, RendererGl )
