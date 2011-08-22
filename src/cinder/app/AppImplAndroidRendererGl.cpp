@@ -61,7 +61,6 @@ void AppImplAndroidRendererGl::initialize( ANativeWindow* window, int32_t& width
 
     // Initialize GL state
     glDisable(GL_DITHER);
-    glEnable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
 #if ! defined( CINDER_GLES2 )
