@@ -25,6 +25,8 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := cinder
 LOCAL_SRC_FILES := ../../obj/local/$(TARGET_ARCH_ABI)/libcinder.a
+# required for wchar_t support, used by boost::filesystem
+LOCAL_EXPORT_CFLAGS += -D_GLIBCPP_USE_WCHAR_T
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../include $(LOCAL_PATH)/../../../boost
 LOCAL_EXPORT_LDLIBS := -llog -lEGL $(GLES_LDLIB) -lz
 include $(PREBUILT_STATIC_LIBRARY)
