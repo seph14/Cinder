@@ -1154,11 +1154,6 @@ void drawStrokedCube( const Vec3f &center, const Vec3f &size )
     if (sContext) sContext->attr().drawStrokedCube(center, size);
 }
 
-// void drawStrokedCube( const AxisAlignedBox3f &aab ) 
-// {
-//     if (sContext) sContext->attr().drawStrokedCube(aab);
-// }
-
 void drawSphere( const Vec3f &center, float radius, int segments )
 {
     if (sContext) sContext->attr().drawSphere(center, radius, segments);

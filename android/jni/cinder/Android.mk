@@ -487,7 +487,7 @@ endif
 LOCAL_STATIC_LIBRARIES	:= android_native_app_glue 
 
 # Module exports
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/boost
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../include $(LOCAL_PATH)/../../../boost
 LOCAL_EXPORT_LDLIBS := -llog -lEGL $(GLES_LDLIB) -lz
 
 include $(BUILD_STATIC_LIBRARY)
