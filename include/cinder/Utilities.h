@@ -23,12 +23,11 @@
 #pragma once
 
 #include <string>
-#ifdef CINDER_ANDROID
-//  wstring is not implemented by gnuSTL
-namespace std {
-	typedef basic_string<wchar_t> wstring;
-}
+
+#if defined( CINDER_ANDROID )
+	#include "cinder/android/wtypes.h"
 #endif
+
 #include <vector>
 #include "cinder/Cinder.h"
 #include "cinder/Url.h"
