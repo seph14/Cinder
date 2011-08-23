@@ -11,17 +11,18 @@ Tested to build on Windows (cygwin), OSX and Linux.
 
 
 Quickstart
-==========
+----------
 
 * Install prerequisites:
 
   - Android SDK and Android NDK R5c or later
+  - Boost, installed in the top Cinder directory
   - bash, curl, unzip, tar and bzip2 command-line tools (required by setup-android)
 
 * Run setup-android
 
   % cd cinder/android
-  % . setup-android
+  % . ./setup-android
 
 * Configure build settings by editing jni/cinder/Configure.mk (optional)
   
@@ -34,17 +35,17 @@ Quickstart
   % ndk-build -j 4
 
 * Build one of the sample programs (AndroidTest, FBOBasic, iPhoneAccelerometer,
-  MultiTouchBasic, AndroidTestES2 or shaderTestES2)
+  MultiTouchBasic, AndroidTestES2, TextureFont or shaderTestES2)
 
   % cd cinder/samples/<SAMPLE>/android
-  % . setup-android
+  % . ./setup-android
   % ndk-build && ant debug && adb install -r bin/<SAMPLE-APK>
 
-NB: The ES2 samples will only build against an ES2 build of Cinder (and vice versa)
+NB: The ES2 samples will only build against an ES2 build of Cinder
 
 
 Linking against Cinder
-======================
+----------------------
 
 The android/setup-android script will suggest settings for linking against
 prebuilt static libraries, or you can set NDK_MODULE_PATH to
@@ -59,28 +60,28 @@ NDK_MODULE_PATH.
 
 
 Status
-======
+------
 
 * console() output goes to the Android debug log
 * loadResource opens files embedded from the project "assets" folder
 * FreeImage image source, tested to work with PNG/JPEG/BMP files so far
 * stb_image image source, a smaller image backend compatible with PNG/JPEG/GIF
 * OpenGL ES2 supported at compile time with a restricted subset of gl methods
+* TextureFont implementation using Freetype
 
 
 TODO
-====
+----
 
 * Android save/restore state callbacks
-* Text support (Font/TextureFont, to be implemented with Freetype/Harfbuzz)
 * Audio support (using OpenSL ES)
 * URL implementation (currently stubbed out)
 * Camera capture (may require JNI)
-* Better filesystem support
+* boost::filesystem v3 support
 
 
 Credits
-=======
+-------
 
 Portions of this software are copyright © 2011 The FreeType Project (www.freetype.org).  All rights reserved.
 
@@ -94,5 +95,6 @@ FreeImage is used under the FIPL, version 1.0.
 Parts of the font rendering code are based on freetype-gl (http://code.google.com/p/freetype-gl/)
 Copyright 2011 Nicolas P. Rougier. All rights reserved
 
-safetydank 14/8/11
+
+safetydank 23/8/11
 
