@@ -34,7 +34,7 @@ Quickstart
 
     USE_GLES2     - select OpenGL ES2 - if disabled then OpenGL ES1.5 is used instead
 
-* Build the library.  Tip: use -j <num cores> to enable multi-threaded build.
+* Build the library.  Tip: use -j <num cores> to enable parallel build.
 
 ```
     % ndk-build -j 4
