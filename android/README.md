@@ -7,7 +7,7 @@ When linked as an activity it uses the NDK Native Activity code, which
 restricts it to running on Android versions 2.3 (Gingerbread) and upwards. This
 restriction does not apply when linked as a static library called through JNI.
 
-Tested to build on Windows (cygwin), OSX and Linux.
+Tested to build on Windows (cygwin), OS X and Linux.
 
 
 Quickstart
@@ -20,28 +20,31 @@ Quickstart
   - bash, curl, unzip, tar and bzip2 command-line tools (required by setup-android)
 
 * Run setup-android
-
-  % cd cinder/android
-  % . ./setup-android
+```
+    % cd cinder/android
+    % . ./setup-android
+```
 
 * Configure build settings by editing jni/cinder/Configure.mk (optional)
   
-  USE_FREEIMAGE : use FreeImage image library (wide format compatibility but large)
-  USE_STBIMAGE  : use the stb_image image library (small JPEG/PNG/GIF reader)
-  USE_GLES2     : select OpenGL ES2 - if disabled then OpenGL ES1.5 is used instead
+  USE_FREEIMAGE - use FreeImage image library (wide format compatibility but large)
+  USE_STBIMAGE  - use the stb_image image library (small JPEG/PNG/GIF reader)
+  USE_GLES2     - select OpenGL ES2 - if disabled then OpenGL ES1.5 is used instead
 
 * Build the library.  Tip: use -j <num cores> to enable multi-threaded build.
-
-  % ndk-build -j 4
+```
+    % ndk-build -j 4
+```
 
 * Build one of the sample programs (AndroidTest, FBOBasic, iPhoneAccelerometer,
   MultiTouchBasic, AndroidTestES2, TextureFont or shaderTestES2)
+```
+    % cd cinder/samples/<SAMPLE>/android
+    % . ./setup-android
+    % ndk-build && ant debug && adb install -r bin/<SAMPLE-APK>
+```
 
-  % cd cinder/samples/<SAMPLE>/android
-  % . ./setup-android
-  % ndk-build && ant debug && adb install -r bin/<SAMPLE-APK>
-
-NB: The ES2 samples will only build against an ES2 build of Cinder
+  NB: The ES2 samples will only build against an ES2 build of Cinder
 
 
 Linking against Cinder
@@ -66,7 +69,8 @@ Status
 * loadResource opens files embedded from the project "assets" folder
 * FreeImage image source, tested to work with PNG/JPEG/BMP files so far
 * stb_image image source, a smaller image backend compatible with PNG/JPEG/GIF
-* OpenGL ES2 supported at compile time with a restricted subset of gl methods
+* OpenGL ES2 supported at compile time with a subset of the gl namespace
+* OpenGL ES2 context class, supporting most gl namespace methods
 * TextureFont implementation using Freetype
 
 
