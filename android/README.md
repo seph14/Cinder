@@ -20,6 +20,7 @@ Quickstart
   - bash, curl, unzip, tar and bzip2 command-line tools (required by setup-android)
 
 * Run setup-android
+
 ```
     % cd cinder/android
     % . ./setup-android
@@ -28,16 +29,20 @@ Quickstart
 * Configure build settings by editing jni/cinder/Configure.mk (optional)
   
   USE_FREEIMAGE - use FreeImage image library (wide format compatibility but large)
+
   USE_STBIMAGE  - use the stb_image image library (small JPEG/PNG/GIF reader)
+
   USE_GLES2     - select OpenGL ES2 - if disabled then OpenGL ES1.5 is used instead
 
 * Build the library.  Tip: use -j <num cores> to enable multi-threaded build.
+
 ```
     % ndk-build -j 4
 ```
 
 * Build one of the sample programs (AndroidTest, FBOBasic, iPhoneAccelerometer,
   MultiTouchBasic, AndroidTestES2, TextureFont or shaderTestES2)
+
 ```
     % cd cinder/samples/<SAMPLE>/android
     % . ./setup-android
