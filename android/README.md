@@ -28,11 +28,11 @@ Quickstart
 
 * Configure build settings by editing jni/cinder/Configure.mk (optional)
   
-  USE_FREEIMAGE - use FreeImage image library (wide format compatibility but large)
+    USE_FREEIMAGE - use FreeImage image library (wide format compatibility but large)
 
-  USE_STBIMAGE  - use the stb_image image library (small JPEG/PNG/GIF reader)
+    USE_STBIMAGE  - use the stb_image image library (small JPEG/PNG/GIF reader)
 
-  USE_GLES2     - select OpenGL ES2 - if disabled then OpenGL ES1.5 is used instead
+    USE_GLES2     - select OpenGL ES2 - if disabled then OpenGL ES1.5 is used instead
 
 * Build the library.  Tip: use -j <num cores> to enable multi-threaded build.
 
