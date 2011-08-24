@@ -815,20 +815,29 @@ const char* CinderProgES2::frags =
         "    }\n"
         "}\n";
 
+GlesContextRef GlesContext::create()
+{
+    return GlesContextRef(new GlesContext());
+}
+
+GlesContextRef GlesContext::create(GlslProg& shader, GlesAttr& attr)
+{
+    return GlesContextRef(new GlesContext(shader, attr));
+}
+
+
 GlesContext::GlesContext()
-    : mBound(false)
 {
     CI_LOGW("Initializing CinderProgES2 shader");
-    // mProg = CinderProgES2();
+
 	try {
-        mProg = CinderProgES2();
-        mAttr = GlesAttr(mProg.getAttribLocation("aPosition"),
-                         mProg.getAttribLocation("aTexCoord"),
-                         mProg.getAttribLocation("aColor"),
-                         mProg.getAttribLocation("aNormal"));
-        mAttr.mTexSampler = mProg.getUniformLocation("sTexture");
-        //  XXX use a setter
-        mAttr.mSelectAttr = this;
+        CinderProgES2 shader;
+        GlesAttr attr(shader.getAttribLocation("aPosition"),
+                      shader.getAttribLocation("aTexCoord"),
+                      shader.getAttribLocation("aColor"),
+                      shader.getAttribLocation("aNormal"));
+        attr.mTexSampler = shader.getUniformLocation("sTexture");
+        init(shader, attr);
     }
     catch( gl::GlslProgCompileExc &exc ) {
         CI_LOGW("Shader compile error: \n");
@@ -837,15 +846,21 @@ GlesContext::GlesContext()
     catch( ... ) {
         CI_LOGW("Unable to load shader\n");
     }
-
-    mColor = ColorA::white();
-    mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = mActiveAttrsDirty = true;
 }
 
-GlesContext::GlesContext(GlslProg shader)
-    : mBound(false), mProg(shader)
+GlesContext::GlesContext(GlslProg& shader, GlesAttr& attr)
 {
-    // mAttr = GlesAttr(mProg.getAttribLocation("aPosition"));
+    init(shader, attr);
+}
+
+void GlesContext::init(GlslProg& shader, GlesAttr& attr)
+{
+    //  XXX use a setter
+    mProg = shader;
+    mAttr = attr;
+    mBound = false;
+    mAttr.mSelectAttr = this;
+    mColor = ColorA::white();
     mProjDirty = mModelViewDirty = mColorDirty = mTextureDirty = mActiveAttrsDirty = true;
 }
 
@@ -1125,7 +1140,7 @@ GlesContextRef setGlesContext(GlesContextRef context)
     }
     else {
         //  Use default context
-        sContext = GlesContextRef(new GlesContext());
+        sContext = GlesContext::create();
     }
 
     return sContext;

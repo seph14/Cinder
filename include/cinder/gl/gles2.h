@@ -107,12 +107,23 @@ struct GlesAttr
 };
 
 //  Emulates a GL context
+class GlesContext;
+typedef std::shared_ptr<GlesContext> GlesContextRef;
+
 class GlesContext : public SelectAttrCallback
 {
 public:
-    GlesContext();
-    GlesContext(GlslProg shader);
+    //!  Factory methods
+    static GlesContextRef create();
+    static GlesContextRef create(GlslProg& shader, GlesAttr& attr);
 
+protected:
+    GlesContext();
+    GlesContext(GlslProg& shader, GlesAttr& attr);
+
+    void init(GlslProg& shader, GlesAttr& attr);
+
+public:
     void bind();
     void unbind();
 
@@ -191,8 +202,6 @@ protected:
     std::vector<Matrix44f> mModelViewStack;
     std::vector<Matrix44f> mProjStack;
 };
-
-typedef std::shared_ptr<GlesContext> GlesContextRef;
 
 GlesContextRef setGlesContext(GlesContextRef context = GlesContextRef());
 GlesContextRef getGlesContext();
