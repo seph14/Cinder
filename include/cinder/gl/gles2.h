@@ -309,12 +309,15 @@ void color( const Color &c );
 void color( const ColorA &c );
 
 //! Convenience class designed to push and pop a boolean OpenGL state
+//  Only supports checking the enabled state of vertex arrays supported by
+//  GlesAttr, ie GL_VERTEX_ARRAY, GL_COLOR_ARRAY, GL_TEXTURE_COORD_ARRAY,
+//  GL_NORMAL_ARRAY
 struct ClientBoolState {
-	ClientBoolState( GLint target );
+	ClientBoolState( GlesAttr& attr, GLint target );
 	~ClientBoolState();
   private:
-	GLint		mTarget;
-	GLboolean	mOldValue;
+	GLuint		mTarget;
+	int         mOldValue;
 };
 
 //! Convenience class designed to push and pop the current color

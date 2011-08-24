@@ -271,7 +271,7 @@ void GlesAttr::drawStrokedCircle( const Vec2f &center, float radius, int numSegm
 
 void GlesAttr::drawSolidRect( const Rectf &rect, bool textureRectangle )
 {
-    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() );
+    selectAttrs( ES2_ATTR_VERTEX | (textureRectangle ? ES2_ATTR_TEXCOORD : 0) );
 
     glEnableVertexAttribArray(mVertex);
 	GLfloat verts[12];
@@ -729,13 +729,12 @@ void GlesAttr::draw( const Texture &texture, const Rectf &rect )
 
 void GlesAttr::draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
 {
-    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() );
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD );
 
-    // XXX save state?
-    // SaveTextureBindState saveBindState( texture.getTarget() );
-    // BoolState saveEnabledState( texture.getTarget() );
-    // ClientBoolState vertexArrayState( GL_VERTEX_ARRAY );
-    // ClientBoolState texCoordArrayState( GL_TEXTURE_COORD_ARRAY );	
+    SaveTextureBindState saveBindState( texture.getTarget() );
+    BoolState saveEnabledState( texture.getTarget() );
+    ClientBoolState vertexArrayState( *this, GL_VERTEX_ARRAY );
+    ClientBoolState texCoordArrayState( *this, GL_TEXTURE_COORD_ARRAY );	
     texture.enableAndBind();
     glUniform1i(mTexSampler, 0);
 
@@ -1421,18 +1420,40 @@ void color( const ColorA &c )
     if (sContext) sContext->color(c);
 }
 
-ClientBoolState::ClientBoolState( GLint target )
-	: mTarget( target )
+ClientBoolState::ClientBoolState( GlesAttr& attr, GLint target )
 {
-    //  XXX
-    //  map GL_VERTEX_ARRAY, GL_COLOR_ARRAY, GL_TEXTURE_COORD_ARRAY
-    //  to ES2_ATTR_VERTEX, ES2_ATTR_COLOR, ES2_ATTR_TEXCOORD
+    switch( target ) {
+    case GL_VERTEX_ARRAY:
+        mTarget = attr.mVertex;
+        break;
+    case GL_COLOR_ARRAY:
+        mTarget = attr.mColor;
+        break;
+    case GL_TEXTURE_COORD_ARRAY:
+        mTarget = attr.mTexCoord;
+        break;
+    case GL_NORMAL_ARRAY:
+        mTarget = attr.mNormal;
+        break;
+    default:
+        mTarget = 0;
+    }
+
+    if (mTarget)
+        glGetVertexAttribiv(attr.mVertex, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &mOldValue);
 }
 
 ClientBoolState::~ClientBoolState()
 {
-    //  XXX
-    //  restore state bit
+    if (!mTarget)
+        return;
+
+    if (mOldValue) {
+        glEnableVertexAttribArray(mTarget);
+    }
+    else {
+        glDisableVertexAttribArray(mTarget);
+    }
 }
 
 } }
