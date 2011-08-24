@@ -65,25 +65,17 @@ void AndroidTestES2::draw()
     drawLine(Vec2f(0, 0), Vec2f(200, 200));
 
     color(ColorA(1.0f, 0, 0, 1.0f));
-    // drawSolidCircle( Vec2f(getWindowWidth() / 2.0f, getWindowHeight() / 2.0f), 
-    //                                  40.0f, 32);
 
     if (mTexture) {
-        color(ColorA(1.0f, 1.0f, 1.0f, 1.0f));
         Vec2f lr(getWindowWidth(), getWindowHeight());
         gl::draw(mTexture, Rectf(lr.x-100.0f, lr.y-100.0f, lr.x, lr.y));
     }
 
-    mTexture.unbind();
-    color(ColorA(1.0f, 0.1f, 0.1f, 0.8f));
+    color(Color::white());
     setMatrices(mCam);
-    rotate(Vec3f(15.0f, 15.0f, 15.0f));
-    // drawColorCube( Vec3f(0, 0, 0), Vec3f(3.0f, 3.0f, 3.0f) );
-    drawStrokedCube( Vec3f(0, 0, 0), Vec3f(3.0f, 3.0f, 3.0f) );
-    pushModelView();
-    color(ColorA(0.2f, 0.2f, 1.0f, 1.0f));
-    rotate(Vec3f(15.0f, 15.0f, 15.0f));
-    drawStrokedCube( Vec3f(0, 0, 0), Vec3f(3.0f, 3.0f, 3.0f) );
+    rotate(Vec3f(60.0f, 60.0f, 60.0f));
+    drawCube( Vec3f(0, 0, 0), Vec3f(3.0f, 3.0f, 3.0f) );
+    // drawStrokedCube( Vec3f(0, 0, 0), Vec3f(3.0f, 3.0f, 3.0f) );
 
     mContext->unbind();
 }

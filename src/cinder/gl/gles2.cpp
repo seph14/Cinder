@@ -17,6 +17,15 @@ using std::shared_ptr;
 
 namespace cinder { namespace gl {
 
+//  Check if a texture is bound - called before enabling texturing in the
+//  shader program
+inline ShaderAttrs useTexCoordFlag()
+{
+    int texID;
+    glGetIntegerv( GL_TEXTURE_BINDING_2D, &texID );
+    return ( texID == 0 ? ES2_ATTR_NONE : ES2_ATTR_TEXCOORD );
+}
+
 GlesAttr::GlesAttr(GLuint vertex, GLuint texCoord, GLuint color, GLuint normal)
    : mVertex(vertex), mTexCoord(texCoord), mColor(color), mNormal(normal), mSelectAttr(NULL)
 { }
@@ -39,9 +48,14 @@ void GlesAttr::drawLine( const Vec3f &start, const Vec3f &end )
 }
 
 namespace {
+
 void drawCubeImpl( GlesAttr& attr, const Vec3f &c, const Vec3f &size, bool drawColors )
 {
-    attr.selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_COLOR | ES2_ATTR_NORMAL );
+    attr.selectAttrs( ES2_ATTR_VERTEX 
+                    | useTexCoordFlag() 
+                    | (drawColors ? ES2_ATTR_COLOR : 0)
+                    | ES2_ATTR_NORMAL );
+
 	GLfloat sx = size.x * 0.5f;
 	GLfloat sy = size.y * 0.5f;
 	GLfloat sz = size.z * 0.5f;
@@ -143,7 +157,7 @@ void GlesAttr::drawStrokedCube( const Vec3f &center, const Vec3f &size )
 
 void GlesAttr::drawSphere( const Vec3f &center, float radius, int segments )
 {
-    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_NORMAL );
+    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() | ES2_ATTR_NORMAL );
 
 	if( segments < 0 )
 		return;
@@ -257,7 +271,7 @@ void GlesAttr::drawStrokedCircle( const Vec2f &center, float radius, int numSegm
 
 void GlesAttr::drawSolidRect( const Rectf &rect, bool textureRectangle )
 {
-    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD );
+    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() );
 
     glEnableVertexAttribArray(mVertex);
 	GLfloat verts[12];
@@ -407,7 +421,7 @@ void GlesAttr::drawFrustum( const Camera &cam )
 
 void GlesAttr::drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments )
 {
-    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_NORMAL );
+    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() | ES2_ATTR_NORMAL );
 
 	longitudeSegments = std::min( std::max( 7, longitudeSegments ) + 1, 255 );
 	latitudeSegments = std::min( std::max( 7, latitudeSegments ) + 1, 255 );
@@ -469,7 +483,7 @@ void GlesAttr::drawTorus( float outterRadius, float innerRadius, int longitudeSe
 
 void GlesAttr::drawCylinder( float baseRadius, float topRadius, float height, int slices, int stacks )
 {
-    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_NORMAL );
+    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() | ES2_ATTR_NORMAL );
 
 	stacks = math<int>::max(2, stacks + 1);	// minimum of 1 stack
 	slices = math<int>::max(4, slices + 1);	// minimum of 3 slices
@@ -612,7 +626,7 @@ void GlesAttr::draw( const class Shape2d &shape2d, float approximationScale )
 
 void GlesAttr::draw( const TriMesh &mesh )
 {
-    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD | ES2_ATTR_COLOR | ES2_ATTR_NORMAL );
+    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() | ES2_ATTR_COLOR | ES2_ATTR_NORMAL );
 
     glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, &(mesh.getVertices()[0]) );
     glEnableVertexAttribArray(mVertex);
@@ -671,7 +685,7 @@ void GlesAttr::drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
 
 void GlesAttr::drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
 {
-    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD );
+    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() );
 
     glEnableVertexAttribArray(mVertex);
 	Vec3f verts[4];
@@ -715,7 +729,7 @@ void GlesAttr::draw( const Texture &texture, const Rectf &rect )
 
 void GlesAttr::draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
 {
-    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD );
+    selectAttrs( ES2_ATTR_VERTEX | useTexCoordFlag() );
 
     // XXX save state?
     // SaveTextureBindState saveBindState( texture.getTarget() );
@@ -811,7 +825,8 @@ GlesContext::GlesContext()
         mProg = CinderProgES2();
         mAttr = GlesAttr(mProg.getAttribLocation("aPosition"),
                          mProg.getAttribLocation("aTexCoord"),
-                         mProg.getAttribLocation("aColor"));
+                         mProg.getAttribLocation("aColor"),
+                         mProg.getAttribLocation("aNormal"));
         mAttr.mTexSampler = mProg.getUniformLocation("sTexture");
         //  XXX use a setter
         mAttr.mSelectAttr = this;

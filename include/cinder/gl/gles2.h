@@ -44,6 +44,7 @@ namespace cinder { namespace gl {
 //  Attributes used by the draw* methods
 enum ShaderAttrs
 {
+    ES2_ATTR_NONE     = 0,
     ES2_ATTR_VERTEX   = 1 << 0,
     ES2_ATTR_TEXCOORD = 1 << 1,
     ES2_ATTR_COLOR    = 1 << 2,
