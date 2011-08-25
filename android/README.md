@@ -40,8 +40,9 @@ Quickstart
     % ndk-build -j 4
 ```
 
-* Build one of the sample programs (AndroidTest, FBOBasic, iPhoneAccelerometer,
-  MultiTouchBasic, AndroidTestES2, TextureFont or shaderTestES2)
+* Build one of the sample programs (AndroidTest, EaseGallery, FBOBasic,
+  iPhoneAccelerometer, MultiTouchBasic, AndroidTestES2, TextureFont or
+  shaderTestES2)
 
 ```
     % cd cinder/samples/<SAMPLE>/android

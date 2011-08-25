@@ -825,7 +825,6 @@ GlesContextRef GlesContext::create(GlslProg& shader, GlesAttr& attr)
     return GlesContextRef(new GlesContext(shader, attr));
 }
 
-
 GlesContext::GlesContext()
 {
     CI_LOGW("Initializing CinderProgES2 shader");
