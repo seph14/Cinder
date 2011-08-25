@@ -1435,7 +1435,22 @@ void color( const ColorA &c )
     if (sContext) sContext->color(c);
 }
 
+ClientBoolState::ClientBoolState( GLint target )
+{
+    GlesContextRef context = getGlesContext();
+
+    //  Does nothing if there's no context set
+    if (context) {
+        init( getGlesContext()->attr(), target );
+    }
+}
+
 ClientBoolState::ClientBoolState( GlesAttr& attr, GLint target )
+{
+    init( attr, target);
+}
+
+void ClientBoolState::init(GlesAttr& attr, GLint target )
 {
     switch( target ) {
     case GL_VERTEX_ARRAY:

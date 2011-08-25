@@ -322,9 +322,11 @@ void color( const ColorA &c );
 //  GlesAttr, ie GL_VERTEX_ARRAY, GL_COLOR_ARRAY, GL_TEXTURE_COORD_ARRAY,
 //  GL_NORMAL_ARRAY
 struct ClientBoolState {
+	ClientBoolState( GLint target );
 	ClientBoolState( GlesAttr& attr, GLint target );
 	~ClientBoolState();
   private:
+    void init(GlesAttr& attr, GLint target );
 	GLuint		mTarget;
 	int         mOldValue;
 };
