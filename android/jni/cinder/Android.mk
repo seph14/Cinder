@@ -487,6 +487,11 @@ LOCAL_SRC_FILES  += $(STBIMAGE_SRC)/stb_image.c \
 LOCAL_CFLAGS     += -DCINDER_STBIMAGE
 endif
 
+#  Android Asset Manager requires to be built against 2.3+
+ifdef USE_ASSET_MANAGER
+LOCAL_CFLAGS    += -DCINDER_AASSET
+endif
+
 LOCAL_STATIC_LIBRARIES	:= android_native_app_glue 
 
 # Module exports

@@ -35,7 +35,7 @@
 #	include <boost/iostreams/stream.hpp>
 #endif
 
-#if defined( ANDROID )
+#if defined( CINDER_ANDROID )
 struct AAssetManager;
 struct AAsset;
 #endif

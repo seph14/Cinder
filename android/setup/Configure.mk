@@ -16,3 +16,7 @@ USE_FREETYPE = yes
 # Build with GLES2 support (disables GLES1)
 # USE_GLES2 = yes
 
+# Enable access to Android assets from native activities only
+# (requires Android SDK level 9 or over)
+USE_ASSET_MANAGER = yes
+

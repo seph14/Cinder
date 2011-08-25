@@ -89,7 +89,7 @@ DataSourcePathRef loadFile( const std::string &path )
 	return DataSourcePath::createRef( path );
 }
 
-#if defined( CINDER_ANDROID )
+#if defined( CINDER_ANDROID ) && defined( CINDER_AASSET )
 /////////////////////////////////////////////////////////////////////////////
 // DataSourceAsset
 DataSourceAssetRef DataSourceAsset::createRef( AAssetManager *mgr, const std::string &path )

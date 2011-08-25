@@ -30,7 +30,7 @@
 #include <iostream>
 #include <boost/preprocessor/seq/for_each.hpp>
 
-#if defined( ANDROID )
+#if defined( ANDROID ) && defined( CINDER_AASSET )
 #include <android/asset_manager.h>
 #endif
 
@@ -255,7 +255,7 @@ void IStreamFile::IORead( void *t, size_t size )
 	}
 }
 
-#if defined( CINDER_ANDROID )
+#if defined( CINDER_ANDROID ) && defined( CINDER_AASSET )
 ////////////////////////////////////////////////////////////////////////////////////////
 // IStreamAsset
 IStreamAssetRef IStreamAsset::createRef( AAsset *asset, bool ownsFile )
@@ -632,7 +632,7 @@ IoStreamFileRef readWriteFileStream( const std::string &path )
 		return IoStreamFileRef();
 }
 
-#if defined( CINDER_ANDROID )
+#if defined( CINDER_ANDROID ) && defined( CINDER_AASSET )
 IStreamAssetRef loadAssetStream(AAssetManager* mgr, const std::string &path)
 {
 	AAsset *f = AAssetManager_open(mgr, path.c_str(), AASSET_MODE_RANDOM);
