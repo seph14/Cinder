@@ -206,7 +206,12 @@ DataSourceBufferRef App::loadResource( int mswID, const string &mswType )
 
 DataSourceAssetRef App::loadResource( const string &resourcePath )
 {
+#if defined( CINDER_AASSET )
     return AppAndroid::loadResource(resourcePath);
+#else
+    // TODO: provide an alternative resource loading method
+    return DataSourceAssetRef();
+#endif
 }
 
 #endif
