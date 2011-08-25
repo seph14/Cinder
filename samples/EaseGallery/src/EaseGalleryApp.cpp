@@ -27,7 +27,8 @@ struct EaseBox {
 		text.addLine( name );
 		mLabelTex = gl::Texture( text.render( true ) );
 #else
-        mTexFont = gl::TextureFont::create( Font( loadFile("/system/fonts/DroidSans.ttf"), 18 ) );
+        if (!sTexFont)
+            sTexFont = gl::TextureFont::create( Font( loadFile("/system/fonts/DroidSans.ttf"), 18 ) );
         mName = name;
 #endif
 	}
@@ -44,12 +45,12 @@ struct EaseBox {
 		gl::draw( mLabelTex, mDrawRect.getCenter() - mLabelTex.getSize() / 2 );
 #else
         gl::color( Color::black() );
-        Vec2f labelSize = mTexFont->measureString( mName );
+        Vec2f labelSize = sTexFont->measureString( mName );
         Vec2f baseline;
         baseline.x = (mDrawRect.getWidth() - labelSize.x) / 2.0f + mDrawRect.x1;
-        float ascent = mTexFont->getFont().getAscent();
+        float ascent = sTexFont->getFont().getAscent();
         baseline.y = mDrawRect.y1 + (mDrawRect.y2 - mDrawRect.y1 - ascent) / 2.0f + ascent;
-        mTexFont->drawString( mName, baseline );
+        sTexFont->drawString( mName, baseline );
 #endif
 				
 		// draw graph
@@ -72,10 +73,14 @@ struct EaseBox {
 	Rectf							mDrawRect;
 	gl::Texture						mLabelTex;
 #if defined( CINDER_ANDROID )
-    gl::TextureFontRef  mTexFont;
+    static gl::TextureFontRef  sTexFont;
     string mName;
 #endif
 };
+
+#if defined( CINDER_ANDROID )
+gl::TextureFontRef EaseBox::sTexFont;
+#endif
 
 class EaseGalleryApp : public AppNative {
   public:
@@ -95,6 +100,7 @@ void EaseGalleryApp::setup()
 #if ! defined( CINDER_GLES2 )
 	setWindowSize( 950, 800 );
 #else
+    EaseBox::sTexFont = gl::TextureFontRef();
     mContext = gl::setGlesContext();
     gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
 #endif
