@@ -446,8 +446,11 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/System.cpp \
 					$(CINDER_SRC)/Text.cpp \
 					$(CINDER_SRC)/Timer.cpp \
+					$(CINDER_SRC)/Timeline.cpp \
+					$(CINDER_SRC)/TimelineItem.cpp \
 					$(CINDER_SRC)/Triangulate.cpp \
 					$(CINDER_SRC)/TriMesh.cpp \
+					$(CINDER_SRC)/Tween.cpp \
 					$(CINDER_SRC)/Url.cpp \
 					$(CINDER_SRC)/UrlImplAndroid.cpp \
 					$(CINDER_SRC)/Utilities.cpp \
