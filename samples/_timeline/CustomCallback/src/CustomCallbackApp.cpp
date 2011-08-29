@@ -3,8 +3,12 @@
 // * The completion callback sets the background to blue using a free function
 // * The update callback makes the radius of the circle the distance to the nearest edge using a member function
 
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
 #include "cinder/gl/gl.h"
+
+#if defined( CINDER_GLES2 )
+#include "cinder/gl/gles2.h"
+#endif
 
 using namespace ci;
 using namespace ci::app;
@@ -43,14 +47,24 @@ struct ColorToGreenFunctor {
 	Color		*mColorPtr;
 };
 
-class CustomCallbackApp : public AppBasic {
+class CustomCallbackApp : public AppNative {
   public:
+    void prepareSettings(Settings *settings);
 	void setup();
 	void mouseDown( MouseEvent event );	
 	void draw();
 	
 	Circle		mCircle;
+
+#if defined( CINDER_GLES2 )
+    gl::GlesContextRef mContext;
+#endif
 };
+
+void CustomCallbackApp::prepareSettings(Settings *settings)
+{
+    settings->enableMultiTouch(false);
+}
 
 // a free function which sets gBackgroundColor to blue
 void setBackgroundToBlue()
@@ -60,6 +74,11 @@ void setBackgroundToBlue()
 
 void CustomCallbackApp::setup()
 {
+#if defined( CINDER_GLES2 )
+    mContext = gl::setGlesContext();
+    gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
+#endif
+
 	setBackgroundToBlue();
 
 	mCircle.mPos = Vec2f( 50, 50 );
@@ -76,9 +95,17 @@ void CustomCallbackApp::mouseDown( MouseEvent event )
 
 void CustomCallbackApp::draw()
 {
+#if defined( CINDER_GLES2 )
+    mContext->bind();
+#endif
+    
 	gl::clear( gBackgroundColor ); 	
 	mCircle.draw();
+
+#if defined( CINDER_GLES2 )
+    mContext->unbind();
+#endif    
 }
 
 
-CINDER_APP_BASIC( CustomCallbackApp, RendererGl )
+CINDER_APP_NATIVE( CustomCallbackApp, RendererGl )
