@@ -24,10 +24,6 @@
 
 #include <string>
 
-#if defined( CINDER_ANDROID )
-	#include "cinder/android/wtypes.h"
-#endif
-
 #include <vector>
 #include "cinder/Cinder.h"
 #include "cinder/Url.h"

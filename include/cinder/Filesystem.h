@@ -25,7 +25,6 @@
 #include "cinder/Cinder.h"
 
 #if defined(CINDER_ANDROID)
-    #include "cinder/android/wtypes.h"
     // TODO: build the filesystem v3 library for Android
     // #define BOOST_FILESYSTEM_VERSION 3
     #define BOOST_FILESYSTEM_VERSION 2
