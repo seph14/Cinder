@@ -180,7 +180,7 @@ static void engine_update_touches(struct engine* engine)
             touchState->touchesBegan.clear();
         }
         if ( ! touchState->touchesMoved.empty() ) {
-            for (vector<TouchEvent::Touch>::iterator it = touchState->touchesBegan.begin(); it != touchState->touchesBegan.end(); ++it) {
+            for (vector<TouchEvent::Touch>::iterator it = touchState->touchesMoved.begin(); it != touchState->touchesMoved.end(); ++it) {
                 ci::Vec2f pt = it->getPos();
                 int mods = 0;
                 mods |= cinder::app::MouseEvent::LEFT_DOWN;
@@ -189,7 +189,7 @@ static void engine_update_touches(struct engine* engine)
             touchState->touchesMoved.clear();
         }
         if ( ! touchState->touchesEnded.empty() ) {
-            for (vector<TouchEvent::Touch>::iterator it = touchState->touchesBegan.begin(); it != touchState->touchesBegan.end(); ++it) {
+            for (vector<TouchEvent::Touch>::iterator it = touchState->touchesEnded.begin(); it != touchState->touchesEnded.end(); ++it) {
                 ci::Vec2f pt = it->getPos();
                 int mods = 0;
                 mods |= cinder::app::MouseEvent::LEFT_DOWN;
