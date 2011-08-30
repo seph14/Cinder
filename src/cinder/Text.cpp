@@ -828,7 +828,8 @@ int TextBox::countLines(vector<Font::Glyph>& text, float width) const
 
 Vec2f TextBox::measure() const
 {
-    // not implemented
+    measureGlyphs();
+    return mCalculatedSize;
 }
 
 #if ! defined( CINDER_HARFBUZZ )
@@ -841,6 +842,8 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
     Font::Glyph* end = start + glyphs.size();
 
     Vec2f pen(0, mFont.getAscent());
+
+    mCalculatedSize = Vec2f(0, 0);
 
     while (start < end) {
         Font::Glyph prevIndex = 0;
@@ -859,9 +862,14 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
             prevIndex = *it;
         }
 
-        start += lineLength;
+        if (pen.x > mCalculatedSize.x) {
+            mCalculatedSize.x = pen.x;
+        }
         pen.x = 0;
         pen.y += mFont.getLeading();
+        mCalculatedSize.y = pen.y;
+
+        start += lineLength;
     }
 
     return placements;
