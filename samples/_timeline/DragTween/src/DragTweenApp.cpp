@@ -4,6 +4,10 @@
 #include "cinder/Timeline.h"
 #include <list>
 
+#if defined( CINDER_GLES2 )
+#include "cinder/gl/gles2.h"
+#endif
+
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -47,10 +51,19 @@ class DragTweenApp : public AppNative {
 	// never use a vector with tweens
 	list<Circle>			mCircles;
 	Circle					*mCurrentDragCircle;
+
+#if defined( CINDER_GLES2 )
+    gl::GlesContextRef mContext;
+#endif
 };
 
 void DragTweenApp::setup()
 {
+#if defined( CINDER_GLES2 )
+    mContext = gl::setGlesContext();
+    gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
+#endif
+
 	// setup the initial animation
 	const size_t numCircles = 35;
 	for( size_t c = 0; c < numCircles; ++c ) {
@@ -97,12 +110,20 @@ void DragTweenApp::mouseUp( MouseEvent event )
 
 void DragTweenApp::draw()
 {
+#if defined( CINDER_GLES2 )
+    mContext->bind();
+#endif
+
 	// clear out the window with black
 	gl::clear( Color( 0.8f, 0.8f, 0.8f ) );
 	gl::enableAlphaBlending();
 	
 	for( list<Circle>::const_iterator circleIt = mCircles.begin(); circleIt != mCircles.end(); ++circleIt )
 		circleIt->draw();
+
+#if defined( CINDER_GLES2 )
+    mContext->unbind();
+#endif
 }
 
 
