@@ -315,9 +315,8 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars );
 	set<Font::Glyph> glyphs( tempGlyphs.begin(), tempGlyphs.end() );
 
-    SurfacePack atlas(mFormat.getTextureWidth(), mFormat.getTextureHeight());
+    SurfacePack packer(mFormat.getTextureWidth(), mFormat.getTextureHeight());
     for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ) {
-        size_t w, h, x, y;
 
  		//  Draw glyph 
  		FT_Face face = mFont.getFTFace();
@@ -329,21 +328,22 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
         error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
  		FT_GlyphSlot slot = face->glyph;
 
-        w = slot->bitmap.width + 2 * BORDER;
-        h = slot->bitmap.rows  + 2 * BORDER;
-
-        SurfacePack::Region region = atlas.getRegion(w, h);
-        if (region.x < 0) {
+        Area glyphArea = packer.allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+        if (glyphArea.x1 < 0) {
             ++missed;
             continue;
         }
-        x = region.x + BORDER;
-        y = region.y + BORDER;
-        atlas.setArea(x, y, slot->bitmap.width, slot->bitmap.rows, slot->bitmap.buffer, slot->bitmap.pitch);
+
+        int32_t x, y;
+        x = glyphArea.x1 + BORDER;
+        y = glyphArea.y1 + BORDER;
+
+        Area destArea(x, y, x + slot->bitmap.width, y + slot->bitmap.rows);
+        packer.setAreaData(destArea, slot->bitmap.buffer, slot->bitmap.pitch);
 
  		GlyphInfo newInfo;
  		newInfo.mTextureIndex = curTextureIndex;
- 		newInfo.mTexCoords = Area( x, y, x + slot->bitmap.width, y + slot->bitmap.rows );
+ 		newInfo.mTexCoords    = destArea;
  		newInfo.mOriginOffset = Vec2f(slot->bitmap_left, -slot->bitmap_top);
 
         // CI_LOGI("GlyphInfo %d uv(%.1f,%.1f,%.1f,%.1f) offset(%.1f,%.1f)",
@@ -354,7 +354,7 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
  		++glyphIt;
     }
 
-    Surface& surface = atlas.getSurface();
+    Surface& surface = packer.getSurface();
     // pass premultiply and mipmapping preferences to Texture::Format
     if( ! mFormat.getPremultiply() )
         ip::unpremultiply( &surface );

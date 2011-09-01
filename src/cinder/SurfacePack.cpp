@@ -10,9 +10,9 @@ SurfacePack::SurfacePack(int width, int height)
     mNodes.push_back(node);
 }
 
-void SurfacePack::setArea(size_t x, size_t y, size_t width, size_t height, uint8_t* data, size_t stride)
+void SurfacePack::setAreaData(Area area, uint8_t* data, size_t stride)
 {
-    Surface::Iter iter( mSurface, Area(x, y, x + width, y + height) );
+    Surface::Iter iter( mSurface, area );
     uint8_t* rowPtr = data;
     while (iter.line()) {
         uint8_t* pixelPtr = rowPtr;
@@ -66,10 +66,10 @@ void SurfacePack::merge()
     }
 }
 
-SurfacePack::Region SurfacePack::getRegion(int width, int height)
+Area SurfacePack::allocateArea(int width, int height)
 {
     int y, best_height, best_width, best_index;
-    SurfacePack::Region region = { 0,0,width,height };
+    SurfacePack::Region region = { 0, 0, width, height };
     size_t i;
 
     best_height = INT_MAX;
@@ -91,11 +91,7 @@ SurfacePack::Region SurfacePack::getRegion(int width, int height)
     }
 
     if( best_index == -1 ) {
-        region.x = -1;
-        region.y = -1;
-        region.width = 0;
-        region.height = 0;
-        return region;
+        return Area(-1, -1, -1, -1);
     }
 
     Node newNode;
@@ -126,7 +122,7 @@ SurfacePack::Region SurfacePack::getRegion(int width, int height)
     }
     merge();
     mUsed += width * height;
-    return region;
+    return Area(region.x, region.y, region.x + region.width, region.y + region.height);
 }
 
 Surface& SurfacePack::getSurface() 
