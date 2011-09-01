@@ -1,31 +1,16 @@
 #include "cinder/CinderMath.h"
-#include "cinder/SurfacePack.h"
+#include "cinder/SkylinePack.h"
 
 using namespace cinder;
 
-SurfacePack::SurfacePack(int width, int height) 
-: mWidth(width), mHeight(height), mUsed(0), mSurface(width, height, true)
+SkylinePack::SkylinePack(int width, int height) 
+: mWidth(width), mHeight(height), mUsed(0)
 {
     Node node = { 0, 0, width };
     mNodes.push_back(node);
 }
 
-void SurfacePack::setAreaData(Area area, uint8_t* data, size_t stride)
-{
-    Surface::Iter iter( mSurface, area );
-    uint8_t* rowPtr = data;
-    while (iter.line()) {
-        uint8_t* pixelPtr = rowPtr;
-        while (iter.pixel()) {
-            iter.r() = *pixelPtr;
-            iter.a() = *pixelPtr;
-            ++pixelPtr;
-        }
-        rowPtr += stride;
-    }
-}
-
-int SurfacePack::fit(size_t index, int width, int height)
+int SkylinePack::fit(size_t index, int width, int height)
 {
     Node& node = mNodes[index];
     int x = node.x, y, width_left = width;
@@ -50,7 +35,7 @@ int SurfacePack::fit(size_t index, int width, int height)
     return y;
 }
 
-void SurfacePack::merge()
+void SkylinePack::merge()
 {
     size_t i;
 
@@ -66,10 +51,10 @@ void SurfacePack::merge()
     }
 }
 
-Area SurfacePack::allocateArea(int width, int height)
+Area SkylinePack::allocateArea(int width, int height)
 {
     int y, best_height, best_width, best_index;
-    SurfacePack::Region region = { 0, 0, width, height };
+    SkylinePack::Region region = { 0, 0, width, height };
     size_t i;
 
     best_height = INT_MAX;
@@ -123,10 +108,5 @@ Area SurfacePack::allocateArea(int width, int height)
     merge();
     mUsed += width * height;
     return Area(region.x, region.y, region.x + region.width, region.y + region.height);
-}
-
-Surface& SurfacePack::getSurface() 
-{ 
-    return mSurface; 
 }
 

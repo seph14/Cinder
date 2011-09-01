@@ -443,7 +443,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/Sphere.cpp \
 					$(CINDER_SRC)/Stream.cpp \
 					$(CINDER_SRC)/Surface.cpp \
-					$(CINDER_SRC)/SurfacePack.cpp \
+					$(CINDER_SRC)/SkylinePack.cpp \
 					$(CINDER_SRC)/System.cpp \
 					$(CINDER_SRC)/Text.cpp \
 					$(CINDER_SRC)/Timer.cpp \

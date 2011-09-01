@@ -36,7 +36,7 @@
 #endif
 
 #if defined( CINDER_ANDROID )
-    #include "cinder/SurfacePack.h"
+    #include "cinder/SkylinePack.h"
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
 
@@ -304,6 +304,21 @@ TextureFont::TextureFont( const Font &font, const string &utf8Chars, const Forma
 }
 #elif defined( CINDER_ANDROID )
 
+void setGlyphArea( Surface surface, Area area, uint8_t* glyphData, size_t stride )
+{
+    Surface::Iter iter( surface, area );
+    uint8_t* rowPtr = glyphData;
+    while ( iter.line() ) {
+        uint8_t* pixelPtr = rowPtr;
+        while ( iter.pixel() ) {
+            iter.r() = *pixelPtr;
+            iter.a() = *pixelPtr;
+            ++pixelPtr;
+        }
+        rowPtr += stride;
+    }
+}
+
 TextureFont::TextureFont( const Font &font, const string &supportedChars, const TextureFont::Format &format )
 	: mFont( font ), mFormat( format )
 {
@@ -315,7 +330,9 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars );
 	set<Font::Glyph> glyphs( tempGlyphs.begin(), tempGlyphs.end() );
 
-    SurfacePack packer(mFormat.getTextureWidth(), mFormat.getTextureHeight());
+    Surface fontAtlas(mFormat.getTextureWidth(), mFormat.getTextureHeight(), true);
+    SkylinePack packer(mFormat.getTextureWidth(), mFormat.getTextureHeight());
+
     for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ) {
 
  		//  Draw glyph 
@@ -339,7 +356,7 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
         y = glyphArea.y1 + BORDER;
 
         Area destArea(x, y, x + slot->bitmap.width, y + slot->bitmap.rows);
-        packer.setAreaData(destArea, slot->bitmap.buffer, slot->bitmap.pitch);
+        setGlyphArea( fontAtlas, destArea, slot->bitmap.buffer, slot->bitmap.pitch );
 
  		GlyphInfo newInfo;
  		newInfo.mTextureIndex = curTextureIndex;
@@ -354,10 +371,10 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
  		++glyphIt;
     }
 
-    Surface& surface = packer.getSurface();
+    // Surface& surface = packer.getSurface();
     // pass premultiply and mipmapping preferences to Texture::Format
     if( ! mFormat.getPremultiply() )
-        ip::unpremultiply( &surface );
+        ip::unpremultiply( &fontAtlas );
 
     gl::Texture::Format textureFormat = gl::Texture::Format();
     textureFormat.enableMipmapping( mFormat.hasMipmapping() );
@@ -366,7 +383,7 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 #if defined( CINDER_GLES )
 	std::shared_ptr<uint8_t> lumAlphaData( new uint8_t[mFormat.getTextureWidth()*mFormat.getTextureHeight()*2], checked_array_deleter<uint8_t>() );
     // under iOS format and internalFormat must match, so let's make a block of LUMINANCE_ALPHA data
-    Surface8u::ConstIter iter( surface, surface.getBounds() );
+    Surface8u::ConstIter iter( fontAtlas, fontAtlas.getBounds() );
     size_t offset = 0;
     while( iter.line() ) {
         while( iter.pixel() ) {
@@ -377,7 +394,7 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
     }
     mTextures.push_back( gl::Texture( lumAlphaData.get(), GL_LUMINANCE_ALPHA, mFormat.getTextureWidth(), mFormat.getTextureHeight(), textureFormat ) );
 #else
-    mTextures.push_back( gl::Texture( surface, textureFormat ) );
+    mTextures.push_back( gl::Texture( fontAtlas, textureFormat ) );
 #endif
 
     // generateKerningPairs();

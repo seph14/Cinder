@@ -6,18 +6,11 @@
 
 namespace cinder {
 
-class SurfacePack
+class SkylinePack
 {
 public:
-    SurfacePack(int width, int height);
-
-    int  fit(size_t index, int width, int height);
-    void merge();
-
+    SkylinePack(int width, int height);
     Area allocateArea(int width, int height);
-    void setAreaData(Area area, uint8_t* data, size_t stride);
-
-    Surface& getSurface();
 
 private:
     struct Region
@@ -30,11 +23,13 @@ private:
         int x, y, width;
     };
 
+    int  fit(size_t index, int width, int height);
+    void merge();
+
     std::vector<Node> mNodes;
     int mWidth;
     int mHeight;
     int mUsed;
-    Surface mSurface;
 };
 
 }
