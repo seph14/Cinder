@@ -26,6 +26,12 @@
 #include "cinder/Font.h"
 #include "cinder/gl/Texture.h"
 
+#if defined( CINDER_ANDROID )
+//  TextureFont::Atlas dependencies
+#include "cinder/Surface.h"
+#include "cinder/SkylinePack.h"
+#endif
+
 #include <map>
 #include <boost/unordered_map.hpp>
 
@@ -99,6 +105,13 @@ class TextureFont {
 		float		mScale;
 	};
 
+#if defined( CINDER_ANDROID )
+
+    class Atlas;
+	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and font atlas \a atlas
+	static TextureFontRef		create( const Font &font, Atlas &atlas, const std::string &supportedChars = TextureFont::defaultChars() );
+#endif
+
 	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and format \a format
 	static TextureFontRef		create( const Font &font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() );
 	
@@ -144,27 +157,21 @@ class TextureFont {
 	static std::string		defaultChars() { return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\@#_[]<>%^llflfiphrids\303\251\303\241\303\250\303\240"; }
 
 // XXX DEBUGGING, remove later
-#ifdef CINDER_ANDROID
-    gl::Texture getTexture();
-	struct KerningPair {
-		Font::Glyph index;
-		float kerning;
-	};
+#if defined( CINDER_ANDROID )
+    std::vector< gl::Texture >& getTextures();
 #endif
 
   protected:
 	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
+#if defined( CINDER_ANDROID )
+	TextureFont( const Font &font, const std::string &supportedChars, Atlas &atlas );
+    void init( const std::string &supportedChars, Atlas &atlas );
+#endif
 
 	struct GlyphInfo {
 		uint8_t		mTextureIndex;
 		Area		mTexCoords;
 		Vec2f		mOriginOffset;
-#ifdef CINDER_ANDROID
-		//  TextureFont is also responsible for layout on Android
-		Vec2f		mSize;
-		Vec2f		mAdvance;
-		std::vector<KerningPair> mKerning;
-#endif
 	};
 	
 	boost::unordered_map<Font::Glyph, GlyphInfo>	mGlyphMap;
@@ -172,14 +179,32 @@ class TextureFont {
 	Font											mFont;
 	Format											mFormat;
 
-#ifdef CINDER_ANDROID
-	//!  Measure glyph positions, suitable for passing to drawGlyphs
-	// std::vector<std::pair<uint16_t,Vec2f> > shapeGlyphs(const std::string& str) const;
-	//!  Generate kerning pairs for all glyphs
-	void generateKerningPairs();
-	//!  Get kerning information for a glyph pair
-	float getKerning(const GlyphInfo& glyph, Font::Glyph prev) const;
+#if defined( CINDER_ANDROID )
+  public:
+    class Atlas {
+      public:
+        Atlas( const Format &format = Format() );
+
+        Format&  getFormat();
+
+        void beginGlyphSet();
+        GlyphInfo addGlyph(Font& font, Font::Glyph glyph);
+        std::vector< gl::Texture > endGlyphSet();
+
+      private:
+        void updateTexture();
+        void pushNewTexture();
+
+        Format                   mFormat;
+        std::vector<gl::Texture> mTextures;
+        Surface                  mSurface;
+        SkylinePack              mPack;
+        int32_t                  mBeginIndex;
+        int32_t                  mCurIndex;
+        gl::Texture::Format      mTextureFormat;
+    };
 #endif
+
 };
 
 } } // namespace cinder::gl

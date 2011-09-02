@@ -36,8 +36,10 @@
 #endif
 
 #if defined( CINDER_ANDROID )
+    #include "cinder/SkylinePack.h"
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
+
 #undef __FTERRORS_H__
 #define FT_ERRORDEF( e, v, s )  { e, s },
 #define FT_ERROR_START_LIST     {
@@ -302,234 +304,45 @@ TextureFont::TextureFont( const Font &font, const string &utf8Chars, const Forma
 }
 #elif defined( CINDER_ANDROID )
 
-// Texture packing based on freetype-gl
-namespace {
-    struct Node
-    {
-        int x, y, width;
-    };
-
-    struct Region
-    {
-        int x, y, width, height;
-    };
+void setGlyphArea( Surface surface, Area area, uint8_t* glyphData, size_t stride )
+{
+    Surface::Iter iter( surface, area );
+    uint8_t* rowPtr = glyphData;
+    while ( iter.line() ) {
+        uint8_t* pixelPtr = rowPtr;
+        while ( iter.pixel() ) {
+            iter.r() = *pixelPtr;
+            iter.a() = *pixelPtr;
+            ++pixelPtr;
+        }
+        rowPtr += stride;
+    }
 }
 
-/** Packs font bitmaps into a surface */
-class TextureAtlas
-{
-public:
-    vector<Node> mNodes;
-    int mWidth, mHeight, mUsed;
-    Surface mSurface;
-
-    TextureAtlas(int width, int height) 
-        : mWidth(width), mHeight(height), mUsed(0), mSurface(width, height, true)
-    {
-        Node node = { 0, 0, width };
-        mNodes.push_back(node);
-    }
-
-    void setArea(size_t x, size_t y, size_t width, size_t height, uint8_t* data, size_t stride)
-    {
-		Surface::Iter iter( mSurface, Area(x, y, x + width, y + height) );
-		uint8_t* rowPtr = data;
-		while (iter.line()) {
-			uint8_t* pixelPtr = rowPtr;
-			while (iter.pixel()) {
-				iter.r() = *pixelPtr;
-				iter.a() = *pixelPtr;
-				++pixelPtr;
-			}
-			rowPtr += stride;
-		}
-    }
-
-    int fit(size_t index, int width, int height)
-    {
-        Node& node = mNodes[index];
-        int x = node.x, y, width_left = width;
-        size_t i = index;
-
-        if ( (x + width) > mWidth ) {
-            return -1;
-        }
-
-        y = node.y;
-
-        while( width_left > 0 ) {
-            Node& next = mNodes[i];
-            y = max( y, next.y );
-            if( (y + height) > mHeight ) {
-                return -1;
-            }
-            width_left -= next.width;
-            ++i;
-        }
-
-        return y;
-    }
-
-    void merge()
-    {
-        size_t i;
-
-        for( i=0; i< mNodes.size()-1; ++i ) {
-            Node& node = mNodes[i];
-            Node& next = mNodes[i+1];
-
-            if( node.y == next.y ) {
-                node.width += next.width;
-                mNodes.erase(mNodes.begin()+i+1);
-                --i;
-            }
-        }
-    }
-
-    Region getRegion(int width, int height)
-    {
-        int y, best_height, best_width, best_index;
-        Region region = { 0,0,width,height };
-        size_t i;
-
-        best_height = INT_MAX;
-        best_index  = -1;
-        best_width = INT_MAX;
-        for( i=0; i < mNodes.size(); ++i ) {
-            y = fit( i, width, height );
-            if( y >= 0 ) {
-                Node& node = mNodes[i];
-                if( ( y + height < best_height ) ||
-                    ( y + height == best_height && node.width < best_width) ) {
-                    best_height = y + height;
-                    best_index = i;
-                    best_width = node.width;
-                    region.x = node.x;
-                    region.y = y;
-                }
-            }
-        }
-
-        if( best_index == -1 )
-        {
-            region.x = -1;
-            region.y = -1;
-            region.width = 0;
-            region.height = 0;
-            return region;
-        }
-
-        Node newNode;
-        newNode.x     = region.x;
-        newNode.y     = region.y + height;
-        newNode.width = width;
-        mNodes.insert(mNodes.begin() + best_index, newNode);
-
-        for(i = best_index+1; i < mNodes.size(); ++i) {
-            Node& node = mNodes[i];
-            Node& prev = mNodes[i-1];
-
-            if (node.x < (prev.x + prev.width) ) {
-                int shrink = prev.x + prev.width - node.x;
-                node.x     += shrink;
-                node.width -= shrink;
-                if (node.width <= 0) {
-                    mNodes.erase(mNodes.begin() + i);
-                    --i;
-                }
-                else {
-                    break;
-                }
-            }
-            else {
-                break;
-            }
-        }
-        merge();
-        mUsed += width * height;
-        return region;
-    }
-
-    Surface& getSurface() { return mSurface; }
-};
-
-TextureFont::TextureFont( const Font &font, const string &supportedChars, const TextureFont::Format &format )
+TextureFont::TextureFont( const Font &font, const std::string &supportedChars, const Format &format )
 	: mFont( font ), mFormat( format )
 {
-    const size_t BORDER = 1;
-    size_t missed = 0;
-    uint8_t curTextureIndex = 0;
+    Atlas atlas( format );
+    init( supportedChars, atlas );
+}
 
+TextureFont::TextureFont( const Font &font, const string &supportedChars, Atlas &atlas )
+	: mFont( font ), mFormat( atlas.getFormat() )
+{
+    init( supportedChars, atlas );
+}
+
+void TextureFont::init( const std::string &supportedChars, Atlas &atlas )
+{
 	// get the glyph indices we'll need
-	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars );
+	vector<Font::Glyph>	tempGlyphs = mFont.getGlyphs( supportedChars );
 	set<Font::Glyph> glyphs( tempGlyphs.begin(), tempGlyphs.end() );
 
-    TextureAtlas atlas(mFormat.getTextureWidth(), mFormat.getTextureHeight());
-    for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ) {
-        size_t w, h, x, y;
-
- 		//  Draw glyph 
- 		FT_Face face = mFont.getFTFace();
- 		int error = FT_Load_Glyph(face, *glyphIt, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
-        if( error ) {
-            CI_LOGW("FT_Error (line %d, code 0x%02x) : %s\n",
-                    __LINE__, FT_Errors[error].code, FT_Errors[error].message);
-        }
-        error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
- 		FT_GlyphSlot slot = face->glyph;
-
-        w = slot->bitmap.width + 2 * BORDER;
-        h = slot->bitmap.rows  + 2 * BORDER;
-
-        Region region = atlas.getRegion(w, h);
-        if (region.x < 0) {
-            ++missed;
-            continue;
-        }
-        x = region.x + BORDER;
-        y = region.y + BORDER;
-        atlas.setArea(x, y, slot->bitmap.width, slot->bitmap.rows, slot->bitmap.buffer, slot->bitmap.pitch);
-
- 		GlyphInfo newInfo;
- 		newInfo.mTextureIndex = curTextureIndex;
- 		newInfo.mTexCoords = Area( x, y, x + slot->bitmap.width, y + slot->bitmap.rows );
- 		newInfo.mOriginOffset = Vec2f(slot->bitmap_left, -slot->bitmap_top);
-
-        // CI_LOGI("GlyphInfo %d uv(%.1f,%.1f,%.1f,%.1f) offset(%.1f,%.1f)",
-        //         *glyphIt,
-        //         newInfo.mTexCoords.x1, newInfo.mTexCoords.y1, newInfo.mTexCoords.x2, newInfo.mTexCoords.y2,
-        //         newInfo.mOriginOffset.x, newInfo.mOriginOffset.y);
- 		mGlyphMap[*glyphIt] = newInfo;
- 		++glyphIt;
+    atlas.beginGlyphSet();
+    for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ++glyphIt ) {
+ 		mGlyphMap[*glyphIt] = atlas.addGlyph(mFont, *glyphIt);
     }
-
-    Surface& surface = atlas.getSurface();
-    // pass premultiply and mipmapping preferences to Texture::Format
-    if( ! mFormat.getPremultiply() )
-        ip::unpremultiply( &surface );
-
-    gl::Texture::Format textureFormat = gl::Texture::Format();
-    textureFormat.enableMipmapping( mFormat.hasMipmapping() );
-    textureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
-
-#if defined( CINDER_GLES )
-	std::shared_ptr<uint8_t> lumAlphaData( new uint8_t[mFormat.getTextureWidth()*mFormat.getTextureHeight()*2], checked_array_deleter<uint8_t>() );
-    // under iOS format and internalFormat must match, so let's make a block of LUMINANCE_ALPHA data
-    Surface8u::ConstIter iter( surface, surface.getBounds() );
-    size_t offset = 0;
-    while( iter.line() ) {
-        while( iter.pixel() ) {
-            lumAlphaData.get()[offset+0] = iter.r();
-            lumAlphaData.get()[offset+1] = iter.a();
-            offset += 2;
-        }
-    }
-    mTextures.push_back( gl::Texture( lumAlphaData.get(), GL_LUMINANCE_ALPHA, mFormat.getTextureWidth(), mFormat.getTextureHeight(), textureFormat ) );
-#else
-    mTextures.push_back( gl::Texture( surface, textureFormat ) );
-#endif
-
-    // generateKerningPairs();
+    mTextures = atlas.endGlyphSet();
 }
 
 #endif
@@ -798,6 +611,128 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 	}
 }
 
+#if defined( CINDER_ANDROID )
+
+TextureFont::Atlas::Atlas( const Format &format ) 
+    : mFormat( format ), 
+      mSurface( format.getTextureWidth(), format.getTextureHeight(), true ),
+      mPack( format.getTextureWidth(), format.getTextureHeight() )
+{
+    gl::Texture::Format textureFormat = gl::Texture::Format();
+    mTextureFormat.enableMipmapping( mFormat.hasMipmapping() );
+    mTextureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
+
+    mBeginIndex = mCurIndex = 0;
+    pushNewTexture();
+}
+
+void TextureFont::Atlas::pushNewTexture()
+{
+    mTextures.push_back( Texture( mFormat.getTextureWidth(), mFormat.getTextureHeight(), mTextureFormat ) );
+	ip::fill( &mSurface, ColorA8u( 0, 0, 0, 0 ) );
+}
+
+void TextureFont::Atlas::beginGlyphSet()
+{
+    mBeginIndex = mCurIndex;
+}
+
+TextureFont::GlyphInfo TextureFont::Atlas::addGlyph(Font& font, Font::Glyph glyph)
+{
+    const size_t BORDER = 1;
+
+    //  Draw glyph 
+    FT_Face face = font.getFTFace();
+    int error = FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
+    if( error ) {
+        CI_LOGW("FT_Error (line %d, code 0x%02x) : %s\n",
+                __LINE__, FT_Errors[error].code, FT_Errors[error].message);
+    }
+    error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+    FT_GlyphSlot slot = face->glyph;
+
+    Area glyphArea = mPack.allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+    if (glyphArea.x1 < 0) {
+        updateTexture();
+        pushNewTexture();
+        ++mCurIndex;
+        mPack = SkylinePack( mFormat.getTextureWidth(), mFormat.getTextureHeight() );
+        glyphArea = mPack.allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+        //  XXX If allocation fails here then abort completely
+    }
+
+    int32_t x = glyphArea.x1 + BORDER;
+    int32_t y = glyphArea.y1 + BORDER;
+
+    //  Write glyph to surface
+    Area          destArea(x, y, x + slot->bitmap.width, y + slot->bitmap.rows);
+    Surface::Iter iter( mSurface, destArea );
+
+    uint8_t* rowPtr = slot->bitmap.buffer;
+    while ( iter.line() ) {
+        uint8_t* pixelPtr = rowPtr;
+        while ( iter.pixel() ) {
+            iter.r() = *pixelPtr;
+            iter.a() = *pixelPtr;
+            ++pixelPtr;
+        }
+        rowPtr += slot->bitmap.pitch;
+    }
+
+    GlyphInfo info;
+    info.mTextureIndex = mCurIndex - mBeginIndex;
+    info.mTexCoords    = destArea;
+    info.mOriginOffset = Vec2f(slot->bitmap_left, -slot->bitmap_top);
+    return info;
+}
+
+void TextureFont::Atlas::updateTexture()
+{
+    Surface surface = mSurface.clone();
+
+    if( ! mFormat.getPremultiply() )
+        ip::unpremultiply( &surface );
+
+    gl::Texture& tex = mTextures.back();
+
+#if defined( CINDER_GLES )
+	std::shared_ptr<uint8_t> lumAlphaData( new uint8_t[mFormat.getTextureWidth()*mFormat.getTextureHeight()*2], checked_array_deleter<uint8_t>() );
+    // under iOS/Android format and internalFormat must match, so let's make a block of LUMINANCE_ALPHA data
+    Surface8u::ConstIter iter( surface, surface.getBounds() );
+    size_t offset = 0;
+    while( iter.line() ) {
+        while( iter.pixel() ) {
+            lumAlphaData.get()[offset+0] = iter.r();
+            lumAlphaData.get()[offset+1] = iter.a();
+            offset += 2;
+        }
+    }
+
+    //  update the texture data in-place
+    glBindTexture(tex.getTarget(), tex.getId());
+    glTexImage2D(tex.getTarget(), 0, GL_LUMINANCE_ALPHA, mFormat.getTextureWidth(), mFormat.getTextureHeight(), 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, lumAlphaData.get() );
+#else
+    tex.update( surface );
+#endif
+}
+
+vector< gl::Texture > TextureFont::Atlas::endGlyphSet()
+{
+    updateTexture();
+    return vector< gl::Texture >( mTextures.begin() + mBeginIndex, mTextures.begin() + mCurIndex + 1 );
+}
+
+TextureFont::Format& TextureFont::Atlas::getFormat()
+{
+    return mFormat;
+}
+
+TextureFontRef		TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )
+{ 
+	return TextureFontRef( new TextureFont( font, supportedChars, atlas ) ); 
+}
+#endif
+
 TextureFontRef		TextureFont::create( const Font &font, const Format &format, const std::string &supportedChars )
 { 
 	return TextureFontRef( new TextureFont( font, supportedChars, format ) ); 
@@ -877,13 +812,9 @@ vector<pair<uint16_t,Vec2f> > TextureFont::getGlyphPlacements( const std::string
 }
 
 #ifdef CINDER_ANDROID
-gl::Texture TextureFont::getTexture()
+std::vector< gl::Texture >& TextureFont::getTextures()
 {
-    if (mTextures.begin() != mTextures.end()) {
-        return *(mTextures.begin());
-    }
-    
-    return gl::Texture();
+    return mTextures;
 }
 #endif
 
