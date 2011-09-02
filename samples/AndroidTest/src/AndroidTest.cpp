@@ -36,18 +36,18 @@ public:
 
 void AndroidTest::setup()
 {
-    CI_LOGW("XXX AndroidTest::setup");
-	try {
-		console() << "Loading logo image" << endl;
-		mTexture = gl::Texture( loadImage( loadResource("cinder_logo.png") ) );
-		console() << "success!!!" << endl;
-	}
-	catch( ... ) {
-		console() << "unable to load the texture file!" << std::endl;
-	}
+    // CI_LOGW("XXX AndroidTest::setup");
+	// try {
+	// 	console() << "Loading logo image" << endl;
+	// 	mTexture = gl::Texture( loadImage( loadResource("cinder_logo.png") ) );
+	// 	console() << "success!!!" << endl;
+	// }
+	// catch( ... ) {
+	// 	console() << "unable to load the texture file!" << std::endl;
+	// }
 
-    mFont1 = Font(loadFile("/system/fonts/DroidSans.ttf"), 40);
-    mFont2 = Font(loadFile("/system/fonts/DroidSans.ttf"), 70);
+    mFont1 = Font(loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40);
+    mFont2 = Font(loadFile("/system/fonts/DroidSerif-Regular.ttf"), 50);
     mFont3 = Font(loadFile("/system/fonts/DroidSans.ttf"), 20);
 	console() << "Loaded font name " << mFont1.getName() << " num glyphs " << mFont1.getNumGlyphs() << endl;
 
