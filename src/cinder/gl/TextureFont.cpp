@@ -334,82 +334,15 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, Atlas 
 
 void TextureFont::init( const std::string &supportedChars, Atlas &atlas )
 {
-    const size_t BORDER = 1;
-    size_t missed = 0;
-    uint8_t curTextureIndex = 0;
-
 	// get the glyph indices we'll need
 	vector<Font::Glyph>	tempGlyphs = mFont.getGlyphs( supportedChars );
 	set<Font::Glyph> glyphs( tempGlyphs.begin(), tempGlyphs.end() );
 
-    Surface fontAtlas(mFormat.getTextureWidth(), mFormat.getTextureHeight(), true);
-    SkylinePack packer(mFormat.getTextureWidth(), mFormat.getTextureHeight());
-
-    for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ) {
-
- 		//  Draw glyph 
- 		FT_Face face = mFont.getFTFace();
- 		int error = FT_Load_Glyph(face, *glyphIt, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
-        if( error ) {
-            CI_LOGW("FT_Error (line %d, code 0x%02x) : %s\n",
-                    __LINE__, FT_Errors[error].code, FT_Errors[error].message);
-        }
-        error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
- 		FT_GlyphSlot slot = face->glyph;
-
-        Area glyphArea = packer.allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
-        if (glyphArea.x1 < 0) {
-            ++missed;
-            continue;
-        }
-
-        int32_t x, y;
-        x = glyphArea.x1 + BORDER;
-        y = glyphArea.y1 + BORDER;
-
-        Area destArea(x, y, x + slot->bitmap.width, y + slot->bitmap.rows);
-        setGlyphArea( fontAtlas, destArea, slot->bitmap.buffer, slot->bitmap.pitch );
-
- 		GlyphInfo newInfo;
- 		newInfo.mTextureIndex = curTextureIndex;
- 		newInfo.mTexCoords    = destArea;
- 		newInfo.mOriginOffset = Vec2f(slot->bitmap_left, -slot->bitmap_top);
-
-        // CI_LOGI("GlyphInfo %d uv(%.1f,%.1f,%.1f,%.1f) offset(%.1f,%.1f)",
-        //         *glyphIt,
-        //         newInfo.mTexCoords.x1, newInfo.mTexCoords.y1, newInfo.mTexCoords.x2, newInfo.mTexCoords.y2,
-        //         newInfo.mOriginOffset.x, newInfo.mOriginOffset.y);
- 		mGlyphMap[*glyphIt] = newInfo;
- 		++glyphIt;
+    atlas.beginGlyphSet();
+    for( set<Font::Glyph>::const_iterator glyphIt = glyphs.begin(); glyphIt != glyphs.end(); ++glyphIt ) {
+ 		mGlyphMap[*glyphIt] = atlas.addGlyph(mFont, *glyphIt);
     }
-
-    // Surface& surface = packer.getSurface();
-    // pass premultiply and mipmapping preferences to Texture::Format
-    if( ! mFormat.getPremultiply() )
-        ip::unpremultiply( &fontAtlas );
-
-    gl::Texture::Format textureFormat = gl::Texture::Format();
-    textureFormat.enableMipmapping( mFormat.hasMipmapping() );
-    textureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
-
-#if defined( CINDER_GLES )
-	std::shared_ptr<uint8_t> lumAlphaData( new uint8_t[mFormat.getTextureWidth()*mFormat.getTextureHeight()*2], checked_array_deleter<uint8_t>() );
-    // under iOS format and internalFormat must match, so let's make a block of LUMINANCE_ALPHA data
-    Surface8u::ConstIter iter( fontAtlas, fontAtlas.getBounds() );
-    size_t offset = 0;
-    while( iter.line() ) {
-        while( iter.pixel() ) {
-            lumAlphaData.get()[offset+0] = iter.r();
-            lumAlphaData.get()[offset+1] = iter.a();
-            offset += 2;
-        }
-    }
-    mTextures.push_back( gl::Texture( lumAlphaData.get(), GL_LUMINANCE_ALPHA, mFormat.getTextureWidth(), mFormat.getTextureHeight(), textureFormat ) );
-#else
-    mTextures.push_back( gl::Texture( fontAtlas, textureFormat ) );
-#endif
-
-    // generateKerningPairs();
+    mTextures = atlas.endGlyphSet();
 }
 
 #endif
@@ -679,11 +612,114 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 }
 
 #if defined( CINDER_ANDROID )
+
 TextureFont::Atlas::Atlas( const Format &format ) 
     : mFormat( format ), 
       mSurface( format.getTextureWidth(), format.getTextureHeight(), true ),
       mPack( format.getTextureWidth(), format.getTextureHeight() )
 {
+    gl::Texture::Format textureFormat = gl::Texture::Format();
+    mTextureFormat.enableMipmapping( mFormat.hasMipmapping() );
+    mTextureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
+
+    mBeginIndex = mCurIndex = 0;
+    pushNewTexture();
+}
+
+void TextureFont::Atlas::pushNewTexture()
+{
+    mTextures.push_back( Texture( mFormat.getTextureWidth(), mFormat.getTextureHeight(), mTextureFormat ) );
+	ip::fill( &mSurface, ColorA8u( 0, 0, 0, 0 ) );
+}
+
+void TextureFont::Atlas::beginGlyphSet()
+{
+    mBeginIndex = mCurIndex;
+}
+
+TextureFont::GlyphInfo TextureFont::Atlas::addGlyph(Font& font, Font::Glyph glyph)
+{
+    const size_t BORDER = 1;
+
+    //  Draw glyph 
+    FT_Face face = font.getFTFace();
+    int error = FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
+    if( error ) {
+        CI_LOGW("FT_Error (line %d, code 0x%02x) : %s\n",
+                __LINE__, FT_Errors[error].code, FT_Errors[error].message);
+    }
+    error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+    FT_GlyphSlot slot = face->glyph;
+
+    Area glyphArea = mPack.allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+    if (glyphArea.x1 < 0) {
+        updateTexture();
+        pushNewTexture();
+        ++mCurIndex;
+        mPack = SkylinePack( mFormat.getTextureWidth(), mFormat.getTextureHeight() );
+        glyphArea = mPack.allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+        //  XXX If allocation fails here then abort completely
+    }
+
+    int32_t x = glyphArea.x1 + BORDER;
+    int32_t y = glyphArea.y1 + BORDER;
+
+    //  Write glyph to surface
+    Area          destArea(x, y, x + slot->bitmap.width, y + slot->bitmap.rows);
+    Surface::Iter iter( mSurface, destArea );
+
+    uint8_t* rowPtr = slot->bitmap.buffer;
+    while ( iter.line() ) {
+        uint8_t* pixelPtr = rowPtr;
+        while ( iter.pixel() ) {
+            iter.r() = *pixelPtr;
+            iter.a() = *pixelPtr;
+            ++pixelPtr;
+        }
+        rowPtr += slot->bitmap.pitch;
+    }
+
+    GlyphInfo info;
+    info.mTextureIndex = mCurIndex - mBeginIndex;
+    info.mTexCoords    = destArea;
+    info.mOriginOffset = Vec2f(slot->bitmap_left, -slot->bitmap_top);
+    return info;
+}
+
+void TextureFont::Atlas::updateTexture()
+{
+    Surface surface = mSurface.clone();
+
+    if( ! mFormat.getPremultiply() )
+        ip::unpremultiply( &surface );
+
+    gl::Texture& tex = mTextures.back();
+
+#if defined( CINDER_GLES )
+	std::shared_ptr<uint8_t> lumAlphaData( new uint8_t[mFormat.getTextureWidth()*mFormat.getTextureHeight()*2], checked_array_deleter<uint8_t>() );
+    // under iOS/Android format and internalFormat must match, so let's make a block of LUMINANCE_ALPHA data
+    Surface8u::ConstIter iter( surface, surface.getBounds() );
+    size_t offset = 0;
+    while( iter.line() ) {
+        while( iter.pixel() ) {
+            lumAlphaData.get()[offset+0] = iter.r();
+            lumAlphaData.get()[offset+1] = iter.a();
+            offset += 2;
+        }
+    }
+
+    //  update the texture data in-place
+    glBindTexture(tex.getTarget(), tex.getId());
+    glTexImage2D(tex.getTarget(), 0, GL_LUMINANCE_ALPHA, mFormat.getTextureWidth(), mFormat.getTextureHeight(), 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, lumAlphaData.get() );
+#else
+    tex.update( surface );
+#endif
+}
+
+vector< gl::Texture > TextureFont::Atlas::endGlyphSet()
+{
+    updateTexture();
+    return vector< gl::Texture >( mTextures.begin() + mBeginIndex, mTextures.begin() + mCurIndex + 1 );
 }
 
 TextureFont::Format& TextureFont::Atlas::getFormat()
@@ -776,13 +812,9 @@ vector<pair<uint16_t,Vec2f> > TextureFont::getGlyphPlacements( const std::string
 }
 
 #ifdef CINDER_ANDROID
-gl::Texture TextureFont::getTexture()
+std::vector< gl::Texture >& TextureFont::getTextures()
 {
-    if (mTextures.begin() != mTextures.end()) {
-        return *(mTextures.begin());
-    }
-    
-    return gl::Texture();
+    return mTextures;
 }
 #endif
 

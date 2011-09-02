@@ -23,8 +23,14 @@ public:
 	
 	gl::Texture		   mTexture;	
 
-	Font               mFont;
-	gl::TextureFontRef mTexFont;
+	Font               mFont1;
+	Font               mFont2;
+	Font               mFont3;
+
+	gl::TextureFontRef mTexFont1;
+	gl::TextureFontRef mTexFont2;
+	gl::TextureFontRef mTexFont3;
+
 	gl::Texture        mFontTexture;
 };
 
@@ -40,37 +46,28 @@ void AndroidTest::setup()
 		console() << "unable to load the texture file!" << std::endl;
 	}
 
-    // Bitstream Vera Sans has Freetype kerning information
-    // mFont = Font(loadResource("Vera.ttf"), 16);
-
-    mFont = Font(loadFile("/system/fonts/DroidSans.ttf"), 40);
-    // mFont = Font(loadFile("/system/fonts/DroidSerif-Regular.ttf"), 12);
-	console() << "Loaded font name " << mFont.getName() << " num glyphs " << mFont.getNumGlyphs() << endl;
+    mFont1 = Font(loadFile("/system/fonts/DroidSans.ttf"), 40);
+    mFont2 = Font(loadFile("/system/fonts/DroidSans.ttf"), 70);
+    mFont3 = Font(loadFile("/system/fonts/DroidSans.ttf"), 20);
+	console() << "Loaded font name " << mFont1.getName() << " num glyphs " << mFont1.getNumGlyphs() << endl;
 
     gl::TextureFont::Format format;
+
     format.textureWidth(512);
     format.textureHeight(512);
     format.premultiply(true);
-    mTexFont = gl::TextureFont::create( mFont, format );
 
-    mFontTexture = mTexFont->getTexture();
+    gl::TextureFont::Atlas atlas(format);
+
+    mTexFont3 = gl::TextureFont::create( mFont3, atlas );
+    mTexFont1 = gl::TextureFont::create( mFont1, atlas );
+    mTexFont2 = gl::TextureFont::create( mFont2, atlas );
+
+    console() << "XXX font tex count font1 " << mTexFont1->getTextures().size() << " font 2 "
+        << mTexFont2->getTextures().size() << endl;
+
+    mFontTexture = mTexFont2->getTextures().front();
     gl::enableAlphaBlending(format.getPremultiply());
-
-	// console() << "AndroidTest" << endl;
-	// DataSourceRef data = loadResource("hello.txt");
-	// console() << "Loaded hello.txt" << endl;
-	// IStreamRef stream = data->createStream();
-	// int size = stream->size();
-	// console() << "Stream size: " << size << endl;
-	// char* input = new char[size+1];
-	// int read = stream->readDataAvailable(input, 1024);
-	// input[read] = '\0';
-	// console() << "Read " << read << " bytes from stream" << endl;
-	// console() << "value: " << input << endl;
-
-	// string text;
-	// stream->readFixedString(&text, size);
-	// console() << "Read from hello.txt: " << text << endl;
 }
 
 void AndroidTest::resume(bool renewContext)
@@ -85,11 +82,18 @@ void AndroidTest::draw()
 	gl::setMatricesWindow( getWindowSize() );
 	gl::clear( Color( 0.2f, 0.2f, 0.2f ) );
 
-	// if( mTexture )
-	// 	gl::draw( mTexture, Vec2f( 0, 0 ) );
+    int rightEdge = getWindowWidth();
+	float helloWidth = mTexFont1->measureString( "Hello" ).x;
+    mTexFont1->drawString( "Hello", Vec2f(rightEdge - helloWidth, mTexFont1->getAscent()) );
+    float worldWidth = mTexFont2->measureString( "World" ).x;
+    mTexFont2->drawString( "World", Vec2f(rightEdge - worldWidth, 
+                mTexFont1->getAscent() + mTexFont1->getDescent() + mTexFont2->getAscent()) );
+    float demoWidth = mTexFont3->measureString( "Font packing demonstration" ).x;
+    mTexFont3->drawString( "Font packing demonstration", Vec2f(rightEdge - demoWidth,
+                getWindowHeight() - mTexFont3->getDescent()) );
+
 	if( mFontTexture ) {
 		gl::draw( mFontTexture, Vec2f( 0, 0 ) );
-        mTexFont->drawString("Hello world!", Vec2f(0, 240));
     }
 }
 
