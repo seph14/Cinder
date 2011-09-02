@@ -25,6 +25,7 @@
 #include "cinder/Cinder.h"
 #include "cinder/Font.h"
 #include "cinder/gl/Texture.h"
+#include "cinder/Surface.h"
 
 #include <map>
 #include <boost/unordered_map.hpp>
@@ -99,6 +100,24 @@ class TextureFont {
 		float		mScale;
 	};
 
+#if defined( CINDER_ANDROID )
+
+    class Atlas {
+      public:
+        Atlas( const Format &format = Format() );
+        Format& getFormat();
+
+      private:
+        Format                   mFormat;
+        std::vector<gl::Texture> mTextures;
+        Surface                  mSurface;
+    };
+
+	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and format \a format
+	static TextureFontRef		create( const Font &font, Atlas &atlas, const std::string &supportedChars = TextureFont::defaultChars() );
+
+#endif
+
 	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and format \a format
 	static TextureFontRef		create( const Font &font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() );
 	
@@ -144,7 +163,7 @@ class TextureFont {
 	static std::string		defaultChars() { return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\@#_[]<>%^llflfiphrids\303\251\303\241\303\250\303\240"; }
 
 // XXX DEBUGGING, remove later
-#ifdef CINDER_ANDROID
+#if defined( CINDER_ANDROID )
     gl::Texture getTexture();
 	struct KerningPair {
 		Font::Glyph index;
@@ -153,13 +172,19 @@ class TextureFont {
 #endif
 
   protected:
+#if defined( CINDER_ANDROID )
 	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
+	TextureFont( const Font &font, const std::string &supportedChars, Atlas &atlas );
+    void init( const std::string &supportedChars, Atlas &atlas );
+#else
+	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
+#endif
 
 	struct GlyphInfo {
 		uint8_t		mTextureIndex;
 		Area		mTexCoords;
 		Vec2f		mOriginOffset;
-#ifdef CINDER_ANDROID
+#if defined( CINDER_ANDROID )
 		//  TextureFont is also responsible for layout on Android
 		Vec2f		mSize;
 		Vec2f		mAdvance;
@@ -172,7 +197,7 @@ class TextureFont {
 	Font											mFont;
 	Format											mFormat;
 
-#ifdef CINDER_ANDROID
+#if defined( CINDER_ANDROID )
 	//!  Measure glyph positions, suitable for passing to drawGlyphs
 	// std::vector<std::pair<uint16_t,Vec2f> > shapeGlyphs(const std::string& str) const;
 	//!  Generate kerning pairs for all glyphs

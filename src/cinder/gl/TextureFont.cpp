@@ -319,15 +319,27 @@ void setGlyphArea( Surface surface, Area area, uint8_t* glyphData, size_t stride
     }
 }
 
-TextureFont::TextureFont( const Font &font, const string &supportedChars, const TextureFont::Format &format )
+TextureFont::TextureFont( const Font &font, const std::string &supportedChars, const Format &format )
 	: mFont( font ), mFormat( format )
+{
+    Atlas atlas( format );
+    init( supportedChars, atlas );
+}
+
+TextureFont::TextureFont( const Font &font, const string &supportedChars, Atlas &atlas )
+	: mFont( font ), mFormat( atlas.getFormat() )
+{
+    init( supportedChars, atlas );
+}
+
+void TextureFont::init( const std::string &supportedChars, Atlas &atlas )
 {
     const size_t BORDER = 1;
     size_t missed = 0;
     uint8_t curTextureIndex = 0;
 
 	// get the glyph indices we'll need
-	vector<Font::Glyph>	tempGlyphs = font.getGlyphs( supportedChars );
+	vector<Font::Glyph>	tempGlyphs = mFont.getGlyphs( supportedChars );
 	set<Font::Glyph> glyphs( tempGlyphs.begin(), tempGlyphs.end() );
 
     Surface fontAtlas(mFormat.getTextureWidth(), mFormat.getTextureHeight(), true);
@@ -665,6 +677,23 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 		glDrawElements( GL_TRIANGLES, indices.size(), indexType, &indices[0] );
 	}
 }
+
+#if defined( CINDER_ANDROID )
+TextureFont::Atlas::Atlas( const Format &format ) 
+    : mFormat( format ), mSurface( format.getTextureWidth(), format.getTextureHeight(), true )
+{
+}
+
+TextureFont::Format& TextureFont::Atlas::getFormat()
+{
+    return mFormat;
+}
+
+TextureFontRef		TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )
+{ 
+	return TextureFontRef( new TextureFont( font, supportedChars, atlas ) ); 
+}
+#endif
 
 TextureFontRef		TextureFont::create( const Font &font, const Format &format, const std::string &supportedChars )
 { 
