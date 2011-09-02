@@ -680,7 +680,9 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 
 #if defined( CINDER_ANDROID )
 TextureFont::Atlas::Atlas( const Format &format ) 
-    : mFormat( format ), mSurface( format.getTextureWidth(), format.getTextureHeight(), true )
+    : mFormat( format ), 
+      mSurface( format.getTextureWidth(), format.getTextureHeight(), true ),
+      mPack( format.getTextureWidth(), format.getTextureHeight() )
 {
 }
 

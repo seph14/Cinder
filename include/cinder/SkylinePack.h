@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cinder/Area.h"
-#include "cinder/Surface.h"
 #include <vector>
 
 namespace cinder {

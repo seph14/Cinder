@@ -25,7 +25,12 @@
 #include "cinder/Cinder.h"
 #include "cinder/Font.h"
 #include "cinder/gl/Texture.h"
+
+#if defined( CINDER_ANDROID )
+//  TextureFont::Atlas dependencies
 #include "cinder/Surface.h"
+#include "cinder/SkylinePack.h"
+#endif
 
 #include <map>
 #include <boost/unordered_map.hpp>
@@ -105,17 +110,19 @@ class TextureFont {
     class Atlas {
       public:
         Atlas( const Format &format = Format() );
-        Format& getFormat();
+
+        Format&  getFormat();
+        Surface& getSurface();
 
       private:
         Format                   mFormat;
         std::vector<gl::Texture> mTextures;
         Surface                  mSurface;
+        SkylinePack              mPack;
     };
 
-	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and format \a format
+	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and font atlas \a atlas
 	static TextureFontRef		create( const Font &font, Atlas &atlas, const std::string &supportedChars = TextureFont::defaultChars() );
-
 #endif
 
 	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and format \a format
@@ -172,12 +179,10 @@ class TextureFont {
 #endif
 
   protected:
-#if defined( CINDER_ANDROID )
 	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
+#if defined( CINDER_ANDROID )
 	TextureFont( const Font &font, const std::string &supportedChars, Atlas &atlas );
     void init( const std::string &supportedChars, Atlas &atlas );
-#else
-	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
 #endif
 
 	struct GlyphInfo {
