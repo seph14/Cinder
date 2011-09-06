@@ -373,8 +373,8 @@ static void android_run(struct engine* engine)
             if (state->destroyRequested != 0) {
                 // XXX frequently crashes in teardown when orientation is locked 
                 // to landscape
-                // ci::app::AppAndroid& app = *(engine->cinderApp);
-                // app.getRenderer()->teardown();
+                ci::app::AppAndroid& app = *(engine->cinderApp);
+                app.getRenderer()->teardown();
                 engine->animating = 0;
                 return;
             }
@@ -413,6 +413,11 @@ AppAndroid::AppAndroid()
     mEngine->paused       = false;
     mEngine->resumed      = false;
     mEngine->renewContext = false;
+}
+
+AppAndroid::~AppAndroid()
+{
+    CI_LOGW("~AppAndroid()");
 }
 
 void AppAndroid::pause()

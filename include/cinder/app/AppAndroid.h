@@ -26,7 +26,7 @@ class AppAndroid : public App {
 	};
 
 	AppAndroid();
-	virtual ~AppAndroid() {}
+	virtual ~AppAndroid();
 
 	virtual void		prepareSettings( Settings *settings ) {}
 
