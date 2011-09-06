@@ -65,7 +65,9 @@ void TextureFontApp::keyDown( KeyEvent event )
 
 void TextureFontApp::mouseDown( MouseEvent event )
 {
+#if ! defined( CINDER_ANDROID )
 	mFont = Font( Font::getNames()[Rand::randInt() % Font::getNames().size()], mFont.getSize() );
+#endif
 	console() << mFont.getName() << std::endl;
 	mTextureFont = gl::TextureFont::create( mFont );
 }
