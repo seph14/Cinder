@@ -83,18 +83,23 @@ void AppImplAndroidRendererGl::swapBuffers()
 
 void AppImplAndroidRendererGl::defaultResize()
 {
-    CI_LOGW("Setting viewport to %d x %d", mApp->getWindowWidth(), mApp->getWindowHeight());
-	glViewport( 0, 0, mApp->getWindowWidth(), mApp->getWindowHeight() );
-	cinder::CameraPersp cam( mApp->getWindowWidth(), mApp->getWindowHeight(), 60.0f );
+    int width = mApp->getWindowWidth();
+    int height = mApp->getWindowHeight();
+    CI_LOGW("Setting viewport to %d x %d", width, height); 
+	glViewport( 0, 0, width, height );
 
 #if ! defined( CINDER_GLES2 )
-	glMatrixMode( GL_PROJECTION );
-	glLoadMatrixf( cam.getProjectionMatrix().m );
+    gl::setMatricesWindow(width, height);
 
-	glMatrixMode( GL_MODELVIEW );
-	glLoadMatrixf( cam.getModelViewMatrix().m );
-	glScalef( 1.0f, -1.0f, 1.0f );           // invert Y axis so increasing Y goes down.
-	glTranslatef( 0.0f, (float)-mApp->getWindowHeight(), 0.0f );       // shift origin up to upper-left corner.
+	// cinder::CameraPersp cam( mApp->getWindowWidth(), mApp->getWindowHeight(), 60.0f );
+
+	// glMatrixMode( GL_PROJECTION );
+	// glLoadMatrixf( cam.getProjectionMatrix().m );
+
+	// glMatrixMode( GL_MODELVIEW );
+	// glLoadMatrixf( cam.getModelViewMatrix().m );
+	// glScalef( 1.0f, -1.0f, 1.0f );           // invert Y axis so increasing Y goes down.
+	// glTranslatef( 0.0f, (float)-mApp->getWindowHeight(), 0.0f );       // shift origin up to upper-left corner.
 #endif
 }
 

@@ -245,11 +245,14 @@ Surface	RendererGl::copyWindowSurface( const Area &area )
 #elif defined( CINDER_ANDROID )
 RendererGl::~RendererGl()
 {
+    CI_LOGW("~RendererGl()");
     delete mImpl;
+    mImpl = 0;
 }
 
 void RendererGl::setup( App *aApp, ANativeWindow* window, int32_t& width, int32_t& height )
 {
+    CI_LOGW("RendererGl::setup()");
 	mApp = aApp;
 
     if ( ! mImpl )
@@ -260,7 +263,9 @@ void RendererGl::setup( App *aApp, ANativeWindow* window, int32_t& width, int32_
 
 void RendererGl::teardown()
 {
-    mImpl->teardown();
+    CI_LOGW("RendererGl::teardown()");
+    if ( mImpl )
+        mImpl->teardown();
 }
 
 bool RendererGl::isValidDisplay()
