@@ -271,14 +271,14 @@ void GlesAttr::drawStrokedCircle( const Vec2f &center, float radius, int numSegm
 
 void GlesAttr::drawSolidRect( const Rectf &rect, bool textureRectangle )
 {
-    selectAttrs( ES2_ATTR_VERTEX | (textureRectangle ? ES2_ATTR_TEXCOORD : 0) );
+    selectAttrs( ES2_ATTR_VERTEX | ES2_ATTR_TEXCOORD );
 
     glEnableVertexAttribArray(mVertex);
 	GLfloat verts[12];
     glVertexAttribPointer( mVertex, 3, GL_FLOAT, GL_FALSE, 0, verts );
     glEnableVertexAttribArray(mTexCoord);
 	GLfloat texCoords[8];
-    glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, verts );
+    glVertexAttribPointer( mTexCoord, 2, GL_FLOAT, GL_FALSE, 0, texCoords );
 	verts[0*3+0] = rect.getX2(); texCoords[0*2+0] = ( textureRectangle ) ? rect.getX2() : 1;
 	verts[0*3+1] = rect.getY1(); texCoords[0*2+1] = ( textureRectangle ) ? rect.getY1() : 0;
     verts[0*3+2] = 0;
