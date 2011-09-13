@@ -920,6 +920,13 @@ void GlesContext::setProjection( const Camera &cam )
     updateUniforms();
 }
 
+void GlesContext::setProjection( const ci::Matrix44f &proj )
+{
+    mProj = proj;
+    mProjDirty = true;
+    updateUniforms();
+}
+
 void GlesContext::pushModelView()
 {
     mModelViewStack.push_back(mModelView);
@@ -1326,6 +1333,12 @@ void setProjection( const Camera &cam )
 {
     if (sContext) sContext->setProjection(cam);
 }
+
+void setProjection( const ci::Matri44f &proj )
+{
+    if (sContext) sContext->setProjection(proj);
+}
+
 
 void pushModelView()
 {
