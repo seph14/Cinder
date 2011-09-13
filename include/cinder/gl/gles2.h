@@ -135,6 +135,7 @@ public:
     void setMatrices( const Camera &cam );
     void setModelView( const Camera &cam );
     void setProjection( const Camera &cam );
+    void setProjection( const Matrix44f &proj );
     void pushModelView();
     void popModelView();
     void pushModelView( const Camera &cam );
@@ -277,6 +278,7 @@ void draw( const Texture &texture, const Area &srcArea, const Rectf &destRect );
 void setMatrices( const Camera &cam );
 void setModelView( const Camera &cam );
 void setProjection( const Camera &cam );
+void setProjection( const ci::Matri44f &proj );
 void pushModelView();
 void popModelView();
 void pushModelView( const Camera &cam );
