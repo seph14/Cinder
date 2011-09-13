@@ -1334,7 +1334,7 @@ void setProjection( const Camera &cam )
     if (sContext) sContext->setProjection(cam);
 }
 
-void setProjection( const ci::Matri44f &proj )
+void setProjection( const Matrix44f &proj )
 {
     if (sContext) sContext->setProjection(proj);
 }
