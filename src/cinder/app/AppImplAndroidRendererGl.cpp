@@ -90,30 +90,25 @@ void AppImplAndroidRendererGl::defaultResize()
 
 #if ! defined( CINDER_GLES2 )
     gl::setMatricesWindow(width, height);
-
-	// cinder::CameraPersp cam( mApp->getWindowWidth(), mApp->getWindowHeight(), 60.0f );
-
-	// glMatrixMode( GL_PROJECTION );
-	// glLoadMatrixf( cam.getProjectionMatrix().m );
-
-	// glMatrixMode( GL_MODELVIEW );
-	// glLoadMatrixf( cam.getModelViewMatrix().m );
-	// glScalef( 1.0f, -1.0f, 1.0f );           // invert Y axis so increasing Y goes down.
-	// glTranslatef( 0.0f, (float)-mApp->getWindowHeight(), 0.0f );       // shift origin up to upper-left corner.
 #endif
 }
 
 void AppImplAndroidRendererGl::teardown()
 {
     if (mDisplay != EGL_NO_DISPLAY) {
-        eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        if (mContext != EGL_NO_CONTEXT) {
-            eglDestroyContext(mDisplay, mContext);
-        }
-        if (mSurface != EGL_NO_SURFACE) {
-            eglDestroySurface(mDisplay, mSurface);
-        }
-        eglTerminate(mDisplay);
+        // XXX These teardown methods consistently hard-crash the HTC Evo 3D
+        // running 2.3.3, not sure of a good workaround.
+
+        // eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        // if (mContext != EGL_NO_CONTEXT) {
+        //     eglDestroyContext(mDisplay, mContext);
+        // }
+        // CI_LOGW("DESTROY SURFACE");
+        // if (mSurface != EGL_NO_SURFACE) {
+        //     eglDestroySurface(mDisplay, mSurface);
+        // }
+
+        // eglTerminate(mDisplay);
     }
 
     mDisplay = EGL_NO_DISPLAY;
