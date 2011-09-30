@@ -82,7 +82,9 @@ void AndroidTest::draw()
     float r = math<float>::abs(math<float>::sin(getElapsedSeconds() * 0.30f));
     float g = math<float>::abs(math<float>::cos(getElapsedSeconds() * 0.17f));
     float b = math<float>::abs(math<float>::cos(getElapsedSeconds() * 0.67f));
+#if !defined( CINDER_GLES2 )
 	gl::setMatricesWindow( getWindowSize() );
+#endif
 	gl::clear( Color(r,g,b) );
 
 //    int rightEdge = getWindowWidth();

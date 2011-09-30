@@ -6,6 +6,10 @@
 
 #include <android/native_window.h>
 
+//  XXX activity ending hack
+#include <android_native_app_glue.h>
+#include "cinder/app/AppAndroid.h"
+
 namespace cinder { namespace app {
 
 const char* EGLErrorString()
@@ -119,7 +123,11 @@ void AppImplAndroidRendererGl::makeCurrentContext()
 void AppImplAndroidRendererGl::swapBuffers()
 {
     if (EGL_FALSE == eglSwapBuffers(mDisplay, mSurface)) {
-        CI_LOGW("XXX ERROR eglSwapBuffers returned EGL_FALSE: %s", EGLErrorString());
+        CI_LOGW("XXX ERROR eglSwapBuffers returned EGL_FALSE : %s", EGLErrorString());
+        //  XXX NASTY HACK
+        CI_LOGW("ABORTING...");
+        struct android_app* app = static_cast<AppAndroid*>(mApp)->mAndroidApp;
+        ANativeActivity_finish(app->activity);
     }
 }
 
