@@ -14,7 +14,7 @@ class RendererGl;
 class AppImplAndroidRendererGl 
 {
  public:
-	AppImplAndroidRendererGl( App *aApp, RendererGl *aRenderer );
+	AppImplAndroidRendererGl( App *aApp );
 
     void initialize( ANativeWindow* window, int32_t& width, int32_t& height );
     void makeCurrentContext();
@@ -26,7 +26,6 @@ class AppImplAndroidRendererGl
 
  protected:
 	App         *mApp;
-	RendererGl	*mRenderer;
 
     EGLSurface mSurface;
     EGLContext mContext;

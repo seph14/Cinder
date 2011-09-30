@@ -60,6 +60,9 @@ App::App()
 
 App::~App()
 {
+#if defined( CINDER_ANDROID )
+    CI_LOGW("XXXX ~App XXXX");
+#endif
 }
 
 // Pseudo-private event handlers
@@ -148,6 +151,7 @@ void App::privateFileDrop__( const FileDropEvent &event )
 
 void App::privateSetup__()
 {
+    CI_LOGW("XXX privateSetup__");
 	mTimeline.stepTo( getElapsedSeconds() );
 	setup();
 }

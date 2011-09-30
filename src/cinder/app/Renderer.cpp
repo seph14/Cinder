@@ -256,15 +256,18 @@ void RendererGl::setup( App *aApp, ANativeWindow* window, int32_t& width, int32_
 	mApp = aApp;
 
     if ( ! mImpl )
-        mImpl = new AppImplAndroidRendererGl(mApp, this);
+        mImpl = new AppImplAndroidRendererGl(mApp);
 
+    CI_LOGW("Initializing with ANativeWindow %p", window);
 	mImpl->initialize( window, width, height );
 }
 
 void RendererGl::teardown()
 {
     CI_LOGW("RendererGl::teardown()");
-    if ( mImpl )
+    if (!mImpl)
+        CI_LOGW("XXX RendererGl INVALID mImpl when teardown() was called");
+    else
         mImpl->teardown();
 }
 

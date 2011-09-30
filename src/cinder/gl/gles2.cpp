@@ -830,7 +830,8 @@ GlesContext::GlesContext()
     CI_LOGW("Initializing CinderProgES2 shader");
 
 	try {
-        CinderProgES2 shader;
+        // CinderProgES2 shader;
+        GlslProg shader(CinderProgES2::verts, CinderProgES2::frags);
         GlesAttr attr(shader.getAttribLocation("aPosition"),
                       shader.getAttribLocation("aTexCoord"),
                       shader.getAttribLocation("aColor"),

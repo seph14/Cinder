@@ -4,6 +4,8 @@
 #include "cinder/app/TouchEvent.h"
 #include "cinder/app/AccelEvent.h"
 
+#include <time.h>
+
 struct android_app;
 struct engine;
 
@@ -117,12 +119,12 @@ class AppAndroid : public App {
 	//! Returns a pointer to the current global AppBasic
 	virtual const Settings&	getSettings() const { return mSettings; }
 
-	void setAppState(struct android_app* state);
+	void setAndroidApp(struct android_app* androidApp);
 
 	//! \cond
 	// These are called by application instantation macros and are only used in the launch process
 	static void		prepareLaunch() { App::prepareLaunch(); }
-	static void		executeLaunch( AppAndroid *app, class Renderer *renderer, const char *title, struct android_app* state ) { sInstance = app; app->setAppState(state); App::executeLaunch( app, renderer, title, 0, NULL ); }
+	static void		executeLaunch( AppAndroid *app, class Renderer *renderer, const char *title, struct android_app* androidApp ) { sInstance = app; app->setAndroidApp(androidApp); App::executeLaunch( app, renderer, title, 0, NULL ); }
 	static void		cleanupLaunch() { App::cleanupLaunch(); }
 	
 	virtual void	launch( const char *title, int argc, char * const argv[] );
@@ -141,13 +143,23 @@ class AppAndroid : public App {
 	void		privateAccelerated__( const Vec3f &direction );
 	//! \endcond
 	//
+
+  public:
+    //  XXX not really public - shared with internal engine static methods
+
+	//  Android Native Activity state
+	struct android_app*      mAndroidApp;
+
+    //  Window width, height
+    int32_t mWidth;
+    int32_t mHeight;
+
+    struct engine* mEngine;
 	
   private:
-	//  Android Native Activity state
-	struct engine*			mEngine;
 	
 	static AppAndroid		*sInstance;
-	Settings				mSettings;
+	Settings				 mSettings;
 	
 	std::vector<TouchEvent::Touch>	mActiveTouches;
 
@@ -156,6 +168,8 @@ class AppAndroid : public App {
 
 	float					mAccelFilterFactor;
 	Vec3f					mLastAccel, mLastRawAccel;
+
+    struct timespec mStartTime;
 
   public:
 	static DataSourceAssetRef loadResource(const std::string &resourcePath);

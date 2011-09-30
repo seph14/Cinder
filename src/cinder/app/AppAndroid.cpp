@@ -1,7 +1,5 @@
 #include "cinder/app/AppAndroid.h"
 
-#include <time.h>
-
 #include <jni.h>
 #include <errno.h>
 
@@ -37,21 +35,21 @@ struct TouchState {
 };
 
 struct engine {
-    struct android_app* state;
+    struct android_app* androidApp;
 
-    ASensorManager* sensorManager;
-    const ASensor* accelerometerSensor;
+    ASensorManager*    sensorManager;
+    const ASensor*     accelerometerSensor;
     ASensorEventQueue* sensorEventQueue;
 
     int animating;
 
-    int32_t width;
-    int32_t height;
+    // int32_t width;
+    // int32_t height;
 
     struct saved_state savedState;
 
-    struct timespec mStartTime;
     ci::app::AppAndroid* cinderApp;
+    ci::app::Renderer*   cinderRenderer;
 
     TouchState* touchState;
 
@@ -59,22 +57,24 @@ struct engine {
     bool  accelEnabled;
     float accelUpdateFrequency;
 
-    bool  initialized;
-    bool  paused;
-    bool  resumed;
-    bool  renewContext;
+    // bool  initialized;
+    // bool  paused;
+    // bool  resumed;
+    // bool  renewContext;
 };
 
 static void engine_draw_frame(struct engine* engine) {
     ci::app::AppAndroid& app      = *(engine->cinderApp);
-    ci::app::Renderer&   renderer = *(app.getRenderer());
+    ci::app::Renderer&   renderer = *(engine->cinderRenderer);
 
     if (!renderer.isValidDisplay()) {
+        CI_LOGW("XXX NO VALID DISPLAY, SKIPPING RENDER");
         // No display.
         return;
     }
 
-    renderer.startDraw();
+    // XXX not necessary?
+    // renderer.startDraw();
     app.privateUpdate__();
     app.privateDraw__();
     renderer.finishDraw();
@@ -97,7 +97,9 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
     struct engine* engine = (struct engine*)app->userData;
     struct TouchState* touchState = engine->touchState;
 
-    if (AInputEvent_getType(event) == AINPUT_EVENT_TYPE_MOTION) {
+    int32_t eventType = AInputEvent_getType(event);
+
+    if (eventType == AINPUT_EVENT_TYPE_MOTION) {
         int32_t actionCode = AMotionEvent_getAction(event);
         int action = actionCode & AMOTION_EVENT_ACTION_MASK;
         int index  = (actionCode & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
@@ -144,14 +146,25 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
 
         return 1;
     }
+    else if (eventType == AINPUT_EVENT_TYPE_KEY) {
+        int32_t actionCode = AKeyEvent_getAction(event);
+        int32_t keyCode = AKeyEvent_getKeyCode(event);
+        if (actionCode == AKEY_EVENT_ACTION_DOWN && keyCode == AKEYCODE_MENU) {
+            //  DEBUGGING - renew context when menu key is pressed
+            CI_LOGW("XXX renew context on keypress");
+            // glUseProgram(0);
+            engine->cinderRenderer->teardown();
+            engine->cinderRenderer->setup(engine->cinderApp, engine->androidApp->window, 
+                    engine->cinderApp->mWidth, engine->cinderApp->mHeight);
+            engine->cinderApp->privateResume__(true);
+        }
+    }
+
     return 0;
 }
 
-static void engine_update_touches(struct engine* engine) 
+static void engine_update_touches(ci::app::AppAndroid& app, TouchState* touchState) 
 {
-    ci::app::AppAndroid& app = *(engine->cinderApp);
-    TouchState* touchState = engine->touchState;
-
     if ( app.getSettings().isMultiTouchEnabled() ) {
         if ( ! touchState->touchesBegan.empty() ) {
             app.privateTouchesBegan__( ci::app::TouchEvent( touchState->touchesBegan ) );
@@ -222,82 +235,86 @@ inline void engine_disable_accelerometer(struct engine* engine)
  * Process the next main command.
  */
 static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
-    struct engine* engine = (struct engine*)app->userData;
+    struct engine* engine = (struct engine*) app->userData;
     ci::app::AppAndroid* cinderApp = engine->cinderApp;
 
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
             CI_LOGW("XXX APP_CMD_SAVE_STATE");
             // The system has asked us to save our current state.  Do so.
-            engine->state->savedState = malloc(sizeof(struct saved_state));
-            *((struct saved_state*)engine->state->savedState) = engine->savedState;
-            engine->state->savedStateSize = sizeof(struct saved_state);
+            engine->androidApp->savedState = malloc(sizeof(struct saved_state));
+            *((struct saved_state*)engine->androidApp->savedState) = engine->savedState;
+            engine->androidApp->savedStateSize = sizeof(struct saved_state);
             break;
+
         case APP_CMD_INIT_WINDOW:
             CI_LOGW("XXX APP_CMD_INIT_WINDOW");
             // The window is being shown, get it ready.
-            if (engine->state->window != NULL) {
-                cinderApp->getRenderer()->setup(cinderApp, engine->state->window, 
-                        engine->width, engine->height);
-                cinderApp->privateResize__(ci::Vec2i(engine->width, engine->height));
+            if (engine->androidApp->window != NULL) {
+                engine->cinderRenderer->setup(cinderApp, engine->androidApp->window, 
+                        cinderApp->mWidth, cinderApp->mHeight);
+                cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowWidth(), cinderApp->getWindowHeight()));
+                cinderApp->privatePrepareSettings__();
+                cinderApp->privateSetup__();
 
-                if (!engine->initialized) {
-                    //  First time setup
-                    cinderApp->privatePrepareSettings__();
-                    cinderApp->privateSetup__();
-                    engine->initialized = true;
-                }
-                else if (engine->paused) {
-                    //  Resumed and recreated context
-                    engine->renewContext = true;
-                }
+                // if (!engine->initialized) {
+                //     //  First time setup
+                //     cinderApp->privatePrepareSettings__();
+                //     cinderApp->privateSetup__();
+                //     engine->initialized = true;
+                // }
+                // else if (engine->paused) {
+                //     //  Resumed and recreated context
+                //     engine->renewContext = true;
+                // }
 
-                // engine_draw_frame(engine);
-                engine->animating = 1;
+                engine_draw_frame(engine);
+                engine->animating = 0;
             }
             break;
+
         case APP_CMD_TERM_WINDOW:
             CI_LOGW("XXX APP_CMD_TERM_WINDOW");
             // The window is being hidden or closed, clean it up.
-            cinderApp->getRenderer()->teardown();
+            engine->cinderRenderer->teardown();
             engine->animating = 0;
             break;
+
         case APP_CMD_GAINED_FOCUS:
             CI_LOGW("XXX APP_CMD_GAINED_FOCUS");
-            engine->animating = 1;
 
             // Start monitoring the accelerometer.
             if (engine->accelerometerSensor != NULL && engine->accelEnabled) {
                 engine_enable_accelerometer(engine);
             }
 
-            if (engine->resumed) {
-                cinderApp->privateResume__(engine->renewContext);
-            }
+            // if (engine->resumed) {
+            //     cinderApp->privateResume__(engine->renewContext);
+            // }
 
-            engine->paused       = false;
-            engine->resumed      = false;
-            engine->renewContext = false;
+            engine->animating = 1;
+            // engine->paused       = false;
+            // engine->resumed      = false;
+            // engine->renewContext = false;
 
             break;
         case APP_CMD_LOST_FOCUS:
             CI_LOGW("XXX APP_CMD_LOST_FOCUS");
             //  Disable accelerometer (saves power)
             engine_disable_accelerometer(engine);
-
             engine->animating = 0;
             engine_draw_frame(engine);
             break;
         case APP_CMD_RESUME:
             CI_LOGW("XXX APP_CMD_RESUME");
-            engine->resumed = true;
+            // engine->resumed = true;
             break;
         case APP_CMD_START:
             CI_LOGW("XXX APP_CMD_START");
             break;
         case APP_CMD_PAUSE:
             CI_LOGW("XXX APP_CMD_PAUSE");
-            engine->paused = true;
+            // engine->paused = true;
             cinderApp->privatePause__();
             break;
         case APP_CMD_STOP:
@@ -306,34 +323,52 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
         case APP_CMD_DESTROY:
             //  app has been destroyed, will crash if we attempt to do anything else
             CI_LOGW("XXX APP_CMD_DESTROY");
-            engine->initialized = false;
-            engine->paused = engine->resumed = false;
+            // engine->initialized = false;
+            // engine->paused = engine->resumed = false;
             break;
     }
 }
 
-static void android_run(struct engine* engine) 
+static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* androidApp) 
 {
     // Make sure glue isn't stripped.
     app_dummy();
 
-    struct android_app* state = engine->state;
-    state->userData     = engine;
-    state->onAppCmd     = engine_handle_cmd;
-    state->onInputEvent = engine_handle_input;
+    // XXX must free memory allocated for engine and touchState
+    struct engine engine;
+    memset(&engine, 0, sizeof(engine));
+
+    engine.androidApp     = androidApp;
+    engine.cinderApp      = cinderApp;
+    engine.cinderRenderer = cinderApp->getRenderer();
+    engine.touchState     = new TouchState;
+    engine.accelEnabled   = false;
+
+    //  Activity state tracking
+    // engine.initialized  = false;
+    // engine.paused       = false;
+    // engine.resumed      = false;
+    // engine.renewContext = false;
+
+    //  XXX Used by accelerometer, move to cinder app?
+    cinderApp->mEngine = &engine;
+
+    androidApp->userData     = &engine;
+    androidApp->onAppCmd     = engine_handle_cmd;
+    androidApp->onInputEvent = engine_handle_input;
 
     // Prepare to monitor accelerometer
-    engine->sensorManager = ASensorManager_getInstance();
-    engine->accelerometerSensor = ASensorManager_getDefaultSensor(engine->sensorManager,
-            ASENSOR_TYPE_ACCELEROMETER);
-    engine->sensorEventQueue = ASensorManager_createEventQueue(engine->sensorManager,
-            state->looper, LOOPER_ID_USER, NULL, NULL);
+    engine.sensorManager = ASensorManager_getInstance();
+    engine.accelerometerSensor = ASensorManager_getDefaultSensor(engine.sensorManager,
+           ASENSOR_TYPE_ACCELEROMETER);
+    engine.sensorEventQueue = ASensorManager_createEventQueue(engine.sensorManager,
+            androidApp->looper, LOOPER_ID_USER, NULL, NULL);
 
     CI_LOGW("XXX android_run");
 
-    if (state->savedState != NULL) {
+    if (androidApp->savedState != NULL) {
         // We are starting with a previous saved state; restore from it.
-        engine->savedState = *(struct saved_state*)state->savedState;
+        engine.savedState = *(struct saved_state*)androidApp->savedState;
     }
 
     //  Event loop
@@ -346,73 +381,56 @@ static void android_run(struct engine* engine)
         // If not animating, we will block forever waiting for events.
         // If animating, we loop until all events are read, then continue
         // to draw the next frame of animation.
-        while ((ident=ALooper_pollAll(engine->animating ? 0 : -1, NULL, &events,
+        while ((ident=ALooper_pollAll(engine.animating ? 0 : -1, NULL, &events,
                 (void**)&source)) >= 0) {
 
             // Process this event.
             if (source != NULL) {
-                source->process(state, source);
+                source->process(androidApp, source);
             }
 
             // If a sensor has data, process it now.
             if (ident == LOOPER_ID_USER) {
-                if (engine->accelerometerSensor != NULL) {
+                if (engine.accelerometerSensor != NULL) {
                     ASensorEvent event;
-                    while (ASensorEventQueue_getEvents(engine->sensorEventQueue,
+                    while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
                             &event, 1) > 0) {
-                        ci::app::AppAndroid& app = *(engine->cinderApp);
-                        app.privateAccelerated__(ci::Vec3f(event.acceleration.x, 
-                                                           event.acceleration.y, 
-                                                           event.acceleration.z));
+                        cinderApp->privateAccelerated__(ci::Vec3f(event.acceleration.x, 
+                                                                  event.acceleration.y, 
+                                                                  event.acceleration.z));
                     }
                 }
             }
 
-            // Update input
             // Check if we are exiting.
-            if (state->destroyRequested != 0) {
+            if (androidApp->destroyRequested != 0) {
                 // XXX frequently crashes in teardown when orientation is locked 
                 // to landscape
-                ci::app::AppAndroid& app = *(engine->cinderApp);
-                app.getRenderer()->teardown();
-                engine->animating = 0;
+                engine.animating = 0;
+                engine.cinderRenderer->teardown();
                 return;
             }
         }
 
         //  Update engine touch state
-        engine_update_touches(engine);
+        engine_update_touches(*cinderApp, engine.touchState);
 
-        if (engine->animating) {
+        if (engine.animating) {
             // Drawing is throttled to the screen update rate, so there
             // is no need to do timing here.
-            engine_draw_frame(engine);
+            engine_draw_frame(&engine);
         }
     }
 }
 
 namespace cinder { namespace app {
 
-AppAndroid*				AppAndroid::sInstance = 0;
-AppAndroid*				sInstance;
+AppAndroid*	AppAndroid::sInstance = 0;
 
 AppAndroid::AppAndroid()
 	: App()
 {
-    // XXX must free memory allocated for engine and touchState
-    mEngine = new engine;
-    memset(mEngine, 0, sizeof(engine));
-    mEngine->cinderApp = this;
-    mEngine->touchState = new TouchState;
-    mEngine->accelEnabled = false;
-	clock_gettime(CLOCK_MONOTONIC, &(mEngine->mStartTime));
 	mLastAccel = mLastRawAccel = Vec3f::zero();
-
-    //  Activity state tracking
-    mEngine->initialized  = false;
-    mEngine->paused       = false;
-    mEngine->resumed      = false;
-    mEngine->renewContext = false;
 }
 
 AppAndroid::~AppAndroid()
@@ -433,25 +451,25 @@ void AppAndroid::resume( bool renewContext )
     }
 }
 
-void AppAndroid::setAppState( struct android_app* state )
+void AppAndroid::setAndroidApp( struct android_app* androidApp)
 {
-    mEngine->state = state;
+    mAndroidApp = androidApp;
 }
 
 void AppAndroid::launch( const char *title, int argc, char * const argv[] )
 {
-    cinder::app::App* app = cinder::app::AppAndroid::get();
-    android_run(mEngine);
+	clock_gettime(CLOCK_MONOTONIC, &mStartTime);
+    android_run(this, mAndroidApp);
 }
 
 int	AppAndroid::getWindowWidth() const
 {
-    return mEngine->width;
+    return mWidth;
 }
 
 int	AppAndroid::getWindowHeight() const
 {
-    return mEngine->height;
+    return mHeight;
 }
 
 //! Enables the accelerometer
@@ -506,7 +524,7 @@ double AppAndroid::getElapsedSeconds() const
 	struct timespec currentTime;
 	clock_gettime(CLOCK_MONOTONIC, &currentTime);
 	return ( (currentTime.tv_sec + currentTime.tv_nsec / 1e9) 
-			- (mEngine->mStartTime.tv_sec + mEngine->mStartTime.tv_nsec / 1e9) );
+			- (mStartTime.tv_sec + mStartTime.tv_nsec / 1e9) );
 }
 
 std::string AppAndroid::getAppPath()
@@ -532,6 +550,7 @@ void AppAndroid::privatePause__()
 
 void AppAndroid::privateResume__(bool renewContext) 
 {
+    CI_LOGW("XXX privateResume__");
     resume(renewContext);
 }
 
@@ -582,11 +601,15 @@ void AppAndroid::privateAccelerated__( const Vec3f &direction )
 //  static loadResource method, loads from assets/
 DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
 {
-    //  XXX throw ResourceLoadExc( resourcePath ); on error
-    AppAndroid* cinderApp = AppAndroid::get();
-    android_app* state = cinderApp->mEngine->state;
-    AAssetManager* mgr = state->activity->assetManager;
-    return DataSourceAsset::createRef(mgr, resourcePath);
+    AppAndroid* cinderApp   = AppAndroid::get();
+    if (cinderApp) {
+        AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
+        return DataSourceAsset::createRef(mgr, resourcePath);
+    }
+    else {
+        //  XXX throw ResourceLoadExc( resourcePath ); on error
+        return DataSourceAssetRef();
+    }
 }
 #endif
 
