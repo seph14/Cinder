@@ -110,14 +110,14 @@ void DragTweenApp::mouseUp( MouseEvent event )
 
 void DragTweenApp::draw()
 {
-#if defined( CINDER_GLES2 )
-    mContext->bind();
-#endif
-
 	// clear out the window with black
 	gl::clear( Color( 0.8f, 0.8f, 0.8f ) );
 	gl::enableAlphaBlending();
 	
+#if defined( CINDER_GLES2 )
+    mContext->bind();
+#endif
+
 	for( list<Circle>::const_iterator circleIt = mCircles.begin(); circleIt != mCircles.end(); ++circleIt )
 		circleIt->draw();
 
