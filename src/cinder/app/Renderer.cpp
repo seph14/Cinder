@@ -44,6 +44,7 @@
 #elif defined( CINDER_ANDROID )
 	#include "cinder/app/AppImplAndroidRendererGl.h"
     #include <android/native_window.h>
+    #include <android_native_app_glue.h>
 #endif
 
 #include "cinder/ip/Flip.h"
@@ -250,16 +251,16 @@ RendererGl::~RendererGl()
     mImpl = 0;
 }
 
-void RendererGl::setup( App *aApp, ANativeWindow* window, int32_t& width, int32_t& height )
+void RendererGl::setup( App *aApp, struct android_app *androidApp, int32_t& width, int32_t& height )
 {
     CI_LOGW("RendererGl::setup()");
 	mApp = aApp;
 
     if ( ! mImpl )
-        mImpl = new AppImplAndroidRendererGl(mApp);
+        mImpl = new AppImplAndroidRendererGl(mApp, androidApp);
 
-    CI_LOGW("Initializing with ANativeWindow %p", window);
-	mImpl->initialize( window, width, height );
+    CI_LOGW("Initializing with ANativeWindow %p", androidApp->window);
+	mImpl->initialize( width, height );
 }
 
 void RendererGl::teardown()

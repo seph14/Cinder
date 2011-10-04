@@ -4,11 +4,11 @@
 #include "cinder/gl/gl.h"
 #include "cinder/Camera.h"
 
-#include <android/native_window.h>
+#include <android_native_app_glue.h>
 
 //  XXX activity ending hack
-#include <android_native_app_glue.h>
-#include "cinder/app/AppAndroid.h"
+// #include <android/native_window.h>
+// #include "cinder/app/AppAndroid.h"
 
 namespace cinder { namespace app {
 
@@ -49,12 +49,12 @@ const char* EGLErrorString()
    }
 }
 
-AppImplAndroidRendererGl::AppImplAndroidRendererGl( App *aApp )
-	: mApp(aApp)
+AppImplAndroidRendererGl::AppImplAndroidRendererGl( App *aApp, struct android_app *androidApp )
+	: mApp(aApp), mAndroidApp(androidApp)
 {
 }
 
-void AppImplAndroidRendererGl::initialize( ANativeWindow* window, int32_t& width, int32_t& height )
+void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
 {
     CI_LOGW("XXX AppImplAndroidRendererGl::initialize");
 
@@ -78,9 +78,12 @@ void AppImplAndroidRendererGl::initialize( ANativeWindow* window, int32_t& width
     eglChooseConfig(mDisplay, attribs, &config, 1, &numConfigs);
 
     eglGetConfigAttrib(mDisplay, config, EGL_NATIVE_VISUAL_ID, &format);
-    ANativeWindow_setBuffersGeometry(window, 0, 0, format);
+    ANativeWindow_setBuffersGeometry(mAndroidApp->window, 0, 0, format);
 
-    mSurface = eglCreateWindowSurface(mDisplay, config, window, NULL);
+    mSurface = eglCreateWindowSurface(mDisplay, config, mAndroidApp->window, NULL);
+    if (mSurface == EGL_NO_SURFACE) {
+        CI_LOGW("Error in eglCreateWindowSurface, %s", EGLErrorString());
+    }
 
 #if defined( CINDER_GLES2 )
     EGLint eglAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
@@ -125,9 +128,9 @@ void AppImplAndroidRendererGl::swapBuffers()
     if (EGL_FALSE == eglSwapBuffers(mDisplay, mSurface)) {
         CI_LOGW("XXX ERROR eglSwapBuffers returned EGL_FALSE : %s", EGLErrorString());
         //  XXX NASTY HACK
-        CI_LOGW("ABORTING...");
-        struct android_app* app = static_cast<AppAndroid*>(mApp)->mAndroidApp;
-        ANativeActivity_finish(app->activity);
+        // CI_LOGW("ABORTING...");
+        // struct android_app* app = static_cast<AppAndroid*>(mApp)->mAndroidApp;
+        // ANativeActivity_finish(app->activity);
     }
 }
 
@@ -168,7 +171,7 @@ void AppImplAndroidRendererGl::teardown()
 
 bool AppImplAndroidRendererGl::isValidDisplay()
 {
-    return (mDisplay != EGL_NO_DISPLAY);
+    return (mDisplay != EGL_NO_DISPLAY && mAndroidApp->window != NULL);
 }
 
 } }

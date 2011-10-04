@@ -4,6 +4,7 @@
 
 extern "C" {
     struct ANativeWindow;
+    struct android_app;
 }
 
 namespace cinder { namespace app {
@@ -14,9 +15,9 @@ class RendererGl;
 class AppImplAndroidRendererGl 
 {
  public:
-	AppImplAndroidRendererGl( App *aApp );
+	AppImplAndroidRendererGl( App *aApp, struct android_app *androidApp );
 
-    void initialize( ANativeWindow* window, int32_t& width, int32_t& height );
+    void initialize( int32_t& width, int32_t& height );
     void makeCurrentContext();
     void swapBuffers();
     void defaultResize();
@@ -26,6 +27,7 @@ class AppImplAndroidRendererGl
 
  protected:
 	App         *mApp;
+    android_app *mAndroidApp;
 
     EGLSurface mSurface;
     EGLContext mContext;

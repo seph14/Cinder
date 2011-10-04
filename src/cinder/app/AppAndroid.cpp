@@ -154,7 +154,7 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             CI_LOGW("XXX renew context on keypress");
             // glUseProgram(0);
             engine->cinderRenderer->teardown();
-            engine->cinderRenderer->setup(engine->cinderApp, engine->androidApp->window, 
+            engine->cinderRenderer->setup(engine->cinderApp, engine->androidApp, 
                     engine->cinderApp->mWidth, engine->cinderApp->mHeight);
             engine->cinderApp->privateResume__(true);
         }
@@ -251,8 +251,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             CI_LOGW("XXX APP_CMD_INIT_WINDOW");
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
-                engine->cinderRenderer->setup(cinderApp, engine->androidApp->window, 
-                        cinderApp->mWidth, cinderApp->mHeight);
+                engine->cinderRenderer->setup(cinderApp, engine->androidApp, cinderApp->mWidth, cinderApp->mHeight);
                 cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowWidth(), cinderApp->getWindowHeight()));
                 cinderApp->privatePrepareSettings__();
                 cinderApp->privateSetup__();
@@ -276,8 +275,8 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
         case APP_CMD_TERM_WINDOW:
             CI_LOGW("XXX APP_CMD_TERM_WINDOW");
             // The window is being hidden or closed, clean it up.
-            engine->cinderRenderer->teardown();
             engine->animating = 0;
+            engine->cinderRenderer->teardown();
             break;
 
         case APP_CMD_GAINED_FOCUS:
@@ -315,6 +314,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
         case APP_CMD_PAUSE:
             CI_LOGW("XXX APP_CMD_PAUSE");
             // engine->paused = true;
+            engine->animating = 0;
             cinderApp->privatePause__();
             break;
         case APP_CMD_STOP:

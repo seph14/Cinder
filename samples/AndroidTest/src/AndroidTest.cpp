@@ -10,6 +10,10 @@
 
 #include "cinder/Font.h"
 
+#if defined( CINDER_GLES2 )
+#include "cinder/gl/gles2.h"
+#endif
+
 using namespace ci;
 using namespace ci::app;
 
@@ -32,6 +36,11 @@ public:
 	// gl::TextureFontRef mTexFont3;
 
 	// gl::Texture        mFontTexture;
+    gl::Texture mLogoTexture;
+
+#if defined( CINDER_GLES2 )
+    gl::GlesContextRef mContext;
+#endif
 };
 
 void AndroidTest::setup()
@@ -68,6 +77,12 @@ void AndroidTest::setup()
 
     // mFontTexture = mTexFont2->getTextures().front();
     // gl::enableAlphaBlending(format.getPremultiply());
+
+    mLogoTexture = gl::Texture(loadImage(loadResource("cinder_logo.png")));
+
+#if defined( CINDER_GLES2 )
+    mContext = gl::setGlesContext();
+#endif
 }
 
 // void AndroidTest::resume(bool renewContext)
@@ -82,9 +97,7 @@ void AndroidTest::draw()
     float r = math<float>::abs(math<float>::sin(getElapsedSeconds() * 0.30f));
     float g = math<float>::abs(math<float>::cos(getElapsedSeconds() * 0.17f));
     float b = math<float>::abs(math<float>::cos(getElapsedSeconds() * 0.67f));
-#if !defined( CINDER_GLES2 )
 	gl::setMatricesWindow( getWindowSize() );
-#endif
 	gl::clear( Color(r,g,b) );
 
 //    int rightEdge = getWindowWidth();
@@ -97,9 +110,17 @@ void AndroidTest::draw()
 //    mTexFont3->drawString( "Font packing demonstration", Vec2f(rightEdge - demoWidth,
 //                getWindowHeight() - mTexFont3->getDescent()) );
 //
-//	if( mFontTexture ) {
-//		gl::draw( mFontTexture, Vec2f( 0, 0 ) );
-//    }
+#if defined( CINDER_GLES2 )
+    mContext->bind();
+#endif
+	// if( mFontTexture ) {
+	// 	gl::draw( mFontTexture, Vec2f( 0, 0 ) );
+    // }
+    if ( mLogoTexture )
+        gl::draw( mLogoTexture, Vec2f(0, 0) );
+#if defined( CINDER_GLES2 )
+    mContext->unbind();
+#endif
 }
 
 CINDER_APP_NATIVE( AndroidTest, RendererGl )
