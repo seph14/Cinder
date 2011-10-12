@@ -22,6 +22,14 @@ struct saved_state {
     int32_t y;
 };
 
+enum ActivityState {
+    ACTIVITY_START = 0,
+    ACTIVITY_RESUME,
+    ACTIVITY_PAUSE,
+    ACTIVITY_STOP,
+    ACTIVITY_DESTROY
+};
+
 /**
  * Shared state for our app.
  */
@@ -56,7 +64,9 @@ struct engine {
     //  accelerometer
     bool  accelEnabled;
     float accelUpdateFrequency;
+    ActivityState activityState;
 
+    int orientation;
     // bool  initialized;
     // bool  paused;
     // bool  resumed;
@@ -231,6 +241,16 @@ inline void engine_disable_accelerometer(struct engine* engine)
     }
 }
 
+void log_engine_state(struct engine* engine) {
+    static char* activityStates[] = {
+        "Start",
+        "Resume",
+        "Pause",
+        "Stop",
+        "Destroy"
+    };
+    CI_LOGW("engine activity state: %s", activityStates[engine->activityState]);
+}
 /**
  * Process the next main command.
  */
@@ -241,6 +261,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
             CI_LOGW("XXX APP_CMD_SAVE_STATE");
+            log_engine_state(engine);
             // The system has asked us to save our current state.  Do so.
             engine->androidApp->savedState = malloc(sizeof(struct saved_state));
             *((struct saved_state*)engine->androidApp->savedState) = engine->savedState;
@@ -249,8 +270,10 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
         case APP_CMD_INIT_WINDOW:
             CI_LOGW("XXX APP_CMD_INIT_WINDOW");
+            log_engine_state(engine);
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
+                engine->orientation = AConfiguration_getOrientation(engine->androidApp->config);
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, cinderApp->mWidth, cinderApp->mHeight);
                 cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowWidth(), cinderApp->getWindowHeight()));
                 cinderApp->privatePrepareSettings__();
@@ -274,6 +297,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
         case APP_CMD_TERM_WINDOW:
             CI_LOGW("XXX APP_CMD_TERM_WINDOW");
+            log_engine_state(engine);
             // The window is being hidden or closed, clean it up.
             engine->animating = 0;
             engine->cinderRenderer->teardown();
@@ -281,6 +305,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
         case APP_CMD_GAINED_FOCUS:
             CI_LOGW("XXX APP_CMD_GAINED_FOCUS");
+            log_engine_state(engine);
 
             // Start monitoring the accelerometer.
             if (engine->accelerometerSensor != NULL && engine->accelEnabled) {
@@ -297,35 +322,66 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             // engine->renewContext = false;
 
             break;
+
         case APP_CMD_LOST_FOCUS:
             CI_LOGW("XXX APP_CMD_LOST_FOCUS");
+            log_engine_state(engine);
             //  Disable accelerometer (saves power)
             engine_disable_accelerometer(engine);
             engine->animating = 0;
             engine_draw_frame(engine);
             break;
+
         case APP_CMD_RESUME:
             CI_LOGW("XXX APP_CMD_RESUME");
+            // engine->activityState = ACTIVITY_RESUME;
+            log_engine_state(engine);
             // engine->resumed = true;
             break;
+        
         case APP_CMD_START:
             CI_LOGW("XXX APP_CMD_START");
+            engine->activityState = ACTIVITY_START;
+            log_engine_state(engine);
             break;
+
         case APP_CMD_PAUSE:
             CI_LOGW("XXX APP_CMD_PAUSE");
             // engine->paused = true;
+            engine->activityState = ACTIVITY_PAUSE;
             engine->animating = 0;
             cinderApp->privatePause__();
+            log_engine_state(engine);
             break;
+
         case APP_CMD_STOP:
             CI_LOGW("XXX APP_CMD_STOP");
+            engine->activityState = ACTIVITY_STOP;
+            log_engine_state(engine);
             break;
+
         case APP_CMD_DESTROY:
             //  app has been destroyed, will crash if we attempt to do anything else
             CI_LOGW("XXX APP_CMD_DESTROY");
-            // engine->initialized = false;
-            // engine->paused = engine->resumed = false;
+            engine->activityState = ACTIVITY_DESTROY;
+            log_engine_state(engine);
             break;
+
+        case APP_CMD_CONFIG_CHANGED:
+            int orientation = AConfiguration_getOrientation(engine->androidApp->config);
+            int screenSize = AConfiguration_getScreenSize(engine->androidApp->config);
+            int screenLong = AConfiguration_getScreenLong(engine->androidApp->config);
+
+            //  XXX notify resize AND orientation change
+            if (orientation != engine->orientation) {
+                CI_LOGW("Resizing to (%d, %d)", cinderApp->getWindowHeight(), cinderApp->getWindowWidth());
+                cinderApp->setWindowSize(cinderApp->getWindowHeight(), cinderApp->getWindowWidth());
+                cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowHeight(), cinderApp->getWindowWidth()));
+                engine->orientation = orientation;
+            }
+            CI_LOGW("XXX APP_CMD_CONFIG_CHANGED orientation %d (size %d, long %d)", orientation, screenSize, screenLong);
+            break;
+
     }
 }
 
@@ -368,6 +424,7 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
 
     if (androidApp->savedState != NULL) {
         // We are starting with a previous saved state; restore from it.
+        CI_LOGW("XXX android_run RESTORING SAVED STATE");
         engine.savedState = *(struct saved_state*)androidApp->savedState;
     }
 
@@ -470,6 +527,22 @@ int	AppAndroid::getWindowWidth() const
 int	AppAndroid::getWindowHeight() const
 {
     return mHeight;
+}
+
+void AppAndroid::setWindowWidth( int windowWidth )
+{
+    mWidth = windowWidth;
+}
+
+void AppAndroid::setWindowHeight( int windowHeight )
+{
+    mHeight = windowHeight;
+}
+
+void AppAndroid::setWindowSize( int windowWidth, int windowHeight )
+{
+    setWindowWidth(windowWidth);
+    setWindowHeight(windowHeight);
 }
 
 //! Enables the accelerometer

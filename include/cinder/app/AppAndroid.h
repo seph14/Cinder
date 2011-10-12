@@ -84,12 +84,10 @@ class AppAndroid : public App {
 	virtual int		getWindowWidth() const;
 	//! Returns the height of the App's window measured in pixels, or the screen when in full-screen mode.	
 	virtual int		getWindowHeight() const;
-	//! Ignored on the iPhone.
-	void			setWindowWidth( int windowWidth ) {}
-	//! Ignored on the iPhone.
-	void			setWindowHeight( int windowHeight ) {}
-	//! Ignored on the iPhone.
-	void			setWindowSize( int windowWidth, int windowHeight ) {}
+
+	void			setWindowWidth( int windowWidth );
+	void			setWindowHeight( int windowHeight );
+	void			setWindowSize( int windowWidth, int windowHeight );
 
 	//! Enables the device's accelerometer and modifies its filtering. \a updateFrequency represents the frequency with which accelerated() is called, measured in Hz. \a filterFactor represents the amount to weight the current value relative to the previous.
 	void enableAccelerometer( float updateFrequency = 30.0f, float filterFactor = 0.1f );
