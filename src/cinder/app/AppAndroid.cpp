@@ -273,8 +273,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, cinderApp->mWidth, cinderApp->mHeight);
                 cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowWidth(), cinderApp->getWindowHeight()));
                 cinderApp->privatePrepareSettings__();
-
-                engine_draw_frame(engine);
                 engine->animating = 0;
             }
             break;
@@ -307,6 +305,8 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 }
                 engine->setupCompleted = true;
                 engine->renewContext   = false;
+
+                engine_draw_frame(engine);
             }
 
             engine->animating = 1;
