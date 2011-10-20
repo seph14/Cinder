@@ -51,9 +51,6 @@ struct engine {
 
     int animating;
 
-    // int32_t width;
-    // int32_t height;
-
     struct saved_state savedState;
 
     ci::app::AppAndroid* cinderApp;
@@ -66,11 +63,10 @@ struct engine {
     float accelUpdateFrequency;
     ActivityState activityState;
 
-    int orientation;
-    // bool  initialized;
-    // bool  paused;
-    // bool  resumed;
-    // bool  renewContext;
+    int  orientation;
+    bool renewContext;
+    bool setupCompleted;
+    bool resumed;
 };
 
 static void engine_draw_frame(struct engine* engine) {
@@ -277,18 +273,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, cinderApp->mWidth, cinderApp->mHeight);
                 cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowWidth(), cinderApp->getWindowHeight()));
                 cinderApp->privatePrepareSettings__();
-                cinderApp->privateSetup__();
-
-                // if (!engine->initialized) {
-                //     //  First time setup
-                //     cinderApp->privatePrepareSettings__();
-                //     cinderApp->privateSetup__();
-                //     engine->initialized = true;
-                // }
-                // else if (engine->paused) {
-                //     //  Resumed and recreated context
-                //     engine->renewContext = true;
-                // }
 
                 engine_draw_frame(engine);
                 engine->animating = 0;
@@ -312,14 +296,20 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 engine_enable_accelerometer(engine);
             }
 
-            // if (engine->resumed) {
-            //     cinderApp->privateResume__(engine->renewContext);
-            // }
+            if (!engine->setupCompleted) {
+                if (engine->resumed) {
+                    CI_LOGW("XXXXXX RESUMING privateResume__ renew context %s", engine->renewContext ? "true" : "false");
+                    cinderApp->privateResume__(engine->renewContext);
+                }
+                else {
+                    CI_LOGW("XXXXXX SETUP privateSetup__");
+                    cinderApp->privateSetup__();
+                }
+                engine->setupCompleted = true;
+                engine->renewContext   = false;
+            }
 
             engine->animating = 1;
-            // engine->paused       = false;
-            // engine->resumed      = false;
-            // engine->renewContext = false;
 
             break;
 
@@ -334,7 +324,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
         case APP_CMD_RESUME:
             CI_LOGW("XXX APP_CMD_RESUME");
-            // engine->activityState = ACTIVITY_RESUME;
+            engine->activityState = ACTIVITY_RESUME;
             log_engine_state(engine);
             // engine->resumed = true;
             break;
@@ -372,7 +362,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             int screenSize = AConfiguration_getScreenSize(engine->androidApp->config);
             int screenLong = AConfiguration_getScreenLong(engine->androidApp->config);
 
-            //  XXX notify resize AND orientation change
+            //  XXX notify resize
             if (orientation != engine->orientation) {
                 CI_LOGW("Resizing to (%d, %d)", cinderApp->getWindowHeight(), cinderApp->getWindowWidth());
                 cinderApp->setWindowSize(cinderApp->getWindowHeight(), cinderApp->getWindowWidth());
@@ -401,10 +391,10 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
     engine.accelEnabled   = false;
 
     //  Activity state tracking
-    // engine.initialized  = false;
-    // engine.paused       = false;
-    // engine.resumed      = false;
-    // engine.renewContext = false;
+    // engine.savedState     = NULL;
+    engine.setupCompleted = false;
+    engine.resumed        = false;
+    engine.renewContext   = true;
 
     //  XXX Used by accelerometer, move to cinder app?
     cinderApp->mEngine = &engine;
@@ -426,6 +416,9 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
         // We are starting with a previous saved state; restore from it.
         CI_LOGW("XXX android_run RESTORING SAVED STATE");
         engine.savedState = *(struct saved_state*)androidApp->savedState;
+        engine.resumed = true;
+    }
+    else {
     }
 
     //  Event loop
