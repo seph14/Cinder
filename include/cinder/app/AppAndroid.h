@@ -125,8 +125,9 @@ class AppAndroid : public App {
 	//! Ceases execution of the application. Not implemented yet on iPhone
 	virtual void	quit();
 
-	//! Returns a pointer to the current global App
-	static AppAndroid*	get() { return sInstance; }
+	//! Returns a pointer to the current global AppAndroid
+	static AppAndroid*	get() { return static_cast<AppAndroid*>(App::get()); }
+
 	//! Returns a pointer to the current global AppBasic
 	virtual const Settings&	getSettings() const { return mSettings; }
 
@@ -172,7 +173,7 @@ class AppAndroid : public App {
 	
   private:
 	
-	static AppAndroid		*sInstance;
+	// static AppAndroid		*sInstance;
 	Settings				 mSettings;
 	
 	std::vector<TouchEvent::Touch>	mActiveTouches;

@@ -480,7 +480,7 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
 
 namespace cinder { namespace app {
 
-AppAndroid*	AppAndroid::sInstance = 0;
+// AppAndroid*	AppAndroid::sInstance = 0;
 
 AppAndroid::AppAndroid()
 	: App()
@@ -684,7 +684,9 @@ void AppAndroid::privateAccelerated__( const Vec3f &direction )
 DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
 {
     AppAndroid* cinderApp   = AppAndroid::get();
+    CI_LOGW("cinderApp %p", cinderApp);
     if (cinderApp) {
+        CI_LOGW("loading via manager");
         AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
         return DataSourceAsset::createRef(mgr, resourcePath);
     }
