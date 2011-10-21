@@ -276,8 +276,8 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 engine->animating = 0;
 
                 //  New GL context, trigger app initialization
+                engine->resumed = engine->setupCompleted;
                 engine->setupCompleted = false;
-                engine->resumed = (engine->activityState == ACTIVITY_RESUME);
                 engine->renewContext = true;
             }
             break;

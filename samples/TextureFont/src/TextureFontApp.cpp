@@ -56,9 +56,11 @@ void TextureFontApp::setup()
 void TextureFontApp::resume(bool renewContext)
 {
     if (renewContext) {
-        mContext     = gl::GlesContextRef();
+        mContext = gl::GlesContextRef();
+        mContext = gl::setGlesContext();
         mTextureFont = gl::TextureFontRef();
-        setup();
+        mTextureFont = gl::TextureFont::create( mFont );
+        // setup();
     }
 }
 #endif
