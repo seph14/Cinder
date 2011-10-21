@@ -1142,6 +1142,8 @@ static shared_ptr<GlesContext> sContext;
 
 GlesContextRef setGlesContext(GlesContextRef context)
 {
+    releaseGlesContext();
+
     if (context) {
         sContext = context;
     }
@@ -1160,9 +1162,7 @@ GlesContextRef getGlesContext()
 
 void releaseGlesContext()
 {
-    if (sContext) {
-        sContext = GlesContextRef();
-    }
+    sContext = GlesContextRef();
 }
 
 void drawLine( const Vec2f &start, const Vec2f &end )

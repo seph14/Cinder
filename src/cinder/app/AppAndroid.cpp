@@ -506,10 +506,21 @@ void AppAndroid::resume( bool renewContext )
     }
 }
 
-void AppAndroid::setAndroidApp( struct android_app* androidApp)
+void AppAndroid::setAndroidImpl( struct android_app* androidApp, IAppFactory* factory )
 {
     mAndroidApp = androidApp;
+    mFactory    = factory;
 }
+
+// void AppAndroid::setAndroidApp( struct android_app* androidApp)
+// {
+//     mAndroidApp = androidApp;
+// }
+// 
+// void AppAndroid::setAndroidApp( IAppFactory* factory )
+// {
+//     mFactory = factory;
+// }
 
 void AppAndroid::launch( const char *title, int argc, char * const argv[] )
 {
