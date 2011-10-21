@@ -48,6 +48,7 @@ void AndroidTest::resume(bool renewContext)
     if (renewContext) {
         mLogoTexture.reset();
         mContext.reset();
+
         setup();
     }
 }
@@ -99,13 +100,6 @@ void AndroidTest::setup()
     mContext = gl::setGlesContext();
 #endif
 }
-
-// void AndroidTest::resume(bool renewContext)
-// {
-// 	if (renewContext) {
-// 		setup();
-// 	}
-// }
 
 void AndroidTest::draw()
 {
