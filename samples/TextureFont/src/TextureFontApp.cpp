@@ -32,6 +32,7 @@ class TextureFontApp : public AppNative {
 void TextureFontApp::setup()
 {
 #if defined( CINDER_GLES2 )
+    gl::releaseGlesContext();
     mContext = gl::setGlesContext();
 #endif
 
@@ -69,6 +70,8 @@ void TextureFontApp::mouseDown( MouseEvent event )
 	mFont = Font( Font::getNames()[Rand::randInt() % Font::getNames().size()], mFont.getSize() );
 #endif
 	console() << mFont.getName() << std::endl;
+    gl::releaseGlesContext();
+    mContext = gl::setGlesContext();
 	mTextureFont = gl::TextureFont::create( mFont );
 }
 
