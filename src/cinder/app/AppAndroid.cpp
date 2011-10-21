@@ -342,7 +342,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
         case APP_CMD_PAUSE:
             CI_LOGW("XXX APP_CMD_PAUSE");
-            // engine->paused = true;
             engine->activityState = ACTIVITY_PAUSE;
             engine->animating = 0;
             cinderApp->privatePause__();
@@ -506,10 +505,9 @@ void AppAndroid::resume( bool renewContext )
     }
 }
 
-void AppAndroid::setAndroidImpl( struct android_app* androidApp, IAppFactory* factory )
+void AppAndroid::setAndroidImpl( struct android_app* androidApp )
 {
     mAndroidApp = androidApp;
-    mFactory    = factory;
 }
 
 // void AppAndroid::setAndroidApp( struct android_app* androidApp)

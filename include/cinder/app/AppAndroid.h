@@ -13,17 +13,6 @@ namespace cinder { namespace app {
 
 class AppAndroid;
 
-struct IAppFactory
-{
-    virtual AppAndroid* createApp() = 0;
-};
-
-template<typename T>
-struct AppFactory : public IAppFactory
-{
-    AppAndroid* createApp() { return new T; }
-};
-
 class AppAndroid : public App {
   public:
 	class Settings : public App::Settings {
@@ -131,14 +120,14 @@ class AppAndroid : public App {
 	//! Returns a pointer to the current global AppBasic
 	virtual const Settings&	getSettings() const { return mSettings; }
 
-    void setAndroidImpl( struct android_app* androidApp, IAppFactory* factory );
+    void setAndroidImpl( struct android_app* androidApp );
 	// void setAndroidApp( struct android_app* androidApp );
     // void setAppFactory( IAppFactory* factory );
 
 	//! \cond
 	// These are called by application instantation macros and are only used in the launch process
 	static void		prepareLaunch() { App::prepareLaunch(); }
-	static void		executeLaunch( IAppFactory* factory, class Renderer *renderer, const char *title, struct android_app* androidApp ) { AppAndroid* app = factory->createApp(); app->setAndroidImpl(androidApp, factory); App::executeLaunch(app, renderer, title, 0, NULL ); }
+	static void		executeLaunch( AppAndroid* app, class Renderer *renderer, const char *title, struct android_app* androidApp ) { app->setAndroidImpl(androidApp); App::executeLaunch(app, renderer, title, 0, NULL ); }
 	static void		cleanupLaunch() { App::cleanupLaunch(); }
 	
 	virtual void	launch( const char *title, int argc, char * const argv[] );
@@ -169,7 +158,6 @@ class AppAndroid : public App {
     int32_t mHeight;
 
     struct engine* mEngine;
-    IAppFactory*   mFactory;
 	
   private:
 	
@@ -195,10 +183,10 @@ class AppAndroid : public App {
 #define CINDER_APP_ANDROID( APP, RENDERER )									\
 extern "C" {																\
   void android_main( struct android_app* state ) {							\
-    cinder::app::AppFactory<APP> factory;                                   \
+    cinder::app::AppAndroid *app = new APP;                                 \
   	cinder::app::AppAndroid::prepareLaunch();								\
   	cinder::app::Renderer *ren = new RENDERER;								\
-  	cinder::app::AppAndroid::executeLaunch( &factory, ren, #APP, state );	\
+  	cinder::app::AppAndroid::executeLaunch( app, ren, #APP, state );	    \
   	cinder::app::AppAndroid::cleanupLaunch();								\
   }																			\
 }
