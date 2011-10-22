@@ -12,6 +12,7 @@
 using std::vector;
 using std::map;
 using ci::app::TouchEvent;
+using ci::app::Orientation_t;
 
 /**
  * Our saved state data.
@@ -63,7 +64,7 @@ struct engine {
     float accelUpdateFrequency;
     ActivityState activityState;
 
-    int  orientation;
+    Orientation_t orientation;
     bool renewContext;
     bool setupCompleted;
     bool resumed;
@@ -238,7 +239,7 @@ inline void engine_disable_accelerometer(struct engine* engine)
 }
 
 void log_engine_state(struct engine* engine) {
-    static char* activityStates[] = {
+    static const char* activityStates[] = {
         "Start",
         "Resume",
         "Pause",
@@ -269,7 +270,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             log_engine_state(engine);
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
-                engine->orientation = AConfiguration_getOrientation(engine->androidApp->config);
+                engine->orientation = cinderApp->orientationFromConfig();
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, cinderApp->mWidth, cinderApp->mHeight);
                 cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowWidth(), cinderApp->getWindowHeight()));
                 cinderApp->privatePrepareSettings__();
@@ -331,7 +332,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             CI_LOGW("XXX APP_CMD_RESUME");
             engine->activityState = ACTIVITY_RESUME;
             log_engine_state(engine);
-            // engine->resumed = true;
             break;
         
         case APP_CMD_START:
@@ -343,8 +343,9 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
         case APP_CMD_PAUSE:
             CI_LOGW("XXX APP_CMD_PAUSE");
             engine->activityState = ACTIVITY_PAUSE;
-            engine->animating = 0;
             cinderApp->privatePause__();
+            engine->animating = 0;
+            engine_draw_frame(engine);
             log_engine_state(engine);
             break;
 
@@ -362,18 +363,22 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_CONFIG_CHANGED:
-            int orientation = AConfiguration_getOrientation(engine->androidApp->config);
-            int screenSize = AConfiguration_getScreenSize(engine->androidApp->config);
-            int screenLong = AConfiguration_getScreenLong(engine->androidApp->config);
+            Orientation_t newOrient = cinderApp->orientationFromConfig();
+            int32_t screenLong = AConfiguration_getScreenLong(engine->androidApp->config);
 
-            //  XXX notify resize
-            if (orientation != engine->orientation) {
-                CI_LOGW("Resizing to (%d, %d)", cinderApp->getWindowHeight(), cinderApp->getWindowWidth());
-                cinderApp->setWindowSize(cinderApp->getWindowHeight(), cinderApp->getWindowWidth());
-                cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowHeight(), cinderApp->getWindowWidth()));
-                engine->orientation = orientation;
+            //  Trigger resize event
+            //  XXX incorrect results when switching from landscape->portrait while the
+            //      application is paused
+            if (newOrient != engine->orientation) {
+                ANativeWindow* window = engine->androidApp->window;
+                int32_t width  = cinderApp->getWindowWidth();
+                int32_t height = cinderApp->getWindowHeight();
+                std::swap(width, height);
+                engine->orientation = newOrient;
+                CI_LOGW("Config change: resizing to (%d, %d) long %d", width, height, screenLong);
+                cinderApp->setWindowSize(width, height);
+                cinderApp->privateResize__(ci::Vec2i(width, height));
             }
-            CI_LOGW("XXX APP_CMD_CONFIG_CHANGED orientation %d (size %d, long %d)", orientation, screenSize, screenLong);
             break;
 
     }
@@ -458,8 +463,6 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
 
             // Check if we are exiting.
             if (androidApp->destroyRequested != 0) {
-                // XXX frequently crashes in teardown when orientation is locked 
-                // to landscape
                 engine.animating = 0;
                 engine.cinderRenderer->teardown();
                 return;
@@ -478,8 +481,6 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
 }
 
 namespace cinder { namespace app {
-
-// AppAndroid*	AppAndroid::sInstance = 0;
 
 AppAndroid::AppAndroid()
 	: App()
@@ -509,16 +510,6 @@ void AppAndroid::setAndroidImpl( struct android_app* androidApp )
 {
     mAndroidApp = androidApp;
 }
-
-// void AppAndroid::setAndroidApp( struct android_app* androidApp)
-// {
-//     mAndroidApp = androidApp;
-// }
-// 
-// void AppAndroid::setAndroidApp( IAppFactory* factory )
-// {
-//     mFactory = factory;
-// }
 
 void AppAndroid::launch( const char *title, int argc, char * const argv[] )
 {
@@ -618,6 +609,11 @@ void AppAndroid::quit()
 	return;
 }
 
+Orientation_t AppAndroid::orientation()
+{
+    return mEngine->orientation;
+}
+
 void AppAndroid::privatePrepareSettings__()
 {
 	prepareSettings( &mSettings );
@@ -677,11 +673,34 @@ void AppAndroid::privateAccelerated__( const Vec3f &direction )
 	mLastRawAccel = direction;
 }
 
+Orientation_t AppAndroid::orientationFromConfig()
+{
+    Orientation_t ret = ORIENTATION_ANY;
+    int orient = AConfiguration_getOrientation(mAndroidApp->config);
+
+    switch (orient) {
+    case ACONFIGURATION_ORIENTATION_PORT:
+        ret = ORIENTATION_PORTRAIT;
+        break;
+    case ACONFIGURATION_ORIENTATION_LAND:
+        ret = ORIENTATION_LANDSCAPE;
+        break;
+    case ACONFIGURATION_ORIENTATION_SQUARE:
+        ret = ORIENTATION_SQUARE;
+        break;
+    default:
+        break;
+    }
+
+    return ret;
+}
+
+
 #if defined( CINDER_AASSET )
 //  static loadResource method, loads from assets/
 DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
 {
-    AppAndroid* cinderApp   = AppAndroid::get();
+    AppAndroid* cinderApp = AppAndroid::get();
     CI_LOGW("cinderApp %p", cinderApp);
     if (cinderApp) {
         CI_LOGW("loading via manager");
@@ -689,8 +708,7 @@ DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
         return DataSourceAsset::createRef(mgr, resourcePath);
     }
     else {
-        //  XXX throw ResourceLoadExc( resourcePath ); on error
-        return DataSourceAssetRef();
+        throw ResourceLoadExc( resourcePath );
     }
 }
 #endif

@@ -13,6 +13,14 @@ namespace cinder { namespace app {
 
 class AppAndroid;
 
+enum Orientation_t
+{
+    ORIENTATION_ANY = 0,
+    ORIENTATION_PORTRAIT,
+    ORIENTATION_LANDSCAPE,
+    ORIENTATION_SQUARE
+};
+
 class AppAndroid : public App {
   public:
 	class Settings : public App::Settings {
@@ -117,6 +125,9 @@ class AppAndroid : public App {
 	//! Returns a pointer to the current global AppAndroid
 	static AppAndroid*	get() { return static_cast<AppAndroid*>(App::get()); }
 
+    //! Return app orientation
+    Orientation_t orientation();
+
 	//! Returns a pointer to the current global AppBasic
 	virtual const Settings&	getSettings() const { return mSettings; }
 
@@ -159,6 +170,8 @@ class AppAndroid : public App {
 
     struct engine* mEngine;
 	
+    Orientation_t orientationFromConfig();
+
   private:
 	
 	// static AppAndroid		*sInstance;
