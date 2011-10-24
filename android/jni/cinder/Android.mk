@@ -392,7 +392,7 @@ UTF8_CPP_SRC = ../../../src/utf8-cpp/source
 LOCAL_MODULE 	 := cinder
 
 # required for wchar_t support, used by boost::filesystem
-LOCAL_CFLAGS     := -D_GLIBCPP_USE_WCHAR_T
+LOCAL_CFLAGS     := -D_GLIBCPP_USE_WCHAR_T -D__LITTLE_ENDIAN__
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
 					$(LOCAL_PATH)/../../../boost \
