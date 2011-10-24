@@ -426,6 +426,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/Buffer.cpp \
 					$(CINDER_SRC)/Camera.cpp \
 					$(CINDER_SRC)/Channel.cpp \
+					$(CINDER_SRC)/CinderMath.cpp \
 					$(CINDER_SRC)/Color.cpp \
 					$(CINDER_SRC)/DataSource.cpp \
 					$(CINDER_SRC)/DataTarget.cpp \
