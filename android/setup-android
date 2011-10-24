@@ -43,8 +43,10 @@ function unpack_boost {
         mv $PREBUILT_BOOST setup/boost
     fi
     echo "Setup prebuilt Boost libraries..."
+    rm -rf prebuilt/cinder/arm
     mkdir -p prebuilt/cinder/arm
     tar jxf setup/boost/$PREBUILT_BOOST -C prebuilt/cinder/arm
+    chmod -R a+rwX prebuilt/cinder/arm
 
     local SRC_BOOST=boost-cinder-android-1_47_0.tar.bz2
     if [ ! -e ../boost -a ! -e setup/boost/$SRC_BOOST ]; then
@@ -57,6 +59,7 @@ function unpack_boost {
     if [ ! -e ../boost ]; then
         echo "Setup Boost sources..."
         tar jxf setup/boost/$SRC_BOOST -C ..
+        chmod -R a+rwX ../boost
     fi
 }
 
