@@ -8,7 +8,7 @@ LOCAL_CFLAGS := -DCINDER_GLES2
 LOCAL_SRC_FILES := ../../src/EaseGalleryApp.cpp
 
 LOCAL_LDLIBS    := -landroid
-LOCAL_STATIC_LIBRARIES := cinder freeimage ft2 android_native_app_glue 
+LOCAL_STATIC_LIBRARIES := cinder boost_system freeimage ft2 android_native_app_glue 
 
 include $(BUILD_SHARED_LIBRARY)
 
