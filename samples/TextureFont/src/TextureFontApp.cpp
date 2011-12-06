@@ -57,11 +57,15 @@ void TextureFontApp::resume(bool renewContext)
 {
     if (renewContext) {
         //  Release GL resources
+#if defined( CINDER_GLES2 )
         mContext.reset();
+#endif
         mTextureFont.reset();
 
         //  Recreate GL resources
+#if defined( CINDER_GLES2 )
         mContext = gl::setGlesContext();
+#endif
         mTextureFont = gl::TextureFont::create( mFont );
     }
 }
