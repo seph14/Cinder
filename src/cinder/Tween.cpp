@@ -23,6 +23,7 @@
 */
 
 #include "cinder/Tween.h"
+#include "cinder/Timeline.h"
 
 using namespace std;
 
@@ -33,12 +34,12 @@ TweenBase::TweenBase( void *target, bool copyStartValue, float startTime, float 
 {
 }
 
-TweenScope::~TweenScope()
+/*TweenScope::~TweenScope()
 {
 	for( list<weak_ptr<TimelineItem> >::iterator itemIt = mItems.begin(); itemIt != mItems.end(); ++itemIt ) {
 		TimelineItemRef item = itemIt->lock();
 		if( item )
-			item->cancel();
+			item->removeSelf();
 	}
 }
 
@@ -51,6 +52,64 @@ TweenScope& TweenScope::operator+=( TimelineItemRef item )
 void TweenScope::add( TimelineItemRef item )
 {
 	mItems.push_back( item );
+}*/
+
+AnimBase::AnimBase( const AnimBase &rhs, void *voidPtr )
+	: mVoidPtr( voidPtr )
+{
+	mParentTimeline = rhs.mParentTimeline;
+	if( mParentTimeline ) {
+		mParentTimeline->cloneAndReplaceTarget( rhs.mVoidPtr, mVoidPtr );
+	}	
+}
+
+AnimBase::~AnimBase()
+{
+	if( mParentTimeline )
+		mParentTimeline->removeTarget( mVoidPtr );
+}
+
+void AnimBase::set( const AnimBase &rhs )
+{
+	setParentTimeline( rhs.mParentTimeline );
+	if( mParentTimeline ) {
+		mParentTimeline->cloneAndReplaceTarget( rhs.mVoidPtr, mVoidPtr );
+	}	
+}
+
+// Implements move semantics
+void AnimBase::setReplace( const AnimBase &rhs )
+{
+	setParentTimeline( rhs.mParentTimeline );
+	if( mParentTimeline ) {
+		mParentTimeline->replaceTarget( rhs.mVoidPtr, mVoidPtr );
+	}	
+}
+
+void AnimBase::stop()
+{
+	if( mParentTimeline )
+		mParentTimeline->removeTarget( mVoidPtr );
+	mParentTimeline.reset();
+}
+
+void AnimBase::setParentTimeline( TimelineRef parentTimeline )
+{
+	if( mParentTimeline && ( parentTimeline != mParentTimeline ) ) {
+		mParentTimeline->removeTarget( mVoidPtr );
+	}
+	mParentTimeline = parentTimeline;  		
+}
+
+// these are to provide a compiler firewall to use Timeline from the TweenOptions
+void TweenBase::Options::appendTo( TweenBase &tweenBase, void *endTarget, float offset )
+{
+	tweenBase.setStartTime( mTimeline->findEndTimeOf( endTarget ) + offset );	
+}
+
+void TweenBase::Options::timelineEnd( TweenBase &tweenBase, float offset )
+{
+	tweenBase.setStartTime( std::max( mTimeline->getDuration(), mTimeline->getCurrentTime() ) + offset );
 }
 
 } // namespace cinder

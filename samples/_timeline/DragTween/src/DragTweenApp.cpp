@@ -24,19 +24,18 @@ class Circle {
 	}
 
 	void startDrag() {
-		if( mDragTween ) // if we're heading somewhere, stop going there and start listening to the drag
-			mDragTween->cancel();
+		mPos.stop();
 	}
 	
 	void dragRelease() {
-		// tween back home
-		mDragTween = app::timeline().apply( &mPos, mHomePos, 1.0f, EaseOutBack( 3 ) );
+		// return to our home position in 1sec, easing using EaseOutBack
+		app::timeline().apply( &mPos, mHomePos, 1.0f, EaseOutBack( 3 ) );
 	}
 	
 	Color				mColor;
-	Vec2f				mPos, mHomePos;
-	float				mRadius;
-	TweenRef<Vec2f>		mDragTween;
+	Vec2f				mHomePos;
+	Anim<Vec2f>			mPos;
+	Anim<float>			mRadius;
 };
 
 class DragTweenApp : public AppNative {
@@ -49,24 +48,22 @@ class DragTweenApp : public AppNative {
 	void draw();
     void resume(bool renewContext);
 	
-	// never use a vector with tweens
-	list<Circle>			mCircles;
-	Circle					*mCurrentDragCircle;
-
 #if defined( CINDER_GLES2 )
-    gl::GlesContextRef mContext;
+	gl::GlesContextRef mContext;
 #endif
+	vector<Circle>			mCircles;
+	Circle					*mCurrentDragCircle;
 };
 
 void DragTweenApp::setup()
 {
 #if defined( CINDER_GLES2 )
-    mContext = gl::setGlesContext();
-    gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
+	mContext = gl::setGlesContext();
+	gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
 #endif
 
 #if defined( CINDER_ANDROID )
-    mCircles.clear();
+	mCircles.clear();
 #endif
 
 	// setup the initial animation
@@ -75,29 +72,29 @@ void DragTweenApp::setup()
 		float angle = c / (float)numCircles * 4 * M_PI;
 		Vec2f pos = getWindowCenter() + ( 50 + c / (float)numCircles * 200 ) * Vec2f( cos( angle ), sin( angle ) );
 		mCircles.push_back( Circle( Color( CM_HSV, c / (float)numCircles, 1, 1 ), 0, getWindowCenter(), pos ) );
-		timeline().append( &mCircles.back().mPos, pos, 0.5f, EaseOutAtan( 10 ) )->delay( -0.45f );
-		timeline().append( &mCircles.back().mRadius, 30.0f, 0.5f, EaseOutAtan( 10 ) )->delay( -0.5f );
+		timeline().apply( &mCircles.back().mPos, pos, 0.5f, EaseOutAtan( 10 ) ).timelineEnd( -0.45f );
+		timeline().apply( &mCircles.back().mRadius, 30.0f, 0.5f, EaseOutAtan( 10 ) ).timelineEnd( -0.5f );
 	}
-	
+
 	mCurrentDragCircle = 0;
 }
 
 void DragTweenApp::resume(bool renewContext)
 {
-    if (renewContext) {
+	if (renewContext) {
 #if defined( CINDER_GLES2 )
-        mContext = gl::GlesContextRef();
+		mContext = gl::GlesContextRef();
 #endif
-        setup();
-    }
+		setup();
+	}
 }
 
 void DragTweenApp::mouseDown( MouseEvent event )
 {
 	// see if the mouse is in any of the circles
-	list<Circle>::iterator circleIt = mCircles.end();
+	vector<Circle>::iterator circleIt = mCircles.end();
 	for( circleIt = mCircles.begin(); circleIt != mCircles.end(); ++circleIt )
-		if( circleIt->mPos.distance( event.getPos() ) <= circleIt->mRadius )
+		if( circleIt->mPos.value().distance( event.getPos() ) <= circleIt->mRadius )
 			break;
 
 	// if we hit one, tell it to startDrag()
@@ -126,20 +123,19 @@ void DragTweenApp::mouseUp( MouseEvent event )
 void DragTweenApp::draw()
 {
 	// clear out the window with black
-	gl::clear( Color( 0.8f, 0.8f, 0.8f ) );
+	gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
 	gl::enableAlphaBlending();
 	
 #if defined( CINDER_GLES2 )
     mContext->bind();
 #endif
 
-	for( list<Circle>::const_iterator circleIt = mCircles.begin(); circleIt != mCircles.end(); ++circleIt )
+	for( vector<Circle>::const_iterator circleIt = mCircles.begin(); circleIt != mCircles.end(); ++circleIt )
 		circleIt->draw();
 
 #if defined( CINDER_GLES2 )
-    mContext->unbind();
+	mContext->unbind();
 #endif
 }
-
 
 CINDER_APP_NATIVE( DragTweenApp, RendererGl )

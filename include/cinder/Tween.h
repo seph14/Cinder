@@ -24,9 +24,8 @@
 
 #pragma once
 
-#include "TimelineItem.h"
-
 #include "cinder/Cinder.h"
+#include "cinder/TimelineItem.h"
 #include "cinder/CinderMath.h"
 #include "cinder/Easing.h"
 #include "cinder/Function.h"
@@ -36,10 +35,15 @@
 
 namespace cinder {
 
+class Timeline;
+typedef std::shared_ptr<Timeline>		TimelineRef;
 
 template<typename T>
 class Tween;
 typedef std::function<float (float)> EaseFn;
+
+template<typename T>
+class Anim;
 
 template<typename T>
 T tweenLerp( const T &start, const T &end, float time )
@@ -47,11 +51,10 @@ T tweenLerp( const T &start, const T &end, float time )
 	return start * ( 1 - time ) + end * time;
 }
 
-//Our templated tween design
 class TweenBase : public TimelineItem {
   public:
 	typedef std::function<void ()>		StartFn;
-	typedef std::function<void ()>		CompletionFn;
+	typedef std::function<void ()>		FinishFn;
 	typedef std::function<void ()>		UpdateFn;
 
 	TweenBase( void *target, bool copyStartValue, float startTime, float duration, EaseFn easeFunction = easeNone );
@@ -63,13 +66,30 @@ class TweenBase : public TimelineItem {
 
 	void			setStartFn( StartFn startFunction ) { mStartFunction = startFunction; }
 	StartFn			getStartFn() const { return mStartFunction; }
+
+	void			setReverseStartFn( StartFn reverseStartFunction ) { mReverseStartFunction = reverseStartFunction; }
+	StartFn			getReverseStartFn() const { return mReverseStartFunction; }
 	
 	void			setUpdateFn( UpdateFn updateFunction ) { mUpdateFunction = updateFunction; }									
 	UpdateFn		getUpdateFn() const { return mUpdateFunction; }
 																																					
-	void			setCompletionFn( CompletionFn completionFunction ) { mCompletionFunction = completionFunction; }
-	CompletionFn	getCompletionFn() const { return mCompletionFunction; }
+	void			setFinishFn( FinishFn finishFn ) { mFinishFunction = finishFn; }
+	FinishFn		getFinishFn() const { return mFinishFunction; }
+
+	void			setReverseFinishFn( FinishFn reverseFinishFn ) { mReverseFinishFunction = reverseFinishFn; }
+	FinishFn		getReverseFinishFn() const { return mReverseFinishFunction; }
 	
+	class Options {
+	  protected:
+		Options( TimelineRef timeline )
+			: mTimeline( timeline )
+		{}
+
+		void	appendTo( TweenBase &tweenBase, void *target, float offset );
+		void	timelineEnd( TweenBase &tweenBase, float offset );
+	  
+		TimelineRef		mTimeline;
+	};
 	
   protected:
 	virtual void reset( bool unsetStarted )
@@ -77,16 +97,18 @@ class TweenBase : public TimelineItem {
 		TimelineItem::reset( unsetStarted );
 	}
 
-	virtual void complete()
+	virtual void complete( bool reverse )
 	{
-		if( mCompletionFunction )
-			mCompletionFunction();
+		if( reverse && mReverseFinishFunction )
+			mReverseFinishFunction();
+		else if( ( ! reverse ) && mFinishFunction )
+			mFinishFunction();
 	}
 
   
-	StartFn				mStartFunction;
-	UpdateFn			mUpdateFunction;	
-	CompletionFn		mCompletionFunction;
+	StartFn			mStartFunction, mReverseStartFunction;
+	UpdateFn		mUpdateFunction;	
+	FinishFn		mFinishFunction, mReverseFinishFunction;
   
 	EaseFn		mEaseFunction;
 	float		mDuration;
@@ -131,33 +153,57 @@ class Tween : public TweenBase {
 	T	getStartValue() const { return mStartValue; }
 	T	getEndValue() const { return mEndValue; }			
 	T*	getTarget() const { return reinterpret_cast<T*>( mTarget ); }
-
-	TweenRef<T>		startFn( StartFn startFunction ) { mStartFunction = startFunction; return getThisRef(); }
-	TweenRef<T>		updateFn( UpdateFn updateFunction ) { mUpdateFunction = updateFunction; return getThisRef(); }
-	TweenRef<T>		completionFn( CompletionFn completionFunction ) { mCompletionFunction = completionFunction; return getThisRef(); }	
 	
 	//! Returns whether the tween will copy its target's value upon starting
 	bool	isCopyStartValue() { return mCopyStartValue; }
 
-	// these override their equivalents in TimelineItem so that we can return a TweenRef<T> instead of TimelineItemRef
-	//! Pushes back the tween's start time by \a amt. Returns a reference to \a this
-	TweenRef<T> startTime( float newTime ) { setStartTime( newTime ); return getThisRef(); }
-	//! Pushes back the tween's start time by \a amt. Returns a reference to \a this
-	TweenRef<T> delay( float amt ) { setStartTime( mStartTime + amt ); return getThisRef(); }
-	//! Sets the tween's duration to \a newDuration. Returns a reference to \a this
-	TweenRef<T> duration( float newDuration ) { setDuration( newDuration ); return getThisRef(); }			
-	//! Sets whether the item will remove itself from the Timeline when it is complete
-	TweenRef<T> autoRemove( bool autoRmv = true ) { setAutoRemove( autoRmv ); return getThisRef(); }
-	//! Sets whether the item starts over when it is complete
-	TweenRef<T> loop( bool doLoop = true ) { setLoop( doLoop ); return getThisRef(); }
-	
+	void	setLerpFn( const LerpFn &lerpFn ) { mLerpFunction = lerpFn; }
+
 	//! Returns a TweenRef<T> to \a this
-	TweenRef<T> getThisRef(){ return TweenRef<T>( std::static_pointer_cast<Tween<T> >( shared_from_this() ) ); }
+	TweenRef<T>		getThisRef(){ return TweenRef<T>( std::static_pointer_cast<Tween<T> >( shared_from_this() ) ); }
+
+
+	class Options : public TweenBase::Options {
+	  public:
+		Options&	startFn( const TweenBase::StartFn &startFn ) { mTweenRef->setStartFn( startFn ); return *this; }
+		Options&	reverseStartFn( const TweenBase::StartFn &reverseStartFn ) { mTweenRef->setReverseStartFn( reverseStartFn ); return *this; }
+		Options&	updateFn( const TweenBase::UpdateFn &updateFn ) { mTweenRef->setUpdateFn( updateFn ); return *this; }
+		Options&	finishFn( const TweenBase::FinishFn &finishFn ) { mTweenRef->setFinishFn( finishFn ); return *this; }
+		Options&	reverseFinishFn( const TweenBase::FinishFn &reverseFinishFn ) { mTweenRef->setReverseFinishFn( reverseFinishFn ); return *this; }
+		Options&	easeFn( const EaseFn &easeFunc ) { mTweenRef->setEaseFn( easeFunc ); return *this; }
+		Options&	delay( float delayAmt ) { mTweenRef->setStartTime( mTweenRef->getStartTime() + delayAmt ); return *this; }
+		Options&	autoRemove( bool remove = true ) { mTweenRef->setAutoRemove( remove ); return *this; }
+		Options&	loop( bool doLoop = true ) { mTweenRef->setLoop( doLoop ); return *this; }
+		Options&	pingPong( bool doPingPong = true ) { mTweenRef->setPingPong( doPingPong ); return *this; }
+		Options&	timelineEnd( float offset = 0 ) { TweenBase::Options::timelineEnd( *mTweenRef, offset ); return *this; }
+		template<typename Y>
+		Options&	appendTo( Anim<Y> *endTarget, float offset = 0 ) { TweenBase::Options::appendTo( *mTweenRef, endTarget->ptr(), offset ); return *this; }	
+		Options&	appendTo( void *endTarget, float offset = 0 ) { TweenBase::Options::appendTo( *mTweenRef, endTarget, offset ); return *this; }	
+		Options&	lerpFn( const typename Tween<T>::LerpFn &lerpFn ) { mTweenRef->setLerpFn( lerpFn ); return *this; }
+		
+		operator TweenRef<T>() { return mTweenRef; }
+
+	  protected:
+		Options( TweenRef<T> tweenRef, TimelineRef timeline )
+			: TweenBase::Options( timeline ), mTweenRef( tweenRef )
+		{}
+				
+		TweenRef<T>		mTweenRef;
+		
+		friend class Timeline;
+	};
 
   protected:
 	virtual void reverse()
 	{
 		std::swap( mStartValue, mEndValue );
+	}
+
+	virtual TimelineItemRef	clone() const
+	{
+		std::shared_ptr<Tween<T> > result( new Tween<T>( *this ) );
+		result->mCopyStartValue = false;
+		return result;
 	}
 	
 	virtual TimelineItemRef	cloneReverse() const
@@ -168,11 +214,13 @@ class Tween : public TweenBase {
 		return result;
 	}
 	
-	virtual void start()
+	virtual void start( bool reverse )
 	{
 		if( mCopyStartValue )
 			mStartValue = *(reinterpret_cast<T*>( mTarget ) );
-		if( mStartFunction )
+		if( reverse && mReverseStartFunction )
+			mReverseStartFunction();
+		else if( ( ! reverse ) && mStartFunction )
 			mStartFunction();
 	}
 	
@@ -189,9 +237,122 @@ class Tween : public TweenBase {
 	LerpFn				mLerpFunction;
 };
 
-typedef std::shared_ptr<TweenBase>	TweenBaseRef;
+template<typename T>
+class FnTween : public Tween<T> {
+  public:
+	FnTween( std::function<void (T)> fn, T startValue, T endValue, float startTime, float duration, EaseFn easeFunction = easeNone, typename Tween<T>::LerpFn lerpFunction = &tweenLerp<T> )
+		: Tween<T>( &mValue, startValue, endValue, startTime, duration, easeFunction, lerpFunction ), mFn( fn ), mValue( startValue )
+	{
+	}
+	
+	virtual void update( float relativeTime )
+	{
+		Tween<T>::update( relativeTime );
+		if( mFn )
+			mFn( mValue );
+	}	
+	
+	std::function<void (T)>		mFn;
+	T							mValue;
+};
 
-class TweenScope {
+template<typename T>
+class FnTweenRef : public TweenRef<T> {
+  public:
+	FnTweenRef( const std::shared_ptr<FnTween<T> > &sp )
+		: TweenRef<T>( sp )
+	{}
+	FnTweenRef( FnTween<T> *fnTween )
+		: TweenRef<T>( fnTween )
+	{}
+	FnTweenRef()
+		: TweenRef<T>()
+	{}
+};
+
+class AnimBase {
+  public:
+  	//! removes self from Timeline
+	void 	stop();
+	
+	//! returns the parent timeline for the Anim<> or NULL if there is none
+	TimelineRef	getParent() const { return mParentTimeline; }
+
+  protected:
+	AnimBase( void *voidPtr ) : mVoidPtr( voidPtr ) {}
+	AnimBase( const AnimBase &rhs, void *voidPtr );
+	~AnimBase();
+	
+	void 	set( const AnimBase &rhs );
+	void 	setReplace( const AnimBase &rhs );
+	
+	void		setParentTimeline( TimelineRef parentTimeline );
+
+	void			*mVoidPtr;	
+	TimelineRef		mParentTimeline;
+};
+
+template<typename T>
+class Anim : public AnimBase {
+  public:
+	Anim()
+		: AnimBase( &mValue )
+	{}
+  	Anim( T value ) 
+		: AnimBase( &mValue), mValue( value )
+	{}
+  	Anim( const Anim<T> &rhs ) // normal copy constructor
+		: AnimBase( rhs, &mValue ), mValue( rhs.mValue )
+  	{}
+  	
+	const T&	operator()() const { return mValue; }
+	T&			operator()() { return mValue; }	
+	
+	operator const T&() const { return mValue; }	
+	Anim<T>& operator=( const Anim &rhs ) { // copy assignment
+		if( this != &rhs ) {
+			set( rhs );
+			mValue = rhs.mValue;
+		}
+		return *this;
+  	}
+
+#if defined( CINDER_RVALUE_REFERENCES )
+	Anim( Anim &&rhs ) // move constructor
+		: AnimBase( &mValue )
+	{
+		setReplace( rhs );
+		rhs.mParentTimeline.reset(); // blow away rhs's tweens due to move semantics
+		mValue = rhs.mValue;
+	}
+	Anim<T>& operator=( Anim &&rhs ) { // move assignment
+		if( this != &rhs ) {
+			setReplace( rhs );
+			rhs.mParentTimeline.reset(); // blow away rhs's tweens due to move semantics
+			mValue = rhs.mValue;
+		}
+		return *this;
+	}
+#endif
+
+	Anim<T>& operator=( T value ) { mValue = value; return *this; }
+
+	const T&	value() const { return mValue; }
+	T&			value() { return mValue; }
+  	
+  	const T*		ptr() const { return &mValue; }
+  	T*				ptr() { return &mValue; }
+
+  protected:
+
+	friend class Timeline;
+
+	T				mValue;
+};
+
+//typedef boost::instrusive_ptr<TweenBase>	TweenBaseRef;
+
+/*class TweenScope {
   public:
 	TweenScope() {}
 	TweenScope( const TweenScope &rhs ) {}	// do nothing for copy; these are our tweens alone
@@ -203,24 +364,6 @@ class TweenScope {
 
   private:
 	std::list<std::weak_ptr<TimelineItem> >		mItems;
-};
-
-template<typename T>
-class ValueTween : public Tween<T> {
-  public:
-	ValueTween( T startValue, T endValue, float startTime, float duration, EaseFn easeFunction = easeNone, typename Tween<T>::LerpFn lerpFunction = &tweenLerp<T> )
-		: Tween<T>( &mValue, startValue, endValue, startTime, duration, easeFunction, lerpFunction ), mValue( startValue )
-	{
-	}
-	
-	virtual void update( float relativeTime )
-	{
-		Tween<T>::update( relativeTime );
-	}	
-	
-	T		getValue() const { return mValue; }
-	
-	T		mValue;
-};
+};*/
 
 } //namespace cinder

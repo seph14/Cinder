@@ -62,6 +62,10 @@
 #include <vector>
 #include <algorithm>
 
+namespace cinder {
+class Timeline;
+} // namespace cinder
+
 namespace cinder { namespace app { 
 
 class App {
@@ -315,7 +319,7 @@ class App {
 	std::ostream&	console();
 	
 	//! Returns a reference to the App's Timeline
-	Timeline&		timeline() { return mTimeline; }
+	Timeline&		timeline() { return *mTimeline; }
 
 	/** \return a copy of the window's contents as a Surface8u **/
 	Surface	copyWindowSurface();
@@ -384,7 +388,7 @@ class App {
 	double					mFpsLastSampleTime;
 	double					mFpsSampleInterval;
 
-	Timeline				mTimeline;
+	std::shared_ptr<Timeline>	mTimeline;
 
 	std::shared_ptr<Renderer>	mRenderer;
 	
