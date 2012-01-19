@@ -24,52 +24,71 @@
 
 #include "cinder/TimelineItem.h"
 #include "cinder/Timeline.h"
-
 #include "cinder/CinderMath.h"
-
+	
 namespace cinder {
 
 TimelineItem::TimelineItem( class Timeline *parent )
-	: mParent( parent ), mTarget( 0 ), mStartTime( 0 ), mDuration( 0 ), mInvDuration( 0 ), mHasStarted( false ),
-		mComplete( false ), mMarkedForRemoval( false ), mAutoRemove( true ), mInfinite( false ), mLoop( false ), mLastLoopIteration( -1 ), mUseAbsoluteTime( false )
+	: mParent( parent ), mTarget( 0 ), mStartTime( 0 ), mDirtyDuration( false ), mDuration( 0 ), mInvDuration( 0 ), mHasStarted( false ), mHasReverseStarted( false ),
+		mComplete( false ), mReverseComplete( false ), mMarkedForRemoval( false ), mAutoRemove( true ),
+		mInfinite( false ), mLoop( false ), mPingPong( false ), mLastLoopIteration( -1 ), mUseAbsoluteTime( false )
 {
 }
 
 TimelineItem::TimelineItem( Timeline *parent, void *target, float startTime, float duration )
-	: mParent( parent ), mTarget( target ), mStartTime( startTime ), mDuration( duration ), mInvDuration( duration == 0 ? 0 : (1 / duration) ), mHasStarted( false ),
-		mComplete( false ), mMarkedForRemoval( false ), mAutoRemove( true ), mInfinite( false ), mLoop( false ), mLastLoopIteration( -1 ), mUseAbsoluteTime( false )
+	: mParent( parent ), mTarget( target ), mStartTime( startTime ), mDirtyDuration( false ), mDuration( std::max( duration, 0.0f ) ), mInvDuration( duration <= 0 ? 0 : (1 / duration) ),
+		mHasStarted( false ), mHasReverseStarted( false ), mComplete( false ), mReverseComplete( false ), mMarkedForRemoval( false ), mAutoRemove( true ),
+		mInfinite( false ), mLoop( false ), mPingPong( false ), mLastLoopIteration( -1 ), mUseAbsoluteTime( false )
 {
 }
 
-void TimelineItem::cancel()
+void TimelineItem::removeSelf()
 {
 	mMarkedForRemoval = true;
 }
 
-void TimelineItem::stepTo( float newTime )
+void TimelineItem::stepTo( float newTime, bool reverse )
 {
-	if( mComplete || mMarkedForRemoval )
+	if( mMarkedForRemoval )
 		return;
 	
-	float absTime = newTime - mStartTime;
-	
-	if( newTime >= mStartTime ) {
+	const float absTime = newTime - mStartTime;
+	const float endTime = mStartTime + mDuration;
+
+	updateDuration();
+
+	if( ( ! mHasReverseStarted ) && reverse && ( newTime < mStartTime ) ) {
+		mHasReverseStarted = true;
+		mHasStarted = false;
+		start( true );
+	}	
+	else if( newTime >= mStartTime ) {
 		float relTime;
-		if( mLoop ) {
+		if( mPingPong ) {
+			relTime = math<float>::fmod( absTime * mInvDuration, 2 ); // varies from 0-2
+			if( relTime > 1 )
+				relTime = ( 2 - relTime );
+		}
+		else if( mLoop ) {
 			relTime = math<float>::fmod( absTime * mInvDuration, 1 );
 		}
 		else
 			relTime = math<float>::min( absTime * mInvDuration, 1 );
 		
-		if( ! mHasStarted ) {
+		if( ( ! mHasStarted ) && ( ! reverse ) ) {
 			mHasStarted = true;
+			mHasReverseStarted = false;
 			loopStart();
-			start();
+			start( false );
 		}
 		
 		float time = ( mUseAbsoluteTime ) ? absTime : relTime;
-		
-		if( mLoop ) {
+
+		// accommodate a tween with a duration <= 0
+		if( ( ! mUseAbsoluteTime ) && ( mInvDuration <= 0 ) )
+			time = 1.0f;
+
+		if( mLoop || mPingPong ) {
 			int32_t loopIteration = static_cast<int32_t>( ( newTime - mStartTime ) * mInvDuration );
 			if( loopIteration != mLastLoopIteration ) {
 				mLastLoopIteration = loopIteration;
@@ -82,9 +101,20 @@ void TimelineItem::stepTo( float newTime )
 		else
 			update( time );
 	}
-	if( newTime >= mStartTime + mDuration && ( ! mLoop ) && ( ! mInfinite ) ) {
-		mComplete = true;
-		complete();
+
+	if( newTime < endTime ) {
+		if( ( ! mReverseComplete ) && reverse ) {
+			mReverseComplete = true;
+			mComplete = false;
+			complete( true );
+		}
+	}
+	else if( ( ! mLoop ) && ( ! mInfinite ) ) { // newTime >= endTime
+		if( ( ! mComplete ) && ( ! reverse ) ) {
+			mComplete = true;
+			mReverseComplete = false;
+			complete( false );
+		}
 	}
 }
 
@@ -93,6 +123,15 @@ void TimelineItem::setStartTime( float time )
 	mStartTime = time;
 	if( mParent )
 		mParent->itemTimeChanged( this );
+}
+
+void TimelineItem::updateDuration() const
+{
+	if( mDirtyDuration ) {
+		mDuration = std::max( calcDuration(), 0.0f );
+		mInvDuration = ( mDuration == 0 ) ? 1.0f : ( 1.0f / mDuration );
+		mDirtyDuration = false;
+	}
 }
 
 void TimelineItem::setDuration( float duration )
@@ -107,7 +146,14 @@ float TimelineItem::loopTime( float absTime )
 {
 	float result = absTime;
 	
-	if( mLoop ) {
+	if( mPingPong ) {
+		result = math<float>::fmod( result * mInvDuration, 2 ); // varies from 0-2
+		if( result <= 1 )
+			result *= mDuration;
+		else
+			result = ( 2 - result ) * mDuration;
+	}
+	else if( mLoop ) {
 		result = math<float>::fmod( result * mInvDuration, 1 );
 		result *= mDuration;
 	}

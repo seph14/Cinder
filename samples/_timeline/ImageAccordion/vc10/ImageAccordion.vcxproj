@@ -11,7 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+<<<<<<< HEAD
     <ProjectGuid>{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}</ProjectGuid>
+=======
+    <ProjectGuid>{88B810ED-1A38-446D-859F-E16D248572B1}</ProjectGuid>
+>>>>>>> 1a3dbaa9cc09dab39e69c623b4a6dec55741a3f0
     <RootNamespace>ImageAccordionApp</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>

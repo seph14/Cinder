@@ -3,6 +3,7 @@
 #if defined( CINDER_GLES2 )
 #include "cinder/gl/gles2.h"
 #endif
+#include "cinder/Timeline.h"
 
 using namespace std;
 using namespace ci;
@@ -18,7 +19,7 @@ class BasicTweenApp : public AppNative {
 	void mouseDown( MouseEvent event );
 	void draw();
   
-	Vec2f mBlackPos, mWhitePos;
+	Anim<Vec2f> mBlackPos, mWhitePos;
 };
 
 void BasicTweenApp::prepareSettings(Settings *settings)
@@ -39,8 +40,8 @@ void BasicTweenApp::mouseDown( MouseEvent event )
 {
 	// the call to apply() replaces any existing tweens on mBlackPos with this new one
 	timeline().apply( &mBlackPos, (Vec2f)event.getPos(), 2.0f, EaseInCubic() );
-	// the call to appendTarget() ensures that any other tweens on mWhitePos will complete before this new one begins
-	timeline().appendTarget( &mWhitePos, (Vec2f)event.getPos(), 3.0f, EaseOutQuint() );
+	// the call to appendTo causes the white circle to start when the black one finishes
+	timeline().apply( &mWhitePos, (Vec2f)event.getPos(), 0.35f, EaseOutQuint() ).appendTo( &mBlackPos );
 }
 
 void BasicTweenApp::draw()
@@ -64,3 +65,4 @@ void BasicTweenApp::draw()
 
 // This line tells Cinder to actually create the application
 CINDER_APP_NATIVE( BasicTweenApp, RendererGl )
+

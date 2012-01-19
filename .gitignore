@@ -36,3 +36,4 @@ proguard.cfg
 *.sdf
 Debug/
 Release/
+ipch/

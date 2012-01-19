@@ -1,10 +1,11 @@
 #include "cinder/app/AppNative.h"
-#include "cinder/gl/gl.h"
-#include "cinder/Rand.h"
 
 #if defined( CINDER_GLES2 )
 #include "cinder/gl/gles2.h"
 #endif
+#include "cinder/gl/gl.h"
+#include "cinder/Rand.h"
+#include "cinder/Timeline.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -17,7 +18,7 @@ struct Box {
 		: mColor( color ), mPos( pos ), mSize( size )
 	{}
 	
-	void draw() {
+	void draw() const {
 		gl::color( mColor );
 		gl::drawSolidRect( Rectf( mPos, mPos + mSize ) );
 	}
@@ -41,11 +42,10 @@ class CustomLerpApp : public AppNative {
 	Box		randomBox( Vec2f center );
 	void	draw();
 	
-	Box		mBox;
-
 #if defined( CINDER_GLES2 )
     gl::GlesContextRef mContext;
 #endif
+	Anim<Box>	mBox;
 };
 
 void CustomLerpApp::prepareSettings(Settings *settings)
@@ -59,9 +59,8 @@ void CustomLerpApp::setup()
     mContext = gl::setGlesContext();
     gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
 #endif
-
 	mBox = randomBox( getWindowCenter() );
-}
+};
 
 void CustomLerpApp::mouseDown( MouseEvent event )
 {
@@ -91,6 +90,5 @@ void CustomLerpApp::draw()
     mContext->unbind();
 #endif    
 }
-
 
 CINDER_APP_NATIVE( CustomLerpApp, RendererGl )

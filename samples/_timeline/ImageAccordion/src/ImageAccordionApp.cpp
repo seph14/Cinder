@@ -57,11 +57,10 @@ void ImageAccordionApp::setup()
 {
 	mTotalItems = 8;
 	mItemExpandedWidth = 500;
-	mItemRelaxedWidth = 848/mTotalItems;
+	mItemRelaxedWidth = 848 / mTotalItems;
 	mItemHeight = 564;
 	
-	float xPos = 0;
-	
+	float xPos = 0;	
 	mItems.push_back( AccordionItem( timeline(), 
 									xPos, 
 									0, 
@@ -201,4 +200,3 @@ void ImageAccordionApp::draw()
 
 
 CINDER_APP_BASIC( ImageAccordionApp, RendererGl )
-
