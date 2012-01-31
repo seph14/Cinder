@@ -421,6 +421,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/Area.cpp \
 					$(CINDER_SRC)/AxisAlignedBox.cpp \
 					$(CINDER_SRC)/BandedMatrix.cpp \
+					$(CINDER_SRC)/Base64.cpp \
 					$(CINDER_SRC)/BSpline.cpp \
 					$(CINDER_SRC)/BSplineFit.cpp \
 					$(CINDER_SRC)/Buffer.cpp \
@@ -432,11 +433,13 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/DataTarget.cpp \
 					$(CINDER_SRC)/Exception.cpp \
 					$(CINDER_SRC)/Font.cpp \
+					$(CINDER_SRC)/Frustum.cpp \
 					$(CINDER_SRC)/ImageIo.cpp \
 					$(CINDER_SRC)/Matrix.cpp \
 					$(CINDER_SRC)/Path2d.cpp \
 					$(CINDER_SRC)/Perlin.cpp \
 					$(CINDER_SRC)/PolyLine.cpp \
+					$(CINDER_SRC)/Plane.cpp \
 					$(CINDER_SRC)/Rand.cpp \
 					$(CINDER_SRC)/Ray.cpp \
 					$(CINDER_SRC)/Rect.cpp \
@@ -447,9 +450,9 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/SkylinePack.cpp \
 					$(CINDER_SRC)/System.cpp \
 					$(CINDER_SRC)/Text.cpp \
-					$(CINDER_SRC)/Timer.cpp \
 					$(CINDER_SRC)/Timeline.cpp \
 					$(CINDER_SRC)/TimelineItem.cpp \
+					$(CINDER_SRC)/Timer.cpp \
 					$(CINDER_SRC)/Triangulate.cpp \
 					$(CINDER_SRC)/TriMesh.cpp \
 					$(CINDER_SRC)/Tween.cpp \
