@@ -254,6 +254,7 @@ bool isVerticalSyncEnabled()
 }
 
 #if ! defined( CINDER_GLES2 )
+
 void setModelView( const Camera &cam )
 {
 	glMatrixMode( GL_MODELVIEW );

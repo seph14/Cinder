@@ -114,6 +114,8 @@ using boost::checked_array_deleter;
 #define CI_LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "cinder", __VA_ARGS__))
 #define CI_LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "cinder", __VA_ARGS__))
 #define CI_LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, "cinder", __VA_ARGS__))
+#define CI_LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "cinder", __VA_ARGS__))
+#define CI_LOGV(...) ((void)__android_log_print(ANDROID_LOG_VERBOSE, "cinder", __VA_ARGS__))
 
 //  wstring compatibility
 #include "cinder/android/wtypes.h"
