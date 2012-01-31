@@ -73,10 +73,12 @@ class FontManager
 	Font					getDefault() const
 	{
 		if( ! mDefault )
-#if defined (CINDER_ANDROID)
+#if defined( CINDER_COCOA )        
+            mDefault = Font( "Helvetica", 12 );
+#elif defined( CINDER_MSW )    
+            mDefault = Font( "Arial", 12 );
+#elif defined (CINDER_ANDROID)
 			mDefault = Font(loadFile("/system/fonts/DroidSans.ttf"), 12);
-#else
-			mDefault = Font( "Arial", 12 );
 #endif
 		
 		return mDefault;
