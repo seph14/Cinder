@@ -525,12 +525,13 @@ Vec2f& Font::getAdvance(Glyph glyph) const
 
 float Font::getKerning(Glyph glyph, Glyph prev) const
 {
+    //  Kerning disabled for now, inaccurate results
 	//  Cache kerning info?
-	if (mObj->mHasKerning) {
-		FT_Vector kerning;
-		FT_Get_Kerning(getFTFace(), prev, glyph, FT_KERNING_UNSCALED, &kerning);
-		return kerning.x;
-	}
+	// if (mObj->mHasKerning) {
+	// 	FT_Vector kerning;
+	// 	FT_Get_Kerning(getFTFace(), prev, glyph, FT_KERNING_UNSCALED, &kerning);
+	// 	return kerning.x;
+	// }
 
 	return 0;
 }

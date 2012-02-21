@@ -775,7 +775,7 @@ Vec2f TextureFont::measureString( const std::string &str, const DrawOptions &opt
 {
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );
 
-#if defined( CINDER_COCOA )
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 	return tbox.measure();
 #else
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();

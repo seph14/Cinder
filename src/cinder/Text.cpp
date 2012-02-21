@@ -778,13 +778,14 @@ size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, floa
 
     const Font::Glyph* start      = text;
     const Font::Glyph* word_start = text;
-    bool  prevWS                  = true;
+    bool  prevWS                  = false;
 
     while (text < stop)
     {
         const Font::Glyph* prevText = text;
-        Font::Glyph        uni      = *(++text);  // XXX handle text == (stop-1)
-        bool               currWS   = uni == ws;
+        Font::Glyph        uni      = *(++text);
+        bool               eos      = text == stop;
+        bool               currWS   = uni == ws && !eos;
 
         if (!currWS && prevWS)
             word_start = text;
@@ -792,14 +793,14 @@ size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, floa
 
         w += mFont.getKerning(uni, *prevText) + mFont.getAdvance(*prevText).x;
 
-        if (w + mFont.getAdvance(uni).x > limit) {
+        if ((!eos && w + mFont.getAdvance(uni).x > limit) || (eos && w > limit)) {
             if (currWS) {
                 // eat the rest of the whitespace
                 while (text < stop && *text == ws)
                     ++text;
             }
             else {
-                // backup until a whitespace (or 1 char)
+                // backup until a whitespace (or 1 glyph if run doesn't fit on a line)
                 if (word_start == start) {
                     if (prevText > start)
                         text = prevText;
@@ -868,7 +869,7 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
             mCalculatedSize.x = pen.x;
         }
         pen.x = 0;
-        pen.y += mFont.getLeading();
+        pen.y += stop < end ? mFont.getLeading() : mFont.getDescent();
         mCalculatedSize.y = pen.y;
 
         start += lineLength;
