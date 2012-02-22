@@ -177,6 +177,7 @@ class IStreamFile : public IStream {
 	IStreamFile( FILE *aFile, bool aOwnsFile = true, int32_t aDefaultBufferSize = 2048 );
 
 	virtual void		IORead( void *t, size_t size );
+	size_t				readDataImpl( void *dest, size_t maxSize );
  
 	FILE						*mFile;
 	bool						mOwnsFile;
@@ -268,6 +269,7 @@ class IoStreamFile : public IoStream {
 	IoStreamFile( FILE *aFile, bool aOwnsFile = true, int32_t aDefaultBufferSize = 2048 );
 	
 	virtual void		IORead( void *t, size_t size );
+	size_t				readDataImpl( void *dest, size_t maxSize );
 	virtual void		IOWrite( const void *t, size_t size );
  
 	FILE						*mFile;
