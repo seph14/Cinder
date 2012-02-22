@@ -841,38 +841,40 @@ vector<pair<uint16_t,Vec2f> > TextBox::measureGlyphs() const
     vector<pair<uint16_t,Vec2f> > placements;
     vector<Font::Glyph> glyphs = mFont.getGlyphs(mText);
 
-    Font::Glyph* start = &glyphs[0];
-    Font::Glyph* end = start + glyphs.size();
+    if (!glyphs.empty()) {
+        Font::Glyph* start = &glyphs[0];
+        Font::Glyph* end = start + glyphs.size();
 
-    Vec2f pen(0, mFont.getAscent());
+        Vec2f pen(0, mFont.getAscent());
 
-    mCalculatedSize = Vec2f(0, 0);
+        mCalculatedSize = Vec2f(0, 0);
 
-    while (start < end) {
-        Font::Glyph prevIndex = 0;
+        while (start < end) {
+           Font::Glyph prevIndex = 0;
 
-        int lineLength = mSize.x == GROW ? glyphs.size() : linebreak(start, end, mSize.x);
-        Font::Glyph* stop = start + lineLength;
+           int lineLength = mSize.x == GROW ? glyphs.size() : linebreak(start, end, mSize.x);
+           Font::Glyph* stop = start + lineLength;
 
-        for (Font::Glyph* it = start; it != stop; ++it) {
-            if (prevIndex) {
-                float kerning = mFont.getKerning(*it, prevIndex);
-                pen.x += kerning;
-            }
+           for (Font::Glyph* it = start; it != stop; ++it) {
+              if (prevIndex) {
+                 float kerning = mFont.getKerning(*it, prevIndex);
+                 pen.x += kerning;
+              }
 
-            placements.push_back(std::make_pair(*it, pen));
-            pen += mFont.getAdvance(*it);
-            prevIndex = *it;
+              placements.push_back(std::make_pair(*it, pen));
+              pen += mFont.getAdvance(*it);
+              prevIndex = *it;
+           }
+
+           if (pen.x > mCalculatedSize.x) {
+              mCalculatedSize.x = pen.x;
+           }
+           pen.x = 0;
+           pen.y += stop < end ? mFont.getLeading() : mFont.getDescent();
+           mCalculatedSize.y = pen.y;
+
+           start += lineLength;
         }
-
-        if (pen.x > mCalculatedSize.x) {
-            mCalculatedSize.x = pen.x;
-        }
-        pen.x = 0;
-        pen.y += stop < end ? mFont.getLeading() : mFont.getDescent();
-        mCalculatedSize.y = pen.y;
-
-        start += lineLength;
     }
 
     return placements;
