@@ -29,7 +29,7 @@
 #if defined( CINDER_ANDROID )
 //  TextureFont::Atlas dependencies
 #include "cinder/Surface.h"
-#include "cinder/SkylinePack.h"
+#include "cinder/BinPack.h"
 #endif
 
 #include <map>
@@ -198,7 +198,7 @@ class TextureFont {
         Format                   mFormat;
         std::vector<gl::Texture> mTextures;
         Surface                  mSurface;
-        SkylinePack              mPack;
+        BinPackRef               mPack;
         int32_t                  mBeginIndex;
         int32_t                  mCurIndex;
         gl::Texture::Format      mTextureFormat;

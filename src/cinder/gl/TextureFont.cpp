@@ -36,7 +36,7 @@
 #endif
 
 #if defined( CINDER_ANDROID )
-    #include "cinder/SkylinePack.h"
+    #include "cinder/BinPack.h"
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
 
@@ -618,7 +618,7 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 TextureFont::Atlas::Atlas( const Format &format ) 
     : mFormat( format ), 
       mSurface( format.getTextureWidth(), format.getTextureHeight(), true ),
-      mPack( format.getTextureWidth(), format.getTextureHeight() )
+      mPack( BinPack::create( format.getTextureWidth(), format.getTextureHeight(), BinPack::SKYLINE ) )
 {
     gl::Texture::Format textureFormat = gl::Texture::Format();
     mTextureFormat.enableMipmapping( mFormat.hasMipmapping() );
@@ -653,13 +653,13 @@ TextureFont::GlyphInfo TextureFont::Atlas::addGlyph(Font& font, Font::Glyph glyp
     error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
     FT_GlyphSlot slot = face->glyph;
 
-    Area glyphArea = mPack.allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+    Area glyphArea = mPack->allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
     if (glyphArea.x1 < 0) {
         updateTexture();
         pushNewTexture();
         ++mCurIndex;
-        mPack = SkylinePack( mFormat.getTextureWidth(), mFormat.getTextureHeight() );
-        glyphArea = mPack.allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+        mPack = BinPack::create( mFormat.getTextureWidth(), mFormat.getTextureHeight(), BinPack::SKYLINE );
+        glyphArea = mPack->allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
         //  XXX If allocation fails here then abort completely
     }
 

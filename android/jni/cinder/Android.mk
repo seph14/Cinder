@@ -53,6 +53,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/AxisAlignedBox.cpp \
 					$(CINDER_SRC)/BandedMatrix.cpp \
 					$(CINDER_SRC)/Base64.cpp \
+					$(CINDER_SRC)/BinPack.cpp \
 					$(CINDER_SRC)/BSpline.cpp \
 					$(CINDER_SRC)/BSplineFit.cpp \
 					$(CINDER_SRC)/Buffer.cpp \
@@ -78,7 +79,6 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/Sphere.cpp \
 					$(CINDER_SRC)/Stream.cpp \
 					$(CINDER_SRC)/Surface.cpp \
-					$(CINDER_SRC)/SkylinePack.cpp \
 					$(CINDER_SRC)/System.cpp \
 					$(CINDER_SRC)/Text.cpp \
 					$(CINDER_SRC)/Timeline.cpp \
