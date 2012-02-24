@@ -615,121 +615,161 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 
 #if defined( CINDER_ANDROID )
 
+class TextureFont::Atlas::Impl
+{
+public:
+    static ImplRef create( const Format &format ) {
+        return ImplRef(new Impl( format ));
+    }
+
+    Impl( const Format &format )
+        : mFormat( format ), 
+          mSurface( format.getTextureWidth(), format.getTextureHeight(), true ),
+          mPack( BinPack::create( format.getTextureWidth(), format.getTextureHeight(), BinPack::SKYLINE ) )
+    {
+        gl::Texture::Format textureFormat = gl::Texture::Format();
+        mTextureFormat.enableMipmapping( mFormat.hasMipmapping() );
+        mTextureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
+
+        mBeginIndex = mCurIndex = 0;
+        pushNewTexture();
+    }
+
+    void beginGlyphSet()
+    {
+        mBeginIndex = mCurIndex;
+    }
+
+    TextureFont::GlyphInfo addGlyph(Font& font, Font::Glyph glyph)
+    {
+        const size_t BORDER = 1;
+
+        //  Draw glyph 
+        FT_Face face = font.getFTFace();
+        int error = FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
+        if( error ) {
+            CI_LOGW("FT_Error (line %d, code 0x%02x) : %s\n",
+                    __LINE__, FT_Errors[error].code, FT_Errors[error].message);
+        }
+        error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+        FT_GlyphSlot slot = face->glyph;
+
+        Area glyphArea = mPack->allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+        if (glyphArea.x1 < 0) {
+            updateTexture();
+            pushNewTexture();
+            ++mCurIndex;
+            mPack = BinPack::create( mFormat.getTextureWidth(), mFormat.getTextureHeight(), BinPack::SKYLINE );
+            glyphArea = mPack->allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
+            //  XXX If allocation fails here then abort completely
+        }
+
+        int32_t x = glyphArea.x1 + BORDER;
+        int32_t y = glyphArea.y1 + BORDER;
+
+        //  Write glyph to surface
+        Area          destArea(x, y, x + slot->bitmap.width, y + slot->bitmap.rows);
+        Surface::Iter iter( mSurface, destArea );
+
+        uint8_t* rowPtr = slot->bitmap.buffer;
+        while ( iter.line() ) {
+            uint8_t* pixelPtr = rowPtr;
+            while ( iter.pixel() ) {
+                iter.r() = *pixelPtr;
+                iter.a() = *pixelPtr;
+                ++pixelPtr;
+            }
+            rowPtr += slot->bitmap.pitch;
+        }
+
+        GlyphInfo info;
+        info.mTextureIndex = mCurIndex - mBeginIndex;
+        info.mTexCoords    = destArea;
+        info.mOriginOffset = Vec2f(slot->bitmap_left, -slot->bitmap_top);
+        return info;
+    }
+
+    vector< gl::Texture > endGlyphSet()
+    {
+        updateTexture();
+        return vector< gl::Texture >( mTextures.begin() + mBeginIndex, mTextures.begin() + mCurIndex + 1 );
+    }
+
+    TextureFont::Format& getFormat()
+    {
+        return mFormat;
+    }
+
+    void updateTexture()
+    {
+        Surface surface = mSurface.clone();
+
+        if( ! mFormat.getPremultiply() )
+            ip::unpremultiply( &surface );
+
+        gl::Texture& tex = mTextures.back();
+
+    #if defined( CINDER_GLES )
+        std::shared_ptr<uint8_t> lumAlphaData( new uint8_t[mFormat.getTextureWidth()*mFormat.getTextureHeight()*2], checked_array_deleter<uint8_t>() );
+        // under iOS/Android format and internalFormat must match, so let's make a block of LUMINANCE_ALPHA data
+        Surface8u::ConstIter iter( surface, surface.getBounds() );
+        size_t offset = 0;
+        while( iter.line() ) {
+            while( iter.pixel() ) {
+                lumAlphaData.get()[offset+0] = iter.r();
+                lumAlphaData.get()[offset+1] = iter.a();
+                offset += 2;
+            }
+        }
+
+        //  update the texture data in-place
+        glBindTexture(tex.getTarget(), tex.getId());
+        glTexImage2D(tex.getTarget(), 0, GL_LUMINANCE_ALPHA, mFormat.getTextureWidth(), mFormat.getTextureHeight(), 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, lumAlphaData.get() );
+    #else
+        tex.update( surface );
+    #endif
+    }
+
+    void pushNewTexture()
+    {
+        mTextures.push_back( Texture( mFormat.getTextureWidth(), mFormat.getTextureHeight(), mTextureFormat ) );
+        ip::fill( &mSurface, ColorA8u( 0, 0, 0, 0 ) );
+    }
+
+    Format                   mFormat;
+    std::vector<gl::Texture> mTextures;
+    Surface                  mSurface;
+    BinPackRef               mPack;
+    int32_t                  mBeginIndex;
+    int32_t                  mCurIndex;
+    gl::Texture::Format      mTextureFormat;
+};
+
 TextureFont::Atlas::Atlas( const Format &format ) 
-    : mFormat( format ), 
-      mSurface( format.getTextureWidth(), format.getTextureHeight(), true ),
-      mPack( BinPack::create( format.getTextureWidth(), format.getTextureHeight(), BinPack::SKYLINE ) )
-{
-    gl::Texture::Format textureFormat = gl::Texture::Format();
-    mTextureFormat.enableMipmapping( mFormat.hasMipmapping() );
-    mTextureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
+    : mImpl( TextureFont::Atlas::Impl::create( format ) )
+{ }
 
-    mBeginIndex = mCurIndex = 0;
-    pushNewTexture();
-}
-
-void TextureFont::Atlas::pushNewTexture()
+TextureFont::Format& TextureFont::Atlas::getFormat()
 {
-    mTextures.push_back( Texture( mFormat.getTextureWidth(), mFormat.getTextureHeight(), mTextureFormat ) );
-	ip::fill( &mSurface, ColorA8u( 0, 0, 0, 0 ) );
+    return mImpl->getFormat();
 }
 
 void TextureFont::Atlas::beginGlyphSet()
 {
-    mBeginIndex = mCurIndex;
+    mImpl->beginGlyphSet();
 }
 
 TextureFont::GlyphInfo TextureFont::Atlas::addGlyph(Font& font, Font::Glyph glyph)
 {
-    const size_t BORDER = 1;
-
-    //  Draw glyph 
-    FT_Face face = font.getFTFace();
-    int error = FT_Load_Glyph(face, glyph, FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT);
-    if( error ) {
-        CI_LOGW("FT_Error (line %d, code 0x%02x) : %s\n",
-                __LINE__, FT_Errors[error].code, FT_Errors[error].message);
-    }
-    error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
-    FT_GlyphSlot slot = face->glyph;
-
-    Area glyphArea = mPack->allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
-    if (glyphArea.x1 < 0) {
-        updateTexture();
-        pushNewTexture();
-        ++mCurIndex;
-        mPack = BinPack::create( mFormat.getTextureWidth(), mFormat.getTextureHeight(), BinPack::SKYLINE );
-        glyphArea = mPack->allocateArea(slot->bitmap.width + 2 * BORDER, slot->bitmap.rows + 2 * BORDER);
-        //  XXX If allocation fails here then abort completely
-    }
-
-    int32_t x = glyphArea.x1 + BORDER;
-    int32_t y = glyphArea.y1 + BORDER;
-
-    //  Write glyph to surface
-    Area          destArea(x, y, x + slot->bitmap.width, y + slot->bitmap.rows);
-    Surface::Iter iter( mSurface, destArea );
-
-    uint8_t* rowPtr = slot->bitmap.buffer;
-    while ( iter.line() ) {
-        uint8_t* pixelPtr = rowPtr;
-        while ( iter.pixel() ) {
-            iter.r() = *pixelPtr;
-            iter.a() = *pixelPtr;
-            ++pixelPtr;
-        }
-        rowPtr += slot->bitmap.pitch;
-    }
-
-    GlyphInfo info;
-    info.mTextureIndex = mCurIndex - mBeginIndex;
-    info.mTexCoords    = destArea;
-    info.mOriginOffset = Vec2f(slot->bitmap_left, -slot->bitmap_top);
-    return info;
+    return mImpl->addGlyph(font, glyph);
 }
 
-void TextureFont::Atlas::updateTexture()
+std::vector< gl::Texture > TextureFont::Atlas::endGlyphSet()
 {
-    Surface surface = mSurface.clone();
-
-    if( ! mFormat.getPremultiply() )
-        ip::unpremultiply( &surface );
-
-    gl::Texture& tex = mTextures.back();
-
-#if defined( CINDER_GLES )
-	std::shared_ptr<uint8_t> lumAlphaData( new uint8_t[mFormat.getTextureWidth()*mFormat.getTextureHeight()*2], checked_array_deleter<uint8_t>() );
-    // under iOS/Android format and internalFormat must match, so let's make a block of LUMINANCE_ALPHA data
-    Surface8u::ConstIter iter( surface, surface.getBounds() );
-    size_t offset = 0;
-    while( iter.line() ) {
-        while( iter.pixel() ) {
-            lumAlphaData.get()[offset+0] = iter.r();
-            lumAlphaData.get()[offset+1] = iter.a();
-            offset += 2;
-        }
-    }
-
-    //  update the texture data in-place
-    glBindTexture(tex.getTarget(), tex.getId());
-    glTexImage2D(tex.getTarget(), 0, GL_LUMINANCE_ALPHA, mFormat.getTextureWidth(), mFormat.getTextureHeight(), 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, lumAlphaData.get() );
-#else
-    tex.update( surface );
-#endif
+    return mImpl->endGlyphSet();
 }
 
-vector< gl::Texture > TextureFont::Atlas::endGlyphSet()
-{
-    updateTexture();
-    return vector< gl::Texture >( mTextures.begin() + mBeginIndex, mTextures.begin() + mCurIndex + 1 );
-}
-
-TextureFont::Format& TextureFont::Atlas::getFormat()
-{
-    return mFormat;
-}
-
-TextureFontRef		TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )
+TextureFontRef TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )
 { 
 	return TextureFontRef( new TextureFont( font, supportedChars, atlas ) ); 
 }

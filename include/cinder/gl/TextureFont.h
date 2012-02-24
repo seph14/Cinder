@@ -186,22 +186,14 @@ class TextureFont {
         Atlas( const Format &format = Format() );
 
         Format&  getFormat();
-
         void beginGlyphSet();
-        GlyphInfo addGlyph(Font& font, Font::Glyph glyph);
+        GlyphInfo addGlyph( Font& font, Font::Glyph glyph );
         std::vector< gl::Texture > endGlyphSet();
 
       private:
-        void updateTexture();
-        void pushNewTexture();
-
-        Format                   mFormat;
-        std::vector<gl::Texture> mTextures;
-        Surface                  mSurface;
-        BinPackRef               mPack;
-        int32_t                  mBeginIndex;
-        int32_t                  mCurIndex;
-        gl::Texture::Format      mTextureFormat;
+        class Impl;
+        typedef std::shared_ptr<Impl> ImplRef;
+        ImplRef mImpl;
     };
 #endif
 
