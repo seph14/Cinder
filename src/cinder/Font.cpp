@@ -45,13 +45,14 @@
 	#include <iterator>
 	#include <ft2build.h>
 	#include FT_FREETYPE_H
-    #include FT_GLYPH_H
+	#include FT_GLYPH_H
 
-    struct FTData {
-        ci::IStreamRef	streamRef;
-        FT_StreamRec	streamRec;
-        FT_Face			face;
-    };
+	struct FTData {
+		ci::DataSourceRef data;
+		ci::IStreamRef    streamRef;
+		FT_StreamRec      streamRec;
+		FT_Face           face;
+	};
 #endif
 #include "cinder/Utilities.h"
 
@@ -733,40 +734,38 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 #elif defined( CINDER_ANDROID )
 	FontManager* mgr = FontManager::instance();  // init FreeType
 
+	mFTData->data      = dataSource;
 	mFTData->streamRef = dataSource->createStream();
 	IStreamRef& streamRef = mFTData->streamRef;
-	if (!streamRef) {
-		CI_LOGI("Error: invalid stream passed to font");
+	if ( !streamRef ) {
+		CI_LOGE("Error: invalid stream passed to font");
 		return;
 	}
 
-    FT_Matrix matrix = { (int)((1.0 /*/hres*/) * 0x10000L),
-                         (int)((0.0)      * 0x10000L),
-                         (int)((0.0)      * 0x10000L),
-                         (int)((1.0)      * 0x10000L) };
+	FT_Matrix matrix = { (int)((1.0 /*/hres*/) * 0x10000L),
+                         (int)((0.0)           * 0x10000L),
+                         (int)((0.0)           * 0x10000L),
+                         (int)((1.0)           * 0x10000L) };
 
-	FT_StreamRec& streamRec = mFTData->streamRec;
+	FT_StreamRec& streamRec      = mFTData->streamRec;
 	streamRec.base               = NULL;
 	streamRec.size               = streamRef->size();
 	streamRec.pos                = 0;
 	streamRec.descriptor.pointer = streamRef.get();
-	streamRec.read				  = _ReadStream;
-	streamRec.close        	  = _CloseStream;
+	streamRec.read               = _ReadStream;
+	streamRec.close              = _CloseStream;
 
 	FT_Open_Args args;
-	memset(&args, 0, sizeof(FT_Open_Args));
+	memset( &args, 0, sizeof(FT_Open_Args) );
 	args.flags  |= FT_OPEN_STREAM;
 	args.stream  = &(mFTData->streamRec);
 
-	int error = FT_Open_Face( mgr->getLibrary(),
-							  &args,
-							  0,
-							  &(mFTData->face) );
+	int error = FT_Open_Face( mgr->getLibrary(), &args, 0, &(mFTData->face) );
 
-	if (error == FT_Err_Unknown_File_Format) {
+	if ( error == FT_Err_Unknown_File_Format ) {
 		CI_LOGI("Error opening font: unknown format");
 	}
-	else if (error) {
+	else if ( error ) {
 		CI_LOGI("Error opening font: unhandled");
 	}
 	else {
@@ -775,10 +774,10 @@ Font::Obj::Obj( DataSourceRef dataSource, float size )
 		mNumGlyphs = face->num_glyphs;
 		CI_LOGI("Opened font: family name %s", mName.c_str());
 		const int dpi = 72;  //  XXX query device capabilities
-        error = FT_Select_Charmap( face, FT_ENCODING_UNICODE );
-        //  XXX error handling
+		error = FT_Select_Charmap( face, FT_ENCODING_UNICODE );
+		//  XXX error handling
 		error = FT_Set_Char_Size( face, size * 64, 0, dpi, dpi );
-        FT_Set_Transform( face, &matrix, NULL );
+		FT_Set_Transform( face, &matrix, NULL );
 		mHasKerning = bool( face->face_flags & FT_FACE_FLAG_KERNING );
 	}
 #endif
