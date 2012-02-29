@@ -26,12 +26,6 @@
 #include "cinder/Font.h"
 #include "cinder/gl/Texture.h"
 
-#if defined( CINDER_ANDROID )
-//  TextureFont::Atlas dependencies
-#include "cinder/Surface.h"
-#include "cinder/BinPack.h"
-#endif
-
 #include <map>
 #include <boost/unordered_map.hpp>
 
