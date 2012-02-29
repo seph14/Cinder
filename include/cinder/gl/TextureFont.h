@@ -101,7 +101,7 @@ class TextureFont {
 
 #if defined( CINDER_ANDROID )
 
-    class Atlas;
+	class Atlas;
 	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and font atlas \a atlas
 	static TextureFontRef		create( const Font &font, Atlas &atlas, const std::string &supportedChars = TextureFont::defaultChars() );
 #endif
@@ -129,7 +129,7 @@ class TextureFont {
 	//! Returns the size in pixels necessary to render the word-wrapped string \a str fit inside \a fitRect with DrawOptions \a options. Mac & iOS only.
 	Vec2f	measureStringWrapped( const std::string &str, const Rectf &fitRect, const DrawOptions &options = DrawOptions() ) const;
 #endif
-    
+
 	//! Returns a vector of glyph/placement pairs representing \a str, suitable for use with drawGlyphs. Useful for caching placement and optimizing batching.
 	std::vector<std::pair<uint16_t,Vec2f> >		getGlyphPlacements( const std::string &str, const DrawOptions &options ) const;
 	//! Returns a vector of glyph/placement pairs representing \a str fit inside \a fitRect, suitable for use with drawGlyphs. Useful for caching placement and optimizing batching.
@@ -137,8 +137,8 @@ class TextureFont {
 
 	//! Returns the font the TextureFont represents
 	const Font&		getFont() const { return mFont; }
-    //! Returns the name of the font
-    std::string getName() const { return mFont.getName(); }
+	//! Returns the name of the font
+	std::string getName() const { return mFont.getName(); }
 	//! Returns the ascent of the font
 	float	getAscent() const { return mFont.getAscent(); }
 	//! Returns the descent of the font
@@ -154,7 +154,7 @@ class TextureFont {
 	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
 #if defined( CINDER_ANDROID )
 	TextureFont( const Font &font, const std::string &supportedChars, Atlas &atlas );
-    void init( const std::string &supportedChars, Atlas &atlas );
+	void init( const std::string &supportedChars, Atlas &atlas );
 #endif
 
 	struct GlyphInfo {
