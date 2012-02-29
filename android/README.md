@@ -116,6 +116,7 @@ Status
 * OpenGL ES2 supported at compile time with a subset of the gl namespace
 * OpenGL ES2 context class, supporting most gl namespace methods
 * TextureFont implementation using Freetype
+* Static boost libraries included (date_time, filesystem, regex, system and thread)
 
 
 TODO
@@ -125,7 +126,6 @@ TODO
 * Audio support (using OpenSL ES)
 * URL implementation (currently stubbed out)
 * Camera capture (may require JNI)
-* boost::filesystem v3 support
 
 
 Credits
@@ -144,5 +144,5 @@ Parts of the font rendering code are based on freetype-gl (http://code.google.co
 Copyright 2011 Nicolas P. Rougier. All rights reserved
 
 
-safetydank 23/8/11
+safetydank 20120229
 
