@@ -101,14 +101,13 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 
 ifdef USE_GLES2
 LOCAL_SRC_FILES += $(CINDER_SRC)/gl/GlslProg.cpp \
-					$(CINDER_SRC)/gl/Vbo.cpp \
-					$(CINDER_SRC)/gl/gles2.cpp
+                   $(CINDER_SRC)/gl/Vbo.cpp
 LOCAL_CFLAGS += -DCINDER_GLES2
 GLES_LDLIB = -lGLESv2
 else
 LOCAL_SRC_FILES += $(CINDER_SRC)/gl/Light.cpp \
-					$(CINDER_SRC)/gl/Material.cpp \
-					$(CINDER_SRC)/gl/TileRender.cpp
+                   $(CINDER_SRC)/gl/Material.cpp \
+                   $(CINDER_SRC)/gl/TileRender.cpp
 LOCAL_CFLAGS += -DCINDER_GLES1
 GLES_LDLIB = -lGLESv1_CM
 endif
@@ -122,7 +121,7 @@ endif
 ifdef USE_STBIMAGE
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../src/stb_image
 LOCAL_SRC_FILES  += $(STBIMAGE_SRC)/stb_image.c \
-					$(CINDER_SRC)/ImageSourceFileStbImage.cpp
+                    $(CINDER_SRC)/ImageSourceFileStbImage.cpp
 LOCAL_CFLAGS     += -DCINDER_STBIMAGE
 endif
 

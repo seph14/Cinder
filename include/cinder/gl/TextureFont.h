@@ -125,9 +125,9 @@ class TextureFont {
 	void	drawStringWrapped( const std::string &str, const Rectf &fitRect, const Vec2f &offset = Vec2f::zero(), const DrawOptions &options = DrawOptions() );
 #endif
 	//! Draws the glyphs in \a glyphMeasures at baseline \a baseline with DrawOptions \a options. \a glyphMeasures is a vector of pairs of glyph indices and offsets for the glyph baselines
-	void	drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baseline, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
+	virtual void drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baseline, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() ) = 0;
 	//! Draws the glyphs in \a glyphMeasures clipped by \a clip, with \a offset added to each of the glyph offsets with DrawOptions \a options. \a glyphMeasures is a vector of pairs of glyph indices and offsets for the glyph baselines.
-	void	drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
+	virtual void drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() ) = 0;
 
 	//! Returns the size in pixels necessary to render the string \a str with DrawOptions \a options.
 	Vec2f	measureString( const std::string &str, const DrawOptions &options = DrawOptions() ) const;
@@ -156,11 +156,6 @@ class TextureFont {
 	//! \c "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\@#_[]<>%^llflfiphridséáèà"
 	static std::string		defaultChars() { return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\@#_[]<>%^llflfiphrids\303\251\303\241\303\250\303\240"; }
 
-// XXX DEBUGGING, remove later
-#if defined( CINDER_ANDROID )
-    std::vector< gl::Texture >& getTextures();
-#endif
-
   protected:
 	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
 #if defined( CINDER_ANDROID )
@@ -181,20 +176,20 @@ class TextureFont {
 
 #if defined( CINDER_ANDROID )
   public:
-    class Atlas {
-      public:
-        Atlas( const Format &format = Format() );
+	class Atlas {
+	  public:
+		Atlas( const Format &format = Format() );
 
-        Format&  getFormat();
-        void beginGlyphSet();
-        GlyphInfo addGlyph( Font& font, Font::Glyph glyph );
-        std::vector< gl::Texture > endGlyphSet();
+		Format&  getFormat();
+		void beginGlyphSet();
+		GlyphInfo addGlyph( Font& font, Font::Glyph glyph );
+		std::vector< gl::Texture > endGlyphSet();
 
-      private:
-        class Impl;
-        typedef std::shared_ptr<Impl> ImplRef;
-        ImplRef mImpl;
-    };
+	  private:
+		class Impl;
+		typedef std::shared_ptr<Impl> ImplRef;
+		ImplRef mImpl;
+	};
 #endif
 
 };

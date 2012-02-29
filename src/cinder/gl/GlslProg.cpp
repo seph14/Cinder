@@ -36,10 +36,6 @@ using namespace std;
 	#define GL_GEOMETRY_SHADER		GL_GEOMETRY_SHADER_EXT
 #endif
 
-#if defined( CINDER_GLES2 )
-   typedef char GLchar;
-#endif
-
 namespace cinder { namespace gl {
 
 GlslProg::Obj::~Obj()
