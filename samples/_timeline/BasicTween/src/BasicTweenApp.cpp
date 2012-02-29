@@ -1,8 +1,5 @@
 #include "cinder/app/AppNative.h"
 
-#if defined( CINDER_GLES2 )
-#include "cinder/gl/gles2.h"
-#endif
 #include "cinder/Timeline.h"
 
 using namespace std;
@@ -10,9 +7,6 @@ using namespace ci;
 using namespace ci::app;
 
 class BasicTweenApp : public AppNative {
-#if defined( CINDER_GLES2 )
-    gl::GlesContextRef mContext;
-#endif
   public:
     void prepareSettings(Settings *settings);
 	void setup();
@@ -29,10 +23,7 @@ void BasicTweenApp::prepareSettings(Settings *settings)
 
 void BasicTweenApp::setup()
 {	
-#if defined( CINDER_GLES2 )
-    mContext = gl::setGlesContext();
     gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
-#endif
 	mBlackPos = mWhitePos = getWindowCenter();
 }
 
@@ -46,10 +37,6 @@ void BasicTweenApp::mouseDown( MouseEvent event )
 
 void BasicTweenApp::draw()
 {
-#if defined( CINDER_GLES2 )
-    mContext->bind();
-#endif
-
 	gl::clear( Color( 0.5f, 0.5f, 0.5f ) );
 	
 	gl::color( Color::black() );
@@ -57,10 +44,6 @@ void BasicTweenApp::draw()
 	
 	gl::color( Color::white() );
 	gl::drawSolidCircle( mWhitePos, 16.0f );
-
-#if defined( CINDER_GLES2 )
-    mContext->unbind();
-#endif    
 }
 
 // This line tells Cinder to actually create the application

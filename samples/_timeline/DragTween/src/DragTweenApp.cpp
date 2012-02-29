@@ -4,10 +4,6 @@
 #include "cinder/Timeline.h"
 #include <list>
 
-#if defined( CINDER_GLES2 )
-#include "cinder/gl/gles2.h"
-#endif
-
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -48,20 +44,12 @@ class DragTweenApp : public AppNative {
 	void draw();
     void resume(bool renewContext);
 	
-#if defined( CINDER_GLES2 )
-	gl::GlesContextRef mContext;
-#endif
 	vector<Circle>			mCircles;
 	Circle					*mCurrentDragCircle;
 };
 
 void DragTweenApp::setup()
 {
-#if defined( CINDER_GLES2 )
-	mContext = gl::setGlesContext();
-	gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
-#endif
-
 #if defined( CINDER_ANDROID )
 	mCircles.clear();
 #endif
@@ -82,9 +70,6 @@ void DragTweenApp::setup()
 void DragTweenApp::resume(bool renewContext)
 {
 	if (renewContext) {
-#if defined( CINDER_GLES2 )
-		mContext = gl::GlesContextRef();
-#endif
 		setup();
 	}
 }
@@ -126,16 +111,8 @@ void DragTweenApp::draw()
 	gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
 	gl::enableAlphaBlending();
 	
-#if defined( CINDER_GLES2 )
-    mContext->bind();
-#endif
-
 	for( vector<Circle>::const_iterator circleIt = mCircles.begin(); circleIt != mCircles.end(); ++circleIt )
 		circleIt->draw();
-
-#if defined( CINDER_GLES2 )
-	mContext->unbind();
-#endif
 }
 
 CINDER_APP_NATIVE( DragTweenApp, RendererGl )

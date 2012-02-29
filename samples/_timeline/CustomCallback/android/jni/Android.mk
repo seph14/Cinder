@@ -4,7 +4,6 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := CustomCallback
 
-# LOCAL_CFLAGS := -DCINDER_GLES2
 LOCAL_SRC_FILES := ../../src/CustomCallbackApp.cpp
 
 LOCAL_LDLIBS    := -landroid

@@ -347,7 +347,7 @@ void TextureFont::init( const std::string &supportedChars, Atlas &atlas )
 #endif
 
 #if ! defined( CINDER_GLES2 )
-virtual void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const std::vector<ColorA8u> &colors )
+void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const std::vector<ColorA8u> &colors )
 {
 	if( mTextures.empty() )
 		return;
@@ -540,6 +540,14 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 		glDrawElements( GL_TRIANGLES, indices.size(), indexType, &indices[0] );
 	}
 }
+
+#else
+
+void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const std::vector<ColorA8u> &colors )
+{ }
+
+void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options, const std::vector<ColorA8u> &colors )
+{ }
 
 #endif   // ! defined( CINDER_GLES2 )
 

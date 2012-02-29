@@ -1,8 +1,5 @@
 #include "cinder/app/AppNative.h"
 
-#if defined( CINDER_GLES2 )
-#include "cinder/gl/gles2.h"
-#endif
 #include "cinder/gl/gl.h"
 #include "cinder/Rand.h"
 #include "cinder/Timeline.h"
@@ -42,9 +39,6 @@ class CustomLerpApp : public AppNative {
 	Box		randomBox( Vec2f center );
 	void	draw();
 	
-#if defined( CINDER_GLES2 )
-    gl::GlesContextRef mContext;
-#endif
 	Anim<Box>	mBox;
 };
 
@@ -55,10 +49,7 @@ void CustomLerpApp::prepareSettings(Settings *settings)
 
 void CustomLerpApp::setup()
 {
-#if defined( CINDER_GLES2 )
-    mContext = gl::setGlesContext();
     gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
-#endif
 	mBox = randomBox( getWindowCenter() );
 };
 
@@ -77,18 +68,9 @@ Box	CustomLerpApp::randomBox( Vec2f center )
 
 void CustomLerpApp::draw()
 {
-#if defined( CINDER_GLES2 )
-    mContext->bind();
-#endif
-    
 	// clear out the window with black
 	gl::clear( Color( 0.7f, 0.7f, 0.7f ) );
-	
-	mBox.draw();
-
-#if defined( CINDER_GLES2 )
-    mContext->unbind();
-#endif    
+	mBox().draw();
 }
 
 CINDER_APP_NATIVE( CustomLerpApp, RendererGl )

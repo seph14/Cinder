@@ -4,7 +4,6 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := BasicTween
 
-# LOCAL_CFLAGS := -DCINDER_GLES2
 LOCAL_SRC_FILES := ../../src/BasicTweenApp.cpp
 
 LOCAL_LDLIBS    := -landroid

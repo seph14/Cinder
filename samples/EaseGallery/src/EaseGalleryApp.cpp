@@ -4,10 +4,6 @@
 #include "cinder/Easing.h"
 #include "cinder/Text.h"
 
-#if defined( CINDER_GLES2 )
-#include "cinder/gl/gles2.h"
-#endif
-
 #if defined( CINDER_ANDROID )
 #include "cinder/gl/TextureFont.h"
 #endif
@@ -93,20 +89,13 @@ class EaseGalleryApp : public AppNative {
 	void sizeRectangles();
 	
 	vector<EaseBox>		mEaseBoxes;
-#if defined( CINDER_GLES2 )
-    gl::GlesContextRef  mContext;
-#endif
 };
 
 void EaseGalleryApp::setup()
 {
-#if ! defined( CINDER_GLES2 )
-	setWindowSize( 950, 800 );
-#else
+	// setWindowSize( 950, 800 );
     EaseBox::sTexFont = gl::TextureFontRef();
-    mContext = gl::setGlesContext();
     gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
-#endif
 
 	mEaseBoxes.push_back( EaseBox( EaseInQuad(), "EaseInQuad" ) );
 	mEaseBoxes.push_back( EaseBox( EaseOutQuad(), "EaseOutQuad" ) );
@@ -187,10 +176,6 @@ void EaseGalleryApp::sizeRectangles()
 
 void EaseGalleryApp::draw()
 {
-#if defined( CINDER_GLES2 )
-    mContext->bind();
-#endif
-
 	gl::clear( Color( 0.9f, 0.9f, 0.9f ) ); 
 	gl::enableAlphaBlending();
 	glLineWidth( 2.0f );

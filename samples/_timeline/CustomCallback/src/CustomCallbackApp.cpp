@@ -4,12 +4,6 @@
 // * The update callback makes the radius of the circle the distance to the nearest edge using a member function
 
 #include "cinder/app/AppNative.h"
-#include "cinder/gl/gl.h"
-
-#if defined( CINDER_GLES2 )
-#include "cinder/gl/gles2.h"
-#endif
-
 #include "cinder/Timeline.h"
 #include "cinder/gl/gl.h"
 
@@ -58,10 +52,6 @@ class CustomCallbackApp : public AppNative {
 	void draw();
 	
 	Circle		mCircle;
-
-#if defined( CINDER_GLES2 )
-    gl::GlesContextRef mContext;
-#endif
 };
 
 void CustomCallbackApp::prepareSettings(Settings *settings)
@@ -77,10 +67,7 @@ void setBackgroundToBlue()
 
 void CustomCallbackApp::setup()
 {
-#if defined( CINDER_GLES2 )
-    mContext = gl::setGlesContext();
     gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
-#endif
 
 	setBackgroundToBlue();
 
@@ -98,16 +85,8 @@ void CustomCallbackApp::mouseDown( MouseEvent event )
 
 void CustomCallbackApp::draw()
 {
-#if defined( CINDER_GLES2 )
-    mContext->bind();
-#endif
-    
 	gl::clear( gBackgroundColor ); 	
 	mCircle.draw();
-
-#if defined( CINDER_GLES2 )
-    mContext->unbind();
-#endif    
 }
 
 
