@@ -75,9 +75,8 @@ Regardless of whether you use fixed or switchable orientation, always add
 "orientation" to the android:configChanges tag in AndroidManifest.xml.
 
 A change in orientation will trigger onResize() with the new viewport
-dimensions.  The actual orientation can be checked inside orientation by
-calling app->getOrientation().  See the TextureFont sample for an example
-of how to handle orientation changes.
+dimensions.  The actual orientation can be checked by calling
+app->getOrientation().
 
 To use fixed orientation, add android:orientation="landscape" or "portrait" to
 the activity tag.
