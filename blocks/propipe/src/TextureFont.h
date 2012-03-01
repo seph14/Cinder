@@ -2,6 +2,7 @@
 
 #include "cinder/gl/TextureFont.h"
 #include "cinder/gl/GlslProg.h"
+#include "cinder/Exception.h"
 
 namespace cinder { namespace pp {
 
@@ -18,18 +19,21 @@ class TextureFont : public gl::TextureFont
 	  public:
 		virtual ~IRenderer() { }
 
+        //! Set color used to draw glyphs if per-glyph colors are not supplied
 		virtual void setColor(const ColorA& color) = 0;
+        //! Set modelview * projection matrix
 		virtual void setMVP(const Matrix44f& mvp)  = 0;
-
+        //! Called to enable use of the shader's color attribute
 		virtual void useColorAttr(bool useAttr) = 0;
-		virtual bool useColorAttr() const = 0;
 
-		//  Attribute access
+		//! Attribute access
 		virtual GLuint aPosition() const = 0;
 		virtual GLuint aTexCoord() const = 0;
 		virtual GLuint aColor()    const = 0;
 
+        //! Enable client state and binds the renderer's shader
 		virtual void bind()   = 0;
+        //! Disables client state and unbinds the renderer's shader
 		virtual void unbind() = 0;
 	};
 
@@ -54,9 +58,15 @@ class TextureFont : public gl::TextureFont
 	static TextureFontRef create( const Font &font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() );
 
 	//!  Initialize the internal TextureFont renderer/shader. Must be called to enable font drawing.
-	static IRendererRef rendererInit(const IRendererRef& renderer = IRendererRef());
+	static void rendererInit(const IRendererRef& renderer = IRendererRef());
 	//!  Release the internal TextureFont renderer/shader
 	static void rendererRelease();
+
+    //!  Return a reference to the internal renderer, throws a \a RendererException if the renderer is not initialized or invalid
+    static IRenderer& renderer();
+};
+
+class RendererException : public Exception {
 };
 
 } } // namespace cinder::pp

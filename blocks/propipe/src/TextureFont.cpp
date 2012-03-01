@@ -40,11 +40,6 @@ public:
 		mShader.uniform("uUseColorAttr", useAttr);
 	}
 
-	bool useColorAttr() const
-	{
-		return mUseColorAttr;
-	}
-
 	virtual GLuint aPosition() const
 	{
 		return mPosition;
@@ -197,7 +192,7 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 			texCoords.push_back( srcCoords.getX2() ); texCoords.push_back( srcCoords.getY2() );
 			texCoords.push_back( srcCoords.getX1() ); texCoords.push_back( srcCoords.getY2() );
 			
-			if( sRenderer->useColorAttr() ) {
+			if( ! colors.empty() ) {
 				for( int i = 0; i < 4; ++i )
 					vertColors.push_back( colors[glyphIt-glyphMeasures.begin()] );
 			}
@@ -215,7 +210,7 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 
 		glVertexAttribPointer( sRenderer->aPosition(), 2, GL_FLOAT, GL_FALSE, 0, &verts[0] );
 		glVertexAttribPointer( sRenderer->aTexCoord(), 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0] );
-		if( sRenderer->useColorAttr() ) {
+		if( ! colors.empty() ) {
 			glVertexAttribPointer( sRenderer->aColor(), 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, &vertColors[0] );
 		}
 
@@ -301,7 +296,7 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 			texCoords.push_back( srcTexCoords.getX2() ); texCoords.push_back( srcTexCoords.getY2() );
 			texCoords.push_back( srcTexCoords.getX1() ); texCoords.push_back( srcTexCoords.getY2() );
 
-			if( sRenderer->useColorAttr() ) {
+			if( ! colors.empty() ) {
 				for( int i = 0; i < 4; ++i )
 					vertColors.push_back( colors[glyphIt-glyphMeasures.begin()] );
 			}
@@ -319,7 +314,7 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 
 		glVertexAttribPointer( sRenderer->aPosition(), 2, GL_FLOAT, GL_FALSE, 0, &verts[0] );
 		glVertexAttribPointer( sRenderer->aTexCoord(), 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0] );
-		if( sRenderer->useColorAttr() )
+		if( ! colors.empty() )
 			glVertexAttribPointer( sRenderer->aColor(), 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, &vertColors[0] );
 
 		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
@@ -327,18 +322,25 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 	}
 }
 
-TextureFont::IRendererRef TextureFont::rendererInit(const IRendererRef& renderer)
+void TextureFont::rendererInit(const IRendererRef& renderer)
 {
 	if (!sRenderer) {
 		sRenderer = renderer ? renderer : TextureFont::Renderer::create();
 	}
-
-	return sRenderer;
 }
 
 void TextureFont::rendererRelease()
 {
 	sRenderer.reset();
+}
+
+TextureFont::IRenderer& TextureFont::renderer()
+{
+    if (!sRenderer) {
+        throw RendererException();
+    }
+
+    return *sRenderer;
 }
 
 TextureFontRef TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )
