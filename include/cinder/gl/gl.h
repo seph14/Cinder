@@ -58,7 +58,7 @@
 #elif defined( CINDER_MAC )
 	#include <OpenGL/gl.h>
 #elif defined( CINDER_ANDROID )
-    #define GL_GLEXT_PROTOTYPES
+	#define GL_GLEXT_PROTOTYPES
 	#if defined( CINDER_GLES1 )
 		#include <GLES/gl.h>
 		#include <GLES/glext.h>
@@ -79,6 +79,14 @@ namespace cinder {
 } // namespace cinder
 
 namespace cinder { namespace gl {
+
+#if defined( CINDER_MSW ) || defined( CINDER_MAC ) || defined( CINDER_NACL )
+	typedef uint32_t index_t;
+	#define CINDER_GL_INDEX_TYPE GL_UNSIGNED_INT
+#elif defined( CINDER_COCOA_TOUCH ) || defined( CINDER_ANDROID )
+	typedef uint16_t index_t;
+	#define CINDER_GL_INDEX_TYPE GL_UNSIGNED_SHORT
+#endif
 
 //! Returns whether a particular OpenGL extension is available. Caches results
 bool isExtensionAvailable( const std::string &extName );
@@ -327,6 +335,7 @@ struct SaveTextureBindState {
 	GLint	mOldID;
 };
 
+#if ! defined( CINDER_GLES2 )
 //! Convenience class designed to push and pop a boolean OpenGL state
 struct BoolState {
 	BoolState( GLint target );
@@ -336,7 +345,6 @@ struct BoolState {
 	GLboolean	mOldValue;
 };
 
-#if ! defined( CINDER_GLES2 )
 //! Convenience class designed to push and pop a boolean OpenGL state
 struct ClientBoolState {
 	ClientBoolState( GLint target );

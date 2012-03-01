@@ -19,6 +19,7 @@ CINDER_SRC   = ../../../src/cinder
 TESS_SRC     = ../../../src/libtess2
 STBIMAGE_SRC = ../../../src/stb_image
 UTF8_CPP_SRC = ../../../src/utf8-cpp/source
+PROPIPE_SRC  = ../../../blocks/propipe/src
 
 LOCAL_MODULE 	 := cinder
 
@@ -101,7 +102,8 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 
 ifdef USE_GLES2
 LOCAL_SRC_FILES += $(CINDER_SRC)/gl/GlslProg.cpp \
-                   $(CINDER_SRC)/gl/Vbo.cpp
+                   $(CINDER_SRC)/gl/Vbo.cpp \
+				   $(PROPIPE_SRC)/TextureFont.cpp
 LOCAL_CFLAGS += -DCINDER_GLES2
 GLES_LDLIB = -lGLESv2
 else

@@ -1474,6 +1474,7 @@ SaveTextureBindState::~SaveTextureBindState()
 	glBindTexture( mTarget, mOldID );
 }
 
+#if ! defined( CINDER_GLES2 )
 ///////////////////////////////////////////////////////////////////////////////
 // BoolState
 BoolState::BoolState( GLint target )
@@ -1492,7 +1493,6 @@ BoolState::~BoolState()
 
 ///////////////////////////////////////////////////////////////////////////////
 // ClientBoolState
-#if ! defined( CINDER_GLES2 )
 ClientBoolState::ClientBoolState( GLint target )
 	: mTarget( target )
 {
