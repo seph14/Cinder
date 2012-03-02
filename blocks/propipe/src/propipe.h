@@ -114,13 +114,15 @@ protected:
 
 class MatrixStack
 {
-    std::deque<Matrix44f> mStack;
-    Matrix44f mBack;
-
+public:
     void push(const Matrix44f& matrix);
     void pop();
 
     Matrix44f& back();
+
+protected:
+    std::deque<Matrix44f> mStack;
+    Matrix44f mBack;
 };
 
 }
