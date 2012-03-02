@@ -364,7 +364,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
         case APP_CMD_CONFIG_CHANGED:
             Orientation_t newOrient = cinderApp->orientationFromConfig();
-            int32_t screenLong = AConfiguration_getScreenLong(engine->androidApp->config);
 
             //  Trigger resize event
             //  XXX incorrect results when switching from landscape->portrait while the
@@ -374,8 +373,11 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 int32_t width  = cinderApp->getWindowWidth();
                 int32_t height = cinderApp->getWindowHeight();
                 std::swap(width, height);
+                int32_t winWidth = ANativeWindow_getWidth(window);
+                int32_t winHeight = ANativeWindow_getHeight(window);
                 engine->orientation = newOrient;
-                CI_LOGW("Config change: resizing to (%d, %d) long %d", width, height, screenLong);
+                CI_LOGW("Config change: resizing to (%d, %d) win (%d, %d) orient %d", 
+                        width, height, winWidth, winHeight, newOrient);
                 cinderApp->setWindowSize(width, height);
                 cinderApp->privateResize__(ci::Vec2i(width, height));
             }

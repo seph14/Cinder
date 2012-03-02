@@ -19,21 +19,20 @@ class TextureFont : public gl::TextureFont
 	  public:
 		virtual ~IRenderer() { }
 
-        //! Set color used to draw glyphs if per-glyph colors are not supplied
-		virtual void setColor(const ColorA& color) = 0;
-        //! Set modelview * projection matrix
+        //! Set transform matrix
 		virtual void setMVP(const Matrix44f& mvp)  = 0;
-        //! Called to enable use of the shader's color attribute
-		virtual void useColorAttr(bool useAttr) = 0;
 
-		//! Attribute access
-		virtual GLuint aPosition() const = 0;
-		virtual GLuint aTexCoord() const = 0;
-		virtual GLuint aColor()    const = 0;
+        //! Set color used to draw glyphs if a per-glyph color array is not supplied
+		virtual void setColor(const ColorA& color) = 0;
 
-        //! Enable client state and binds the renderer's shader
+		//! Set vertex attribute data arrays
+		virtual void setPositionArray(float* pos) = 0;
+		virtual void setTexCoordArray(float* texCoord) = 0;
+		virtual void setColorArray(ColorA8u* colors) = 0;
+
+        //! Enable client state, binds the shader and sets vertex data
 		virtual void bind()   = 0;
-        //! Disables client state and unbinds the renderer's shader
+        //! Disables client state and unbinds the shader
 		virtual void unbind() = 0;
 	};
 
@@ -45,14 +44,14 @@ class TextureFont : public gl::TextureFont
 	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
 	TextureFont( const Font &font, const std::string &supportedChars, Atlas &atlas );
 
+	static IRendererRef sRenderer;
+
+  public:
 	//! Draws the glyphs in \a glyphMeasures at baseline \a baseline with DrawOptions \a options. \a glyphMeasures is a vector of pairs of glyph indices and offsets for the glyph baselines
 	virtual void drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baseline, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
 	//! Draws the glyphs in \a glyphMeasures clipped by \a clip, with \a offset added to each of the glyph offsets with DrawOptions \a options. \a glyphMeasures is a vector of pairs of glyph indices and offsets for the glyph baselines.
 	virtual void drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
 
-	static IRendererRef sRenderer;
-
-  public:
 	static TextureFontRef create( const Font &font, Atlas &atlas, const std::string &supportedChars = TextureFont::defaultChars() );
 	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and format \a format
 	static TextureFontRef create( const Font &font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() );

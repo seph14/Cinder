@@ -12,64 +12,68 @@ public:
 		return IRendererRef(new Renderer());
 	}
 
-	Renderer()
+	Renderer() : mPositionArray(0), mTexCoordArray(0), mColorArray(0)
 	{
 		mShader  = gl::GlslProg(vert, frag);
-
-		mPosition = mShader.getAttribLocation("aPosition");
-		mColor    = mShader.getAttribLocation("aColor");
-		mTexCoord = mShader.getAttribLocation("aTexCoord");
-
-		useColorAttr(false);
-		mShader.uniform("sTexture", 0);
-	}
-
-	virtual void setColor(const ColorA& color)
-	{
-		mShader.uniform("uColor", color);
+		mPositionAttrib = mShader.getAttribLocation("aPosition");
+		mTexCoordAttrib = mShader.getAttribLocation("aTexCoord");
+		mColorAttrib    = mShader.getAttribLocation("aColor");
 	}
 
 	virtual void setMVP(const Matrix44f& mvp)
 	{
-		mShader.uniform("uMVP", mvp);
+		mMVP = mvp;
 	}
 
-	void useColorAttr(bool useAttr)
+	virtual void setColor(const ColorA& color)
 	{
-		mUseColorAttr = useAttr;
-		mShader.uniform("uUseColorAttr", useAttr);
+		mColor = color;
 	}
 
-	virtual GLuint aPosition() const
+	virtual void setPositionArray(float* pos)
 	{
-		return mPosition;
+		mPositionArray = pos;
 	}
 
-	virtual GLuint aTexCoord() const
+	virtual void setTexCoordArray(float* texCoord)
 	{
-		return mColor;
+		mTexCoordArray = texCoord;
 	}
 
-	virtual GLuint aColor() const
+	virtual void setColorArray(ColorA8u* colors)
 	{
-		return mTexCoord;
+		mColorArray = colors;
 	}
 
 	virtual void bind()
 	{
-		glEnableVertexAttribArray(mPosition);
-		if ( mUseColorAttr )
-			glEnableVertexAttribArray(mColor);
-		glEnableVertexAttribArray(mTexCoord);
 		mShader.bind();
+		glEnableVertexAttribArray(mPositionAttrib);
+		if ( mColorArray )
+			glEnableVertexAttribArray(mColorAttrib);
+		glEnableVertexAttribArray(mTexCoordAttrib);
+
+		mShader.uniform("sTexture", 0);
+		glVertexAttribPointer( mPositionAttrib, 2, GL_FLOAT, GL_FALSE, 0, mPositionArray );
+		glVertexAttribPointer( mTexCoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, mTexCoordArray );
+		if ( mColorArray ) {
+			mShader.uniform("uUseColorAttr", true);
+			glVertexAttribPointer( mColorAttrib, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, mColorArray );
+		}
+		else {
+			mShader.uniform("uColor", mColor);
+			mShader.uniform("uUseColorAttr", false);
+		}
+
+		mShader.uniform("uMVP", mMVP);
 	}
 
 	virtual void unbind()
 	{
+		glDisableVertexAttribArray(mPositionAttrib);
+		glDisableVertexAttribArray(mColorAttrib);
+		glDisableVertexAttribArray(mTexCoordAttrib);
 		mShader.unbind();
-		glDisableVertexAttribArray(mPosition);
-		glDisableVertexAttribArray(mColor);
-		glDisableVertexAttribArray(mTexCoord);
 	}
 
 	static const char* vert;
@@ -78,22 +82,25 @@ public:
 protected:
 	gl::GlslProg mShader;
 	Matrix44f mMVP;
-	bool mUseColorAttr;
-	GLuint mPosition;
-	GLuint mColor;
-	GLuint mTexCoord;
+
+	GLuint mPositionAttrib;
+	GLuint mTexCoordAttrib;
+	GLuint mColorAttrib;
+
+	float*    mPositionArray;
+	float*    mTexCoordArray;
+	ColorA8u* mColorArray;
+	ColorA8u  mColor;
 };
 
 const char* TextureFont::Renderer::vert =
-        "attribute vec2 aPosition;\n"
-        "attribute vec4 aColor;\n"
+        "attribute vec4 aPosition;\n"
         "attribute vec2 aTexCoord;\n"
+        "attribute vec4 aColor;\n"
 
         "uniform mat4 uMVP;\n"
-        "uniform vec4 uVertexColor;\n"
-
-        "uniform bool uUseColorAttr;\n"
         "uniform vec4 uColor;\n"
+        "uniform bool uUseColorAttr;\n"
 
         "varying vec4 vColor;\n"
         "varying vec2 vTexCoord;\n"
@@ -106,7 +113,7 @@ const char* TextureFont::Renderer::vert =
 		"    vColor = uColor;\n"
 		"  }\n"
         "  vTexCoord = aTexCoord;\n"
-        "  gl_Position = uMVP * vec4(aPosition, 0, 1.0);\n"
+        "  gl_Position = uMVP * aPosition;\n"
         "}\n";
 
 const char* TextureFont::Renderer::frag =
@@ -144,10 +151,6 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 
 	if( ! colors.empty() ) {
 		assert( glyphMeasures.size() == colors.size() );
-		sRenderer->useColorAttr( true );
-	}
-	else {
-		sRenderer->useColorAttr( false );
 	}
 
 	gl::SaveTextureBindState saveBindState( mTextures[0].getTarget() );
@@ -205,15 +208,13 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 		if( curIdx == 0 )
 			continue;
 		
-		sRenderer->bind();
 		curTex.bind();
 
-		glVertexAttribPointer( sRenderer->aPosition(), 2, GL_FLOAT, GL_FALSE, 0, &verts[0] );
-		glVertexAttribPointer( sRenderer->aTexCoord(), 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0] );
-		if( ! colors.empty() ) {
-			glVertexAttribPointer( sRenderer->aColor(), 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, &vertColors[0] );
-		}
+		sRenderer->setPositionArray(&verts[0]);
+		sRenderer->setTexCoordArray(&texCoords[0]);
+		sRenderer->setColorArray(colors.empty() ? NULL : &vertColors[0]);
 
+		sRenderer->bind();
 		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
 		sRenderer->unbind();
 	}
@@ -230,10 +231,8 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 
 	if( ! colors.empty() ) {
 		assert( glyphMeasures.size() == colors.size() );
-		sRenderer->useColorAttr( true );
 	}
 	else {
-		sRenderer->useColorAttr( false );
 	}
 
 	gl::SaveTextureBindState saveBindState( mTextures[0].getTarget() );
@@ -309,14 +308,13 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 		if( curIdx == 0 )
 			continue;
 		
-		sRenderer->bind();
 		curTex.bind();
 
-		glVertexAttribPointer( sRenderer->aPosition(), 2, GL_FLOAT, GL_FALSE, 0, &verts[0] );
-		glVertexAttribPointer( sRenderer->aTexCoord(), 2, GL_FLOAT, GL_FALSE, 0, &texCoords[0] );
-		if( ! colors.empty() )
-			glVertexAttribPointer( sRenderer->aColor(), 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, &vertColors[0] );
+		sRenderer->setPositionArray(&verts[0]);
+		sRenderer->setTexCoordArray(&texCoords[0]);
+		sRenderer->setColorArray(colors.empty() ? NULL : &vertColors[0]);
 
+		sRenderer->bind();
 		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
 		sRenderer->unbind();
 	}
@@ -325,7 +323,7 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 void TextureFont::rendererInit(const IRendererRef& renderer)
 {
 	if (!sRenderer) {
-		sRenderer = renderer ? renderer : TextureFont::Renderer::create();
+		sRenderer = bool(renderer) ? renderer : TextureFont::Renderer::create();
 	}
 }
 
