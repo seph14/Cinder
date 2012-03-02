@@ -29,7 +29,6 @@ class TextureFontApp : public AppNative {
     Matrix44f           mMVP;
 	Font				mFont;
 	pp::TextureFontRef	mTextureFont;
-	pp::TextureFont::IRendererRef mRenderer;
 };
 
 void TextureFontApp::setup()
@@ -45,11 +44,7 @@ void TextureFontApp::setup()
 	mFont = Font( "Times New Roman", 24 );
 #endif
 
-    CI_LOGD("XXX Init tex font");
 	mTextureFont = pp::TextureFont::create( mFont );
-    CI_LOGD("XXX Init tex renderer");
-	// mRenderer = PPRenderer::create();
-    // pp::TextureFont::rendererInit(mRenderer);
     pp::TextureFont::rendererInit();
 	setupMVP();
 }
