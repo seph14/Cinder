@@ -540,16 +540,7 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 		glDrawElements( GL_TRIANGLES, indices.size(), indexType, &indices[0] );
 	}
 }
-
-#else
-
-void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const std::vector<ColorA8u> &colors )
-{ }
-
-void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options, const std::vector<ColorA8u> &colors )
-{ }
-
-#endif   // ! defined( CINDER_GLES2 )
+#endif
 
 #if defined( CINDER_ANDROID )
 
@@ -721,7 +712,6 @@ TextureFontRef TextureFont::create( const Font &font, const Format &format, cons
 {
 	return TextureFontRef( new TextureFont( font, supportedChars, format ) ); 
 }
-#endif
 
 void TextureFont::drawString( const std::string &str, const Vec2f &baseline, const DrawOptions &options )
 {
@@ -737,7 +727,7 @@ void TextureFont::drawString( const std::string &str, const Rectf &fitRect, cons
 	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
 }
 
-#if defined( CINDER_COCOA ) || defined ( CINDER_ANDROID )
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRect, const Vec2f &offset, const DrawOptions &options )
 {
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( fitRect.getWidth(), fitRect.getHeight() ).ligate( options.getLigate() );
@@ -752,7 +742,9 @@ void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRec
 	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset + Vec2f(0, mFont.getAscent() ), options );
 #endif
 }
-#endif
+#endif  // defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
+
+#endif  // ! defined( CINDER_GLES2 )
 
 Vec2f TextureFont::measureString( const std::string &str, const DrawOptions &options ) const
 {

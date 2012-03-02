@@ -26,9 +26,10 @@ class TextureFontApp : public AppNative {
 
 	void setupMVP();
 
-    Matrix44f           mMVP;
-	Font				mFont;
-	pp::TextureFontRef	mTextureFont;
+    Matrix44f                  mMVP;
+	Font			           mFont;
+	pp::TextureFontRef         mTextureFont;
+	pp::TextureFontRendererRef mTextRender;
 };
 
 void TextureFontApp::setup()
@@ -45,7 +46,7 @@ void TextureFontApp::setup()
 #endif
 
 	mTextureFont = pp::TextureFont::create( mFont );
-    pp::TextureFont::rendererInit();
+	mTextRender = pp::TextureFont::createRenderer();
 	setupMVP();
 }
 
@@ -62,11 +63,11 @@ void TextureFontApp::resume(bool renewContext)
     if (renewContext) {
         //  Release GL resources
         mTextureFont.reset();
-        pp::TextureFont::rendererRelease();
+		mTextRender.reset();
 
         //  Recreate GL resources
         mTextureFont = pp::TextureFont::create( mFont );
-        pp::TextureFont::rendererInit();
+		mTextRender  = pp::TextureFont::createRenderer();
     }
 }
 #endif
@@ -106,25 +107,28 @@ void TextureFontApp::setupMVP()
 
 void TextureFontApp::draw()
 {
-    pp::TextureFont::IRenderer& textRender = pp::TextureFont::renderer();
+    // pp::TextureFont::IRenderer& textRender = pp::TextureFont::renderer();
 	gl::enableAlphaBlending();
 	gl::clear( Color( 0, 0, 0 ) );
 
 	std::string str( "Granted, then, that certain transformations do happen, it is essential that we should regard them in the philosophic manner of fairy tales, not in the unphilosophic manner of science and the \"Laws of Nature.\" When we are asked why eggs turn into birds or fruits fall in autumn, we must answer exactly as the fairy godmother would answer if Cinderella asked her why mice turned into horses or her clothes fell from her at twelve o'clock. We must answer that it is MAGIC. It is not a \"law,\" for we do not understand its general formula." );
 	Rectf boundsRect( 40, mTextureFont->getAscent() + 40, getWindowWidth() - 40, getWindowHeight() - 40 );
 
-    textRender.setMVP( mMVP );
-    textRender.setColor( ColorA( 1, 0.5f, 0.25f, 1.0f ) );
+	mTextRender->bind();
+    mTextRender->setMVP( mMVP );
+    mTextRender->setColor( ColorA( 1, 0.5f, 0.25f, 1.0f ) );
 
-	mTextureFont->drawStringWrapped( str, boundsRect );
+	mTextRender->drawStringWrapped( *mTextureFont, str, boundsRect );
 
 	// Draw FPS
-	textRender.setColor( Color::white() );
-	mTextureFont->drawString( toString( floor(getAverageFps()) ) + " FPS", Vec2f( 10, getWindowHeight() - mTextureFont->getDescent() ) );
+	mTextRender->setColor( Color::white() );
+	mTextRender->drawString( *mTextureFont, toString( floor(getAverageFps()) ) + " FPS", Vec2f( 10, getWindowHeight() - mTextureFont->getDescent() ) );
     
     // Draw Font Name
 	float fontNameWidth = mTextureFont->measureString( mTextureFont->getName() ).x;
-	mTextureFont->drawString( mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
+	mTextRender->drawString( *mTextureFont, mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
+
+	mTextRender->unbind();
 }
 
 CINDER_APP_NATIVE( TextureFontApp, RendererGl(0) )
