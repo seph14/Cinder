@@ -36,10 +36,10 @@ void TextureFontRenderer::drawStringWrapped( TextureFont& texFont, const string 
 }
 #endif
 
-class PPRenderer : public TextureFontRenderer
+class PPTextureFontRenderer : public TextureFontRenderer
 {
 public:
-	PPRenderer() : mPositionArray(0), mTexCoordArray(0), mColorArray(0)
+	PPTextureFontRenderer() : mPositionArray(0), mTexCoordArray(0), mColorArray(0)
 	{
 		mShader  = gl::GlslProg(vert, frag);
 		mPositionAttrib = mShader.getAttribLocation("aPosition");
@@ -93,12 +93,12 @@ public:
 		glVertexAttribPointer( mPositionAttrib, 2, GL_FLOAT, GL_FALSE, 0, mPositionArray );
 		glVertexAttribPointer( mTexCoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, mTexCoordArray );
 		if ( mColorArray ) {
-			mShader.uniform("uUseColorAttr", true);
+			mShader.uniform("uEnableColorAttr", true);
 			glVertexAttribPointer( mColorAttrib, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, mColorArray );
 		}
 		else {
 			mShader.uniform("uColor", mColor);
-			mShader.uniform("uUseColorAttr", false);
+			mShader.uniform("uEnableColorAttr", false);
 		}
 
 		mShader.uniform("uMVP", mMVP);
@@ -128,20 +128,20 @@ protected:
 	ColorA8u  mColor;
 };
 
-const char* PPRenderer::vert =
+const char* PPTextureFontRenderer::vert =
         "attribute vec4 aPosition;\n"
         "attribute vec2 aTexCoord;\n"
         "attribute vec4 aColor;\n"
 
         "uniform mat4 uMVP;\n"
         "uniform vec4 uColor;\n"
-        "uniform bool uUseColorAttr;\n"
+        "uniform bool uEnableColorAttr;\n"
 
         "varying vec4 vColor;\n"
         "varying vec2 vTexCoord;\n"
 
         "void main() {\n"
-        "  if (uUseColorAttr) {\n"
+        "  if (uEnableColorAttr) {\n"
         "    vColor = aColor;\n"
         "  }\n"
 		"  else {\n"
@@ -151,7 +151,7 @@ const char* PPRenderer::vert =
         "  gl_Position = uMVP * aPosition;\n"
         "}\n";
 
-const char* PPRenderer::frag =
+const char* PPTextureFontRenderer::frag =
         "precision mediump float;\n"
 
         "uniform sampler2D sTexture;\n"
@@ -347,7 +347,7 @@ void TextureFont::drawGlyphs( TextureFontRenderer& renderer, const vector<pair<u
 
 TextureFontRendererRef TextureFont::createRenderer()
 {
-	return TextureFontRendererRef(new PPRenderer());
+	return TextureFontRendererRef(new PPTextureFontRenderer());
 }
 
 TextureFontRef TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )

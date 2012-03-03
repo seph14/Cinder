@@ -104,7 +104,9 @@ ifdef USE_GLES2
 LOCAL_C_INCLUDES += $(PROPIPE_SRC)
 LOCAL_SRC_FILES += $(CINDER_SRC)/gl/GlslProg.cpp \
                    $(CINDER_SRC)/gl/Vbo.cpp \
-                   $(PROPIPE_SRC)/TextureFont.cpp
+                   $(PROPIPE_SRC)/TextureFont.cpp \
+                   $(PROPIPE_SRC)/Draw.cpp
+
 LOCAL_CFLAGS += -DCINDER_GLES2
 GLES_LDLIB = -lGLESv2
 else

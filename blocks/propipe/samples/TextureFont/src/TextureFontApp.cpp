@@ -7,6 +7,7 @@
 #include "cinder/Utilities.h"
 
 #include "propipe/TextureFont.h"
+#include "propipe/Draw.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -30,6 +31,7 @@ class TextureFontApp : public AppNative {
 	Font			           mFont;
 	pp::TextureFontRef         mTextureFont;
 	pp::TextureFontRendererRef mTextRender;
+	pp::DrawRendererRef        mDraw;
 };
 
 void TextureFontApp::setup()
@@ -46,7 +48,8 @@ void TextureFontApp::setup()
 #endif
 
 	mTextureFont = pp::TextureFont::create( mFont );
-	mTextRender = pp::TextureFont::createRenderer();
+	mTextRender  = pp::TextureFont::createRenderer();
+	mDraw        = pp::DrawRenderer::create();
 	setupMVP();
 }
 
@@ -64,10 +67,12 @@ void TextureFontApp::resume(bool renewContext)
         //  Release GL resources
         mTextureFont.reset();
 		mTextRender.reset();
+		mDraw.reset();
 
         //  Recreate GL resources
         mTextureFont = pp::TextureFont::create( mFont );
 		mTextRender  = pp::TextureFont::createRenderer();
+		mDraw        = pp::DrawRenderer::create();
     }
 }
 #endif
@@ -116,7 +121,7 @@ void TextureFontApp::draw()
 
 	mTextRender->bind();
     mTextRender->setMVP( mMVP );
-    mTextRender->setColor( ColorA( 1, 0.5f, 0.25f, 1.0f ) );
+    mTextRender->setColor( ColorA( 0.17f, 0.72f, 0.88f, 1.0f ) );
 
 	mTextRender->drawStringWrapped( *mTextureFont, str, boundsRect );
 
@@ -129,6 +134,13 @@ void TextureFontApp::draw()
 	mTextRender->drawString( *mTextureFont, mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
 
 	mTextRender->unbind();
+
+	mDraw->bind();
+	mDraw->setColor(ColorA::white());
+	mDraw->setModelView(Matrix44f::identity());
+	mDraw->setProjection(mMVP);
+	mDraw->drawStrokedRect(boundsRect);
+	mDraw->unbind();
 }
 
 CINDER_APP_NATIVE( TextureFontApp, RendererGl(0) )
