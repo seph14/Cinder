@@ -1,218 +1,53 @@
 #include "Draw.h"
 
 #include "cinder/gl/GlslProg.h"
+#include "Renderer.h"
 
 using namespace cinder::gl;
 
 namespace cinder { namespace pp {
 
-class PPDrawRenderer : public DrawRenderer
+Draw::Draw(RendererRef renderer) : mRenderer(renderer)
 {
-public:
-    PPDrawRenderer() 
-        : mPositionDim(3), mPositionArray(0), mTexCoordArray(0), mColorArray(0), mNormalArray(0)
-    {
-        try {
-            mShader  = gl::GlslProg(vert, frag);
-            mPositionAttrib = mShader.getAttribLocation("aPosition");
-            mTexCoordAttrib = mShader.getAttribLocation("aTexCoord");
-            mColorAttrib    = mShader.getAttribLocation("aColor");
-        }
-        catch (GlslProgCompileExc& ex) {
-            CI_LOGE("Error compiling: %s", ex.what());
-        }
-        // mNormalAttrib   = mShader.getAttribLocation("aNormal");
-    }
+}
 
-	virtual void setModelView(const Matrix44f& mv)
-	{
-		mModelView = mv;
-	}
+Draw::~Draw()
+{
+    mRenderer.reset();
+}
 
-	virtual void setProjection(const Matrix44f& proj)
-	{
-		mProjection = proj;
-	}
+void Draw::bind()
+{
+    if (!mRenderer->isBound())
+        mRenderer->bind();
+}
 
-	virtual void setColor(const ColorA& color)
-	{
-		mColor = color;
-	}
+void Draw::unbind()
+{
+    if (mRenderer->isBound())
+        mRenderer->unbind();
+}
 
-	virtual void setPositionArray(float* pos, int dim)
-	{
-		mPositionArray = pos;
-        mPositionDim = dim;
-	}
-
-	virtual void setTexCoordArray(float* texCoord)
-	{
-		mTexCoordArray = texCoord;
-	}
-
-	virtual void setColorArray(GLubyte* colors)
-	{
-		mColorArray = colors;
-	}
-
-	virtual void setNormalArray(float* norms)
-    {
-        mNormalArray = norms;
-    }
-
-    virtual void resetArrays()
-    {
-        mPositionArray = NULL;
-        mTexCoordArray = NULL;
-        mColorArray    = NULL;
-        mNormalArray   = NULL;
-    }
-
-	virtual void bind()
-	{
-		mShader.bind();
-	}
-
-	virtual void unbind()
-	{
-		mShader.unbind();
-	}
-
-	virtual void enableClientState()
-	{
-		glEnableVertexAttribArray(mPositionAttrib);
-		if ( mColorArray )
-			glEnableVertexAttribArray(mColorAttrib);
-        if ( mTexCoordArray )
-            glEnableVertexAttribArray(mTexCoordAttrib);
-        // if ( mNormalArray )
-        //     glEnableVertexAttribArray(mNormalAttrib);
-
-		glVertexAttribPointer( mPositionAttrib, mPositionDim, GL_FLOAT, GL_FALSE, 0, mPositionArray );
-		glVertexAttribPointer( mTexCoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, mTexCoordArray );
-
-		if ( mColorArray ) {
-			mShader.uniform("uEnableColorAttr", true);
-			glVertexAttribPointer( mColorAttrib, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, mColorArray );
-		}
-		else {
-			mShader.uniform("uColor", mColor);
-			mShader.uniform("uEnableColorAttr", false);
-		}
-
-        if (mTexCoordArray) {
-            mShader.uniform("sTexture", 0);
-            mShader.uniform("uEnableTextureAttr", true);
-        }
-        else {
-            mShader.uniform("uEnableTextureAttr", false);
-        }
-
-        // if ( mNormalArray )
-        //     glVertexAttribPointer("");
-
-		mShader.uniform("uModelView", mModelView);
-		mShader.uniform("uProjection", mProjection);
-	}
-
-	virtual void disableClientState()
-	{
-		glDisableVertexAttribArray(mPositionAttrib);
-		glDisableVertexAttribArray(mColorAttrib);
-		glDisableVertexAttribArray(mTexCoordAttrib);
-        // glDisableVertexAttribArray(mNormalAttrib);
-	}
-
-	static const char* vert;
-	static const char* frag;
-
-protected:
-	gl::GlslProg mShader;
-	Matrix44f mModelView;
-	Matrix44f mProjection;
-
-	GLuint mPositionAttrib;
-	GLuint mTexCoordAttrib;
-	GLuint mColorAttrib;
-	GLuint mNormalAttrib;
-
-    int       mPositionDim;
-	ColorA8u  mColor;
-
-	float*    mPositionArray;
-	float*    mTexCoordArray;
-	GLubyte*  mColorArray;
-    float*    mNormalArray;
-};
-
-const char* PPDrawRenderer::vert =
-        "attribute vec4 aPosition;\n"
-        "attribute vec2 aTexCoord;\n"
-        "attribute vec4 aColor;\n"
-
-        "uniform mat4 uModelView;\n"
-        "uniform mat4 uProjection;\n"
-        "uniform vec4 uColor;\n"
-
-        "uniform bool uEnableColorAttr;\n"
-        "uniform bool uEnableTextureAttr;\n"
-
-        "varying vec4 vColor;\n"
-        "varying vec2 vTexCoord;\n"
-
-        "void main() {\n"
-        "  if (uEnableColorAttr) {\n"
-        "    vColor = aColor;\n"
-        "  }\n"
-		"  else {\n"
-		"    vColor = uColor;\n"
-		"  }\n"
-        "  if (uEnableTextureAttr) {\n"
-        "    vTexCoord = aTexCoord;\n"
-        "  }\n"
-        "  gl_Position = uProjection * uModelView * aPosition;\n"
-        "}\n";
-
-const char* PPDrawRenderer::frag =
-        "precision mediump float;\n"
-
-        "uniform sampler2D sTexture;\n"
-
-        "uniform bool uEnableTextureAttr;\n"
-
-        "varying vec4 vColor;\n"
-        "varying vec2 vTexCoord;\n"
-
-        "void main() {\n"
-        "  if (uEnableTextureAttr) {\n"
-        "    gl_FragColor = vColor * texture2D(sTexture, vTexCoord);\n"
-        "  }\n"
-        "  else {\n"
-        "    gl_FragColor = vColor;\n"
-        "  }\n"
-        "}\n";
-
-
-void DrawRenderer::drawLine( const Vec2f &start, const Vec2f &end )
+void Draw::drawLine( const Vec2f &start, const Vec2f &end )
 {
     drawLine(Vec3f(start.x, start.y, 0), Vec3f(end.x, end.y, 0));
 }
 
-void DrawRenderer::drawLine( const Vec3f &start, const Vec3f &end )
+void Draw::drawLine( const Vec3f &start, const Vec3f &end )
 {
     float lineVerts[3*2];
-    resetArrays();
-    setPositionArray(lineVerts, 3);
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray(lineVerts, 3);
     lineVerts[0] = start.x; lineVerts[1] = start.y; lineVerts[2] = start.z;
     lineVerts[3] = end.x; lineVerts[4] = end.y; lineVerts[5] = end.z; 
-    enableClientState();
+    mRenderer->enableClientState();
     glDrawArrays( GL_LINES, 0, 2 );
-    disableClientState();
+    mRenderer->disableClientState();
 }
 
 namespace {
 
-void drawCubeImpl( DrawRenderer& render, const Vec3f &c, const Vec3f &size, bool drawColors, bool textured )
+void drawCubeImpl( Renderer& render, const Vec3f &c, const Vec3f &size, bool drawColors, bool textured )
 {
 	GLfloat sx = size.x * 0.5f;
 	GLfloat sy = size.y * 0.5f;
@@ -271,17 +106,17 @@ void drawCubeImpl( DrawRenderer& render, const Vec3f &c, const Vec3f &size, bool
 } // anonymous namespace
 
 
-void DrawRenderer::drawCube( const Vec3f &center, const Vec3f &size, bool textured )
+void Draw::drawCube( const Vec3f &center, const Vec3f &size, bool textured )
 {
-	drawCubeImpl( *this, center, size, false, textured );
+	drawCubeImpl( *mRenderer, center, size, false, textured );
 }
 
-void DrawRenderer::drawColorCube( const Vec3f &center, const Vec3f &size, bool textured )
+void Draw::drawColorCube( const Vec3f &center, const Vec3f &size, bool textured )
 {
-	drawCubeImpl( *this, center, size, true, textured );
+	drawCubeImpl( *mRenderer, center, size, true, textured );
 }
 
-void DrawRenderer::drawStrokedCube( const Vec3f &center, const Vec3f &size )
+void Draw::drawStrokedCube( const Vec3f &center, const Vec3f &size )
 {
 	Vec3f min = center - size * 0.5f;
 	Vec3f max = center + size * 0.5f;
@@ -302,7 +137,7 @@ void DrawRenderer::drawStrokedCube( const Vec3f &center, const Vec3f &size )
 	drawLine( Vec3f(max.x, min.y, min.z), Vec3f(max.x, min.y, max.z) );
 }
 
-void DrawRenderer::drawSphere( const Vec3f &center, float radius, int segments, bool textured )
+void Draw::drawSphere( const Vec3f &center, float radius, int segments, bool textured )
 {
 	if( segments < 0 )
 		return;
@@ -311,13 +146,13 @@ void DrawRenderer::drawSphere( const Vec3f &center, float radius, int segments, 
 	float *normals = new float[(segments+1)*2*3];
 	float *texCoords = new float[(segments+1)*2*2];
 
-    resetArrays();
-    setPositionArray( verts, 3 );
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray( verts, 3 );
     if ( textured )
-        setTexCoordArray( texCoords );
-    setNormalArray( normals );
+        mRenderer->setTexCoordArray( texCoords );
+    mRenderer->setNormalArray( normals );
 
-    enableClientState();
+    mRenderer->enableClientState();
 
 	for( int j = 0; j < segments / 2; j++ ) {
 		float theta1 = j * 2 * 3.14159f / segments - ( 3.14159f / 2.0f );
@@ -346,19 +181,19 @@ void DrawRenderer::drawSphere( const Vec3f &center, float radius, int segments, 
 		glDrawArrays( GL_TRIANGLE_STRIP, 0, (segments + 1)*2 );
 	}
 
-    disableClientState();
+    mRenderer->disableClientState();
 	
 	delete [] verts;
 	delete [] normals;
 	delete [] texCoords;
 }
 
-void DrawRenderer::draw( const class Sphere &sphere, int segments, bool textured )
+void Draw::draw( const class Sphere &sphere, int segments, bool textured )
 {
 	drawSphere( sphere.getCenter(), sphere.getRadius(), segments, textured );
 }
 
-void DrawRenderer::drawSolidCircle( const Vec2f &center, float radius, int numSegments )
+void Draw::drawSolidCircle( const Vec2f &center, float radius, int numSegments )
 {
 	// automatically determine the number of segments from the circumference
 	if( numSegments <= 0 ) {
@@ -376,15 +211,15 @@ void DrawRenderer::drawSolidCircle( const Vec2f &center, float radius, int numSe
 		verts[(s+1)*2+1] = center.y + math<float>::sin( t ) * radius;
 	}
 
-    resetArrays();
-    setPositionArray( verts, 2 );
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray( verts, 2 );
+    mRenderer->enableClientState();
 	glDrawArrays( GL_TRIANGLE_FAN, 0, numSegments + 2 );
-    disableClientState();
+    mRenderer->disableClientState();
 	delete [] verts;
 }
 
-void DrawRenderer::drawStrokedCircle( const Vec2f &center, float radius, int numSegments )
+void Draw::drawStrokedCircle( const Vec2f &center, float radius, int numSegments )
 {
 	// automatically determine the number of segments from the circumference
 	if( numSegments <= 0 ) {
@@ -399,15 +234,15 @@ void DrawRenderer::drawStrokedCircle( const Vec2f &center, float radius, int num
 		verts[s*2+1] = center.y + math<float>::sin( t ) * radius;
 	}
 
-    resetArrays();
-    setPositionArray( verts, 2 );
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray( verts, 2 );
+    mRenderer->enableClientState();
 	glDrawArrays( GL_LINE_LOOP, 0, numSegments );
-    disableClientState();
+    mRenderer->disableClientState();
 	delete [] verts;
 }
 
-void DrawRenderer::drawSolidRect( const Rectf &rect, bool textureRectangle )
+void Draw::drawSolidRect( const Rectf &rect, bool textureRectangle )
 {
 	GLfloat verts[8];
 	GLfloat texCoords[8];
@@ -421,15 +256,15 @@ void DrawRenderer::drawSolidRect( const Rectf &rect, bool textureRectangle )
 	verts[3*2+0] = rect.getX1(); texCoords[3*2+0] = ( textureRectangle ) ? rect.getX1() : 0;
 	verts[3*2+1] = rect.getY2(); texCoords[3*2+1] = ( textureRectangle ) ? rect.getY2() : 1;
 
-    resetArrays();
-    setPositionArray(verts, 2);
-    setTexCoordArray(texCoords);
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray(verts, 2);
+    mRenderer->setTexCoordArray(texCoords);
+    mRenderer->enableClientState();
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-    disableClientState();
+    mRenderer->disableClientState();
 }
 
-void DrawRenderer::drawStrokedRect( const Rectf &rect )
+void Draw::drawStrokedRect( const Rectf &rect )
 {
 	GLfloat verts[8];
 	verts[0] = rect.getX1();	verts[1] = rect.getY1();
@@ -437,32 +272,32 @@ void DrawRenderer::drawStrokedRect( const Rectf &rect )
 	verts[4] = rect.getX2();	verts[5] = rect.getY2();
 	verts[6] = rect.getX1();	verts[7] = rect.getY2();
 
-    resetArrays();
-    setPositionArray( verts, 2 );
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray( verts, 2 );
+    mRenderer->enableClientState();
 	glDrawArrays( GL_LINE_LOOP, 0, 4 );
-    disableClientState();
+    mRenderer->disableClientState();
 }
 
-void DrawRenderer::drawCoordinateFrame( float axisLength, float headLength, float headRadius )
+void Draw::drawCoordinateFrame( float axisLength, float headLength, float headRadius )
 {
-    setColor(ColorA8u(255, 0, 0, 255));
+    mRenderer->setColor(ColorA8u(255, 0, 0, 255));
 	drawVector( Vec3f::zero(), Vec3f::xAxis() * axisLength, headLength, headRadius );
-    setColor(ColorA8u(0, 255, 0, 255));
+    mRenderer->setColor(ColorA8u(0, 255, 0, 255));
 	drawVector( Vec3f::zero(), Vec3f::yAxis() * axisLength, headLength, headRadius );
-    setColor(ColorA8u(0, 0, 255, 255));
+    mRenderer->setColor(ColorA8u(0, 0, 255, 255));
 	drawVector( Vec3f::zero(), Vec3f::zAxis() * axisLength, headLength, headRadius );
 }
 
-void DrawRenderer::drawVector( const Vec3f &start, const Vec3f &end, float headLength, float headRadius )
+void Draw::drawVector( const Vec3f &start, const Vec3f &end, float headLength, float headRadius )
 {
 	const int NUM_SEGMENTS = 32;
 	float lineVerts[3*2];
 	Vec3f coneVerts[NUM_SEGMENTS+2];
 
-    resetArrays();
-    setPositionArray(lineVerts, 3);
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray(lineVerts, 3);
+    mRenderer->enableClientState();
 
 	lineVerts[0] = start.x; lineVerts[1] = start.y; lineVerts[2] = start.z;
 	lineVerts[3] = end.x; lineVerts[4] = end.y; lineVerts[5] = end.z;	
@@ -474,7 +309,7 @@ void DrawRenderer::drawVector( const Vec3f &start, const Vec3f &end, float headL
 	Vec3f left = axis.cross( temp ).normalized();
 	Vec3f up = axis.cross( left ).normalized();
 
-    setPositionArray(&coneVerts[0].x, 3);
+    mRenderer->setPositionArray(&coneVerts[0].x, 3);
 	coneVerts[0] = Vec3f( end + axis * headLength );
 	for( int s = 0; s <= NUM_SEGMENTS; ++s ) {
 		float t = s / (float)NUM_SEGMENTS;
@@ -484,7 +319,7 @@ void DrawRenderer::drawVector( const Vec3f &start, const Vec3f &end, float headL
 	glDrawArrays( GL_TRIANGLE_FAN, 0, NUM_SEGMENTS+2 );
 
 	// draw the cap
-    setPositionArray(&coneVerts[0].x, 3);
+    mRenderer->setPositionArray(&coneVerts[0].x, 3);
 	coneVerts[0] = end;
 	for( int s = 0; s <= NUM_SEGMENTS; ++s ) {
 		float t = s / (float)NUM_SEGMENTS;
@@ -493,10 +328,10 @@ void DrawRenderer::drawVector( const Vec3f &start, const Vec3f &end, float headL
 	}
 	glDrawArrays( GL_TRIANGLE_FAN, 0, NUM_SEGMENTS+2 );
 
-    disableClientState();
+    mRenderer->disableClientState();
 }
 
-void DrawRenderer::drawFrustum( const Camera &cam )
+void Draw::drawFrustum( const Camera &cam )
 {
 	Vec3f vertex[8];
 	Vec3f nearTopLeft, nearTopRight, nearBottomLeft, nearBottomRight;
@@ -505,9 +340,9 @@ void DrawRenderer::drawFrustum( const Camera &cam )
 	Vec3f farTopLeft, farTopRight, farBottomLeft, farBottomRight;
 	cam.getFarClipCoordinates( &farTopLeft, &farTopRight, &farBottomLeft, &farBottomRight );
 	
-    resetArrays();
-    setPositionArray(&vertex[0].x, 3);
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray(&vertex[0].x, 3);
+    mRenderer->enableClientState();
 	
 	vertex[0] = cam.getEyePoint();
 	vertex[1] = nearTopLeft;
@@ -544,10 +379,10 @@ void DrawRenderer::drawFrustum( const Camera &cam )
 	
 	glLineWidth( 1.0f );
     
-    disableClientState();
+    mRenderer->disableClientState();
 }
 
-void DrawRenderer::drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments, bool textured )
+void Draw::drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments, bool textured )
 {
 	longitudeSegments = std::min( std::max( 7, longitudeSegments ) + 1, 255 );
 	latitudeSegments = std::min( std::max( 7, latitudeSegments ) + 1, 255 );
@@ -559,12 +394,12 @@ void DrawRenderer::drawTorus( float outterRadius, float innerRadius, int longitu
 	GLushort *indices = new GLushort[latitudeSegments * 2];
 	float ct, st, cp, sp;
 
-    resetArrays();
-    setPositionArray(vertex, 3);
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray(vertex, 3);
     if (textured)
-        setTexCoordArray(tex);
-    setNormalArray(normal);
-    enableClientState();
+        mRenderer->setTexCoordArray(tex);
+    mRenderer->setNormalArray(normal);
+    mRenderer->enableClientState();
 
 	for( i = 0; i < longitudeSegments; i++ ) {
 		ct = cos(2.0f * (float)M_PI * (float)i / (float)(longitudeSegments - 1));
@@ -595,7 +430,7 @@ void DrawRenderer::drawTorus( float outterRadius, float innerRadius, int longitu
 		glDrawElements( GL_TRIANGLE_STRIP, (latitudeSegments)*2, GL_UNSIGNED_SHORT, indices );
 	}
 
-    disableClientState();
+    mRenderer->disableClientState();
 	
 	delete [] normal;
 	delete [] tex;
@@ -603,7 +438,7 @@ void DrawRenderer::drawTorus( float outterRadius, float innerRadius, int longitu
 	delete [] indices;
 }
 
-void DrawRenderer::drawCylinder( float baseRadius, float topRadius, float height, int slices, int stacks, bool textured )
+void Draw::drawCylinder( float baseRadius, float topRadius, float height, int slices, int stacks, bool textured )
 {
 	stacks = math<int>::max(2, stacks + 1);	// minimum of 1 stack
 	slices = math<int>::max(4, slices + 1);	// minimum of 3 slices
@@ -614,11 +449,11 @@ void DrawRenderer::drawCylinder( float baseRadius, float topRadius, float height
 	float *tex = new float[stacks * slices * 2];
 	GLushort *indices = new GLushort[slices * 2];
 
-    resetArrays();
-    setPositionArray(vertex, 3);
-    setTexCoordArray(tex);
-    setNormalArray(normal);
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray(vertex, 3);
+    mRenderer->setTexCoordArray(tex);
+    mRenderer->setNormalArray(normal);
+    mRenderer->enableClientState();
 
 	for(i=0;i<slices;i++) {
 		float u = (float)i / (float)(slices - 1);
@@ -652,7 +487,7 @@ void DrawRenderer::drawCylinder( float baseRadius, float topRadius, float height
 		glDrawElements( GL_TRIANGLE_STRIP, (slices)*2, GL_UNSIGNED_SHORT, indices );
 	}
 
-    disableClientState();
+    mRenderer->disableClientState();
 
 	delete [] normal;
 	delete [] tex;
@@ -661,30 +496,30 @@ void DrawRenderer::drawCylinder( float baseRadius, float topRadius, float height
 }
 
 // void draw( const class PolyLine<Vec2f> &polyLine );
-void DrawRenderer::draw( const class PolyLine<Vec3f> &polyLine )
+void Draw::draw( const class PolyLine<Vec3f> &polyLine )
 {
-    resetArrays();
-    setPositionArray((float*) &(polyLine.getPoints()[0]), 3);
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray((float*) &(polyLine.getPoints()[0]), 3);
+    mRenderer->enableClientState();
     glDrawArrays( ( polyLine.isClosed() ) ? GL_LINE_LOOP : GL_LINE_STRIP, 0, polyLine.size() );
 
-    disableClientState();
+    mRenderer->disableClientState();
 }
 
-void DrawRenderer::draw( const class Path2d &path2d, float approximationScale )
+void Draw::draw( const class Path2d &path2d, float approximationScale )
 {
 	if( path2d.getNumSegments() == 0 )
 		return;
 	std::vector<Vec2f> points = path2d.subdivide( approximationScale );
 
-    resetArrays();
-    setPositionArray((float*) &(points[0]), 2);
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray((float*) &(points[0]), 2);
+    mRenderer->enableClientState();
 	glDrawArrays( GL_LINE_STRIP, 0, points.size() );
-    disableClientState();
+    mRenderer->disableClientState();
 }
 
-void DrawRenderer::draw( const class Shape2d &shape2d, float approximationScale )
+void Draw::draw( const class Shape2d &shape2d, float approximationScale )
 {
 //    glEnableVertexAttribArray(mVertex);
 //	for( std::vector<Path2d>::const_iterator contourIt = shape2d.getContours().begin(); contourIt != shape2d.getContours().end(); ++contourIt ) {
@@ -700,61 +535,61 @@ void DrawRenderer::draw( const class Shape2d &shape2d, float approximationScale 
 }
 
 
-void DrawRenderer::drawSolid( const class Path2d &path2d, float approximationScale )
+void Draw::drawSolid( const class Path2d &path2d, float approximationScale )
 {
 }
 
 
-void DrawRenderer::draw( const TriMesh &mesh )
+void Draw::draw( const TriMesh &mesh )
 {
 }
 
-void DrawRenderer::drawRange( const TriMesh &mesh, size_t startTriangle, size_t triangleCount )
+void Draw::drawRange( const TriMesh &mesh, size_t startTriangle, size_t triangleCount )
 {
 }
 
-void DrawRenderer::draw( const VboMesh &vbo )
+void Draw::draw( const VboMesh &vbo )
 {
 }
 
-void DrawRenderer::drawRange( const VboMesh &vbo, size_t startIndex, size_t indexCount, int vertexStart, int vertexEnd )
+void Draw::drawRange( const VboMesh &vbo, size_t startIndex, size_t indexCount, int vertexStart, int vertexEnd )
 {
 }
 
-void DrawRenderer::drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
+void Draw::drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
 {
 }
 
-void DrawRenderer::drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
+void Draw::drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
 {
 }
 
-void DrawRenderer::draw( const Texture &texture )
+void Draw::draw( const Texture &texture )
 {
 	draw( texture, Area( texture.getCleanBounds() ), texture.getCleanBounds() );
 }
 
-void DrawRenderer::draw( const Texture &texture, const Vec2f &pos )
+void Draw::draw( const Texture &texture, const Vec2f &pos )
 {
 	draw( texture, texture.getCleanBounds(), Rectf( pos.x, pos.y, pos.x + texture.getCleanWidth(), pos.y + texture.getCleanHeight() ) );
 }
 
-void DrawRenderer::draw( const Texture &texture, const Rectf &rect )
+void Draw::draw( const Texture &texture, const Rectf &rect )
 {
 	draw( texture, texture.getCleanBounds(), rect );
 }
 
-void DrawRenderer::draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
+void Draw::draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
 {
     texture.bind();
 
     GLfloat verts[8];
     GLfloat texCoords[8];
 
-    resetArrays();
-    setPositionArray(verts, 2);
-    setTexCoordArray(texCoords);
-    enableClientState();
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray(verts, 2);
+    mRenderer->setTexCoordArray(texCoords);
+    mRenderer->enableClientState();
 
     verts[0*2+0] = destRect.getX2(); verts[0*2+1] = destRect.getY1(); 
     verts[1*2+0] = destRect.getX1(); verts[1*2+1] = destRect.getY1(); 
@@ -769,12 +604,12 @@ void DrawRenderer::draw( const Texture &texture, const Area &srcArea, const Rect
 
     glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 
-    disableClientState();
+    mRenderer->disableClientState();
 }
 
-DrawRendererRef DrawRenderer::create()
+DrawRef Draw::create(RendererRef renderer)
 {
-    return DrawRendererRef(new PPDrawRenderer());
+    return DrawRef(new Draw(renderer));
 }
 
 } }

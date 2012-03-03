@@ -2,6 +2,7 @@
 
 #include "cinder/gl/gl.h"
 #include "cinder/Color.h"
+#include "cinder/Exception.h"
 #include "cinder/Matrix.h"
 
 namespace cinder { namespace pp {
@@ -41,5 +42,9 @@ public:
 
 	static RendererRef create(RendererType rendererType = DEFAULT);
 };
+
+class RendererException : public Exception {
+};
+
 
 } }
