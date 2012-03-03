@@ -6,6 +6,7 @@
 
 namespace cinder { namespace pp {
 
+typedef std::shared_ptr<class Renderer> RendererRef;
 typedef std::shared_ptr<class TextureFont> TextureFontRef;
 typedef std::shared_ptr<class TextureFontRenderer> TextureFontRendererRef;
 
@@ -26,6 +27,29 @@ class TextureFont : public gl::TextureFont
 	static TextureFontRef create( const Font &font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() );
 
 	static TextureFontRendererRef createRenderer();
+};
+
+typedef std::shared_ptr<class TextureFontDraw> TextureFontDrawRef;
+class TextureFontDraw
+{
+public:
+    static TextureFontDrawRef create(RendererRef renderer);
+
+    void bind();
+    void unbind();
+
+	//! Draws string \a str at baseline \a baseline with DrawOptions \a options
+	void drawString( TextureFont& texFont, const std::string &str, const Vec2f &baseline, const TextureFont::DrawOptions &options = TextureFont::DrawOptions() );
+	//! Draws string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options
+	void drawString( TextureFont& texFont, const std::string &str, const Rectf &fitRect, const Vec2f &offset = Vec2f::zero(), const TextureFont::DrawOptions &options = TextureFont::DrawOptions() );
+
+#if defined( CINDER_COCOA ) || defined ( CINDER_ANDROID )
+	//! Draws word-wrapped string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options. Mac & iOS only.
+	virtual void	drawStringWrapped( TextureFont& texFont, const std::string &str, const Rectf &fitRect, const Vec2f &offset = Vec2f::zero(), const TextureFont::DrawOptions &options = TextureFont::DrawOptions() );
+#endif
+
+protected:
+    RendererRef mRenderer;
 };
 
 /** Base class used by the internal TextureFont renderer returned by 
