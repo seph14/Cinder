@@ -7,25 +7,82 @@ using namespace cinder::gl;
 
 namespace cinder { namespace pp {
 
-Draw::Draw(RendererRef renderer) : mRenderer(renderer)
+void DrawBase::setModelView(const Matrix44f& mvp)
+{
+    mRenderer->setModelView(mvp);
+}
+
+void DrawBase::setProjection(const Matrix44f& proj)
+{
+    mRenderer->setProjection(proj);
+}
+
+void DrawBase::setColor(const ColorA& color)
+{
+    mRenderer->setColor(color);
+}
+
+void DrawBase::setPositionArray(float* pos, int dim)
+{
+    mRenderer->setPositionArray(pos, dim);
+}
+
+void DrawBase::setTexCoordArray(float* texCoord)
+{
+    mRenderer->setTexCoordArray(texCoord);
+}
+
+void DrawBase::setColorArray(GLubyte* colors)
+{
+    mRenderer->setColorArray(colors);
+}
+
+void DrawBase::setNormalArray(float* normals)
+{
+    mRenderer->setNormalArray(normals);
+}
+
+void DrawBase::resetArrays()
+{
+    mRenderer->resetArrays();
+}
+
+void DrawBase::enableClientState()
+{
+    mRenderer->enableClientState();
+}
+
+void DrawBase::disableClientState()
+{
+    mRenderer->disableClientState();
+}
+
+void DrawBase::bind()
+{
+    mRenderer->bind();
+}
+
+void DrawBase::unbind()
+{
+    mRenderer->unbind();
+}
+
+DrawBase::DrawBase(RendererRef renderer)
+    : mRenderer(renderer)
+{
+}
+
+DrawBase::~DrawBase()
+{
+    mRenderer.reset();
+}
+
+Draw::Draw(RendererRef renderer) : DrawBase(renderer)
 {
 }
 
 Draw::~Draw()
 {
-    mRenderer.reset();
-}
-
-void Draw::bind()
-{
-    if (!mRenderer->isBound())
-        mRenderer->bind();
-}
-
-void Draw::unbind()
-{
-    if (mRenderer->isBound())
-        mRenderer->unbind();
 }
 
 void Draw::drawLine( const Vec2f &start, const Vec2f &end )

@@ -19,7 +19,7 @@ public:
     virtual void setModelView(const Matrix44f& mvp) = 0;
     virtual void setProjection(const Matrix44f& proj) = 0;
 
-	//! Set color used to draw glyphs if a per-glyph color array is not supplied
+	//! Set vertex color if a color array is not supplied
 	virtual void setColor(const ColorA& color) = 0;
 
 	// Set vertex attribute data arrays
@@ -30,15 +30,13 @@ public:
 
     virtual void resetArrays() = 0;
 
-	//! Enable client state, update uniforms and sets vertex data before a draw call
+	//! Enables client state, updates uniforms and sets vertex data before a glDraw call
 	virtual void enableClientState()  = 0;
 	//! Disables client state, called after drawing
 	virtual void disableClientState() = 0;
 
     virtual void bind()   = 0;
     virtual void unbind() = 0;
-
-	virtual bool isBound() = 0;
 
 	static RendererRef create(RendererType rendererType = DEFAULT);
 };

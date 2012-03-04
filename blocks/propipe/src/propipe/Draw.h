@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Renderer.h"
+
 #include "cinder/Cinder.h"
 
 #include "cinder/gl/Texture.h"
@@ -16,16 +18,47 @@
 
 namespace cinder { namespace pp {
 
-typedef std::shared_ptr<class Renderer> RendererRef;
 typedef std::shared_ptr<class Draw> DrawRef;
 
-class Draw
+/**
+ *  Base class for Draw classes, delegating all Renderer calls to an internal member
+ */
+class DrawBase : public Renderer
+{
+  public:
+    virtual void setModelView(const Matrix44f& mvp);
+    virtual void setProjection(const Matrix44f& proj);
+
+	//! Set color used to draw glyphs if a per-glyph color array is not supplied
+	virtual void setColor(const ColorA& color);
+
+	// Set vertex attribute data arrays
+	virtual void setPositionArray(float* pos, int dim);
+	virtual void setTexCoordArray(float* texCoord);
+	virtual void setColorArray(GLubyte* colors);
+	virtual void setNormalArray(float* normals);
+
+    virtual void resetArrays();
+
+	//! Enable client state, update uniforms and sets vertex data before a draw call
+	virtual void enableClientState();
+	//! Disables client state, called after drawing
+	virtual void disableClientState();
+
+    virtual void bind();
+    virtual void unbind();
+
+    virtual ~DrawBase();
+
+  protected:
+    DrawBase(RendererRef renderer);
+    RendererRef mRenderer;
+};
+
+class Draw : public DrawBase
 {
 public:
     static DrawRef create(RendererRef renderer);
-
-    void bind();
-    void unbind();
 
     void drawLine( const Vec2f &start, const Vec2f &end );
     void drawLine( const Vec3f &start, const Vec3f &end );
@@ -66,8 +99,6 @@ public:
 
 protected:
     Draw(RendererRef renderer);
-
-    RendererRef mRenderer;
 };
 
 } }

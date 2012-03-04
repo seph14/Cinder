@@ -12,25 +12,12 @@ TextureFontDrawRef TextureFontDraw::create(RendererRef renderer)
 }
 
 TextureFontDraw::TextureFontDraw(RendererRef renderer)
-    : mRenderer(renderer)
+    : DrawBase(renderer)
 {
 }
 
 TextureFontDraw::~TextureFontDraw()
 {
-    mRenderer.reset();
-}
-
-void TextureFontDraw::bind()
-{
-    if (!mRenderer->isBound())
-        mRenderer->bind();
-}
-
-void TextureFontDraw::unbind()
-{
-    if (mRenderer->isBound())
-        mRenderer->unbind();
 }
 
 void TextureFontDraw::drawString( TextureFont& texFont, const string &str, const Vec2f &baseline, const TextureFont::DrawOptions &options )
@@ -63,133 +50,6 @@ void TextureFontDraw::drawStringWrapped( TextureFont& texFont, const string &str
 #endif
 }
 #endif
-
-// class PPTextureFontRenderer : public TextureFontRenderer
-// {
-// public:
-// 	PPTextureFontRenderer() : mPositionArray(0), mTexCoordArray(0), mColorArray(0)
-// 	{
-// 		mShader  = gl::GlslProg(vert, frag);
-// 		mPositionAttrib = mShader.getAttribLocation("aPosition");
-// 		mTexCoordAttrib = mShader.getAttribLocation("aTexCoord");
-// 		mColorAttrib    = mShader.getAttribLocation("aColor");
-// 	}
-// 
-// 	virtual void setMVP(const Matrix44f& mvp)
-// 	{
-// 		mMVP = mvp;
-// 	}
-// 
-// 	virtual void setColor(const ColorA& color)
-// 	{
-// 		mColor = color;
-// 	}
-// 
-// 	virtual void setPositionArray(float* pos)
-// 	{
-// 		mPositionArray = pos;
-// 	}
-// 
-// 	virtual void setTexCoordArray(float* texCoord)
-// 	{
-// 		mTexCoordArray = texCoord;
-// 	}
-// 
-// 	virtual void setColorArray(ColorA8u* colors)
-// 	{
-// 		mColorArray = colors;
-// 	}
-// 
-// 	virtual void bind()
-// 	{
-// 		mShader.bind();
-// 	}
-// 
-// 	virtual void unbind()
-// 	{
-// 		mShader.unbind();
-// 	}
-// 
-// 	virtual void enableClientState()
-// 	{
-// 		glEnableVertexAttribArray(mPositionAttrib);
-// 		if ( mColorArray )
-// 			glEnableVertexAttribArray(mColorAttrib);
-// 		glEnableVertexAttribArray(mTexCoordAttrib);
-// 
-// 		mShader.uniform("sTexture", 0);
-// 		glVertexAttribPointer( mPositionAttrib, 2, GL_FLOAT, GL_FALSE, 0, mPositionArray );
-// 		glVertexAttribPointer( mTexCoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, mTexCoordArray );
-// 		if ( mColorArray ) {
-// 			mShader.uniform("uEnableColorAttr", true);
-// 			glVertexAttribPointer( mColorAttrib, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, mColorArray );
-// 		}
-// 		else {
-// 			mShader.uniform("uColor", mColor);
-// 			mShader.uniform("uEnableColorAttr", false);
-// 		}
-// 
-// 		mShader.uniform("uMVP", mMVP);
-// 	}
-// 
-// 	virtual void disableClientState()
-// 	{
-// 		glDisableVertexAttribArray(mPositionAttrib);
-// 		glDisableVertexAttribArray(mColorAttrib);
-// 		glDisableVertexAttribArray(mTexCoordAttrib);
-// 	}
-// 
-// 	static const char* vert;
-// 	static const char* frag;
-// 
-// protected:
-// 	gl::GlslProg mShader;
-// 	Matrix44f mMVP;
-// 
-// 	GLuint mPositionAttrib;
-// 	GLuint mTexCoordAttrib;
-// 	GLuint mColorAttrib;
-// 
-// 	float*    mPositionArray;
-// 	float*    mTexCoordArray;
-// 	ColorA8u* mColorArray;
-// 	ColorA8u  mColor;
-// };
-// 
-// const char* PPTextureFontRenderer::vert =
-//         "attribute vec4 aPosition;\n"
-//         "attribute vec2 aTexCoord;\n"
-//         "attribute vec4 aColor;\n"
-// 
-//         "uniform mat4 uMVP;\n"
-//         "uniform vec4 uColor;\n"
-//         "uniform bool uEnableColorAttr;\n"
-// 
-//         "varying vec4 vColor;\n"
-//         "varying vec2 vTexCoord;\n"
-// 
-//         "void main() {\n"
-//         "  if (uEnableColorAttr) {\n"
-//         "    vColor = aColor;\n"
-//         "  }\n"
-// 		"  else {\n"
-// 		"    vColor = uColor;\n"
-// 		"  }\n"
-//         "  vTexCoord = aTexCoord;\n"
-//         "  gl_Position = uMVP * aPosition;\n"
-//         "}\n";
-// 
-// const char* PPTextureFontRenderer::frag =
-//         "precision mediump float;\n"
-// 
-//         "uniform sampler2D sTexture;\n"
-// 
-//         "varying vec4 vColor;\n"
-//         "varying vec2 vTexCoord;\n"
-// 
-//         "void main() {\n"
-//         "      gl_FragColor = vColor * texture2D(sTexture, vTexCoord);\n"
-//         "}\n";
 
 TextureFont::TextureFont( const Font &font, const string &supportedChars, const Format &format )
 	: gl::TextureFont( font, supportedChars, format )

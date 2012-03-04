@@ -5,6 +5,7 @@ using namespace cinder::gl;
 
 namespace cinder { namespace pp {
 
+/** Default renderer implementation */
 class PPRenderer : public Renderer
 {
 public:
@@ -69,19 +70,18 @@ public:
 
 	virtual void bind()
 	{
-		mShader.bind();
-		mBound = true;
+        if (!mBound) {
+            mShader.bind();
+            mBound = true;
+        }
 	}
 
 	virtual void unbind()
 	{
-		mShader.unbind();
-		mBound = false;
-	}
-
-	virtual bool isBound()
-	{
-		return mBound;
+        if (mBound) {
+            mShader.unbind();
+            mBound = false;
+        }
 	}
 
 	virtual void enableClientState()
