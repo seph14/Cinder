@@ -128,9 +128,10 @@ std::string getTemporaryDirectory()
 
 	std::wstring wideResult( tempPath.begin(), tempPath.begin() + static_cast<std::size_t>(result) );
 	return toUtf8( wideResult );
-#endif
+#else
 	string result;
 	return result;
+#endif
 }
 
 std::string getTemporaryFilePath( const std::string &prefix )
