@@ -105,6 +105,7 @@ LOCAL_C_INCLUDES += $(PROPIPE_SRC)
 LOCAL_SRC_FILES += $(CINDER_SRC)/gl/GlslProg.cpp \
                    $(CINDER_SRC)/gl/Vbo.cpp \
                    $(PROPIPE_SRC)/Draw.cpp \
+                   $(PROPIPE_SRC)/Matrices.cpp \
                    $(PROPIPE_SRC)/Renderer.cpp \
                    $(PROPIPE_SRC)/TextureFont.cpp
 

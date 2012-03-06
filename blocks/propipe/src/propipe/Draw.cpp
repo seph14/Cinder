@@ -599,6 +599,25 @@ void Draw::drawSolid( const class Path2d &path2d, float approximationScale )
 
 void Draw::draw( const TriMesh &mesh )
 {
+    mRenderer->resetArrays();
+	if( mesh.hasNormals() ) {
+        mRenderer->setNormalArray((float*)&(mesh.getNormals()[0]));
+	}
+	
+	/* if( mesh.hasColorsRGB() ) {
+        mRenderer->setColorArray(&(mesh.getColorsRGB()[0]), 3);
+	}
+	else */ if( mesh.hasColorsRGBA() ) {
+        mRenderer->setColorArray((GLubyte*)&(mesh.getColorsRGBA()[0]));
+	}
+
+	if( mesh.hasTexCoords() ) {
+        mRenderer->setTexCoordArray((float*)&(mesh.getTexCoords()[0]));
+	}
+
+	glDrawElements( GL_TRIANGLES, mesh.getNumIndices(), GL_UNSIGNED_INT, &(mesh.getIndices()[0]) );
+
+    mRenderer->disableClientState();
 }
 
 void Draw::drawRange( const TriMesh &mesh, size_t startTriangle, size_t triangleCount )
@@ -619,6 +638,25 @@ void Draw::drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
 
 void Draw::drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
 {
+	Vec3f verts[4];
+	GLfloat texCoords[8] = { 0, 0, 0, 1, 1, 0, 1, 1 };
+
+	float sinA = math<float>::sin( toRadians( rotationDegrees ) );
+	float cosA = math<float>::cos( toRadians( rotationDegrees ) );
+
+	verts[0] = pos + bbRight * ( -0.5f * scale.x * cosA - 0.5f * sinA * scale.y ) + bbUp * ( -0.5f * scale.x * sinA + 0.5f * cosA * scale.y );
+	verts[1] = pos + bbRight * ( -0.5f * scale.x * cosA - -0.5f * sinA * scale.y ) + bbUp * ( -0.5f * scale.x * sinA + -0.5f * cosA * scale.y );
+	verts[2] = pos + bbRight * ( 0.5f * scale.x * cosA - 0.5f * sinA * scale.y ) + bbUp * ( 0.5f * scale.x * sinA + 0.5f * cosA * scale.y );
+	verts[3] = pos + bbRight * ( 0.5f * scale.x * cosA - -0.5f * sinA * scale.y ) + bbUp * ( 0.5f * scale.x * sinA + -0.5f * cosA * scale.y );
+
+    mRenderer->resetArrays();
+    mRenderer->setPositionArray((float *) verts, 3);
+    mRenderer->setTexCoordArray(texCoords);
+    mRenderer->enableClientState();
+
+	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
+
+    mRenderer->disableClientState();
 }
 
 void Draw::draw( const Texture &texture )
