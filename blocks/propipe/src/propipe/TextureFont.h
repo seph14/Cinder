@@ -34,7 +34,7 @@ typedef std::shared_ptr<class TextureFontDraw> TextureFontDrawRef;
 class TextureFontDraw : public DrawBase
 {
 public:
-    static TextureFontDrawRef create(RendererRef renderer);
+	static TextureFontDrawRef create(RendererRef renderer);
 
 	//! Draws string \a str at baseline \a baseline with DrawOptions \a options
 	void drawString( TextureFont& texFont, const std::string &str, const Vec2f &baseline, const TextureFont::DrawOptions &options = TextureFont::DrawOptions() );
@@ -43,13 +43,13 @@ public:
 
 #if defined( CINDER_COCOA ) || defined ( CINDER_ANDROID )
 	//! Draws word-wrapped string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options. Mac & iOS only.
-	void	drawStringWrapped( TextureFont& texFont, const std::string &str, const Rectf &fitRect, const Vec2f &offset = Vec2f::zero(), const TextureFont::DrawOptions &options = TextureFont::DrawOptions() );
+	void drawStringWrapped( TextureFont& texFont, const std::string &str, const Rectf &fitRect, const Vec2f &offset = Vec2f::zero(), const TextureFont::DrawOptions &options = TextureFont::DrawOptions() );
 #endif
 
-    virtual ~TextureFontDraw();
+	virtual ~TextureFontDraw();
 
 protected:
-    TextureFontDraw(RendererRef renderer);
+	TextureFontDraw(RendererRef renderer);
 };
 
 } } // namespace cinder::pp

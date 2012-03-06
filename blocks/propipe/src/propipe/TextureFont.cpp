@@ -8,11 +8,11 @@ namespace cinder { namespace pp {
 
 TextureFontDrawRef TextureFontDraw::create(RendererRef renderer)
 {
-    return TextureFontDrawRef(new TextureFontDraw(renderer));
+	return TextureFontDrawRef(new TextureFontDraw(renderer));
 }
 
 TextureFontDraw::TextureFontDraw(RendererRef renderer)
-    : DrawBase(renderer)
+	: DrawBase(renderer)
 {
 }
 

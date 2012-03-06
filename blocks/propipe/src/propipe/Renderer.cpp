@@ -9,20 +9,19 @@ namespace cinder { namespace pp {
 class PPRenderer : public Renderer
 {
 public:
-    PPRenderer() : mBound(false), 
+	PPRenderer() : mBound(false), 
 		mPositionDim(3), mPositionArray(0), mTexCoordArray(0), mColorArray(0), mNormalArray(0)
-    {
-        try {
-            mShader  = gl::GlslProg(vert, frag);
-            mPositionAttrib = mShader.getAttribLocation("aPosition");
-            mTexCoordAttrib = mShader.getAttribLocation("aTexCoord");
-            mColorAttrib    = mShader.getAttribLocation("aColor");
-        }
-        catch (GlslProgCompileExc& ex) {
-            CI_LOGE("Error compiling: %s", ex.what());
-        }
-        // mNormalAttrib   = mShader.getAttribLocation("aNormal");
-    }
+	{
+		try {
+			mShader  = gl::GlslProg(vert, frag);
+			mPositionAttrib = mShader.getAttribLocation("aPosition");
+			mTexCoordAttrib = mShader.getAttribLocation("aTexCoord");
+			mColorAttrib	= mShader.getAttribLocation("aColor");
+		}
+		catch (GlslProgCompileExc& ex) {
+			CI_LOGE("Error compiling: %s", ex.what());
+		}
+	}
 
 	virtual void setModelView(const Matrix44f& mv)
 	{
@@ -42,7 +41,7 @@ public:
 	virtual void setPositionArray(float* pos, int dim)
 	{
 		mPositionArray = pos;
-        mPositionDim = dim;
+		mPositionDim = dim;
 	}
 
 	virtual void setTexCoordArray(float* texCoord)
@@ -50,75 +49,79 @@ public:
 		mTexCoordArray = texCoord;
 	}
 
-	virtual void setColorArray(GLubyte* colors)
+	virtual void setColorArray(const GLvoid* colors, int colorType, int dim)
 	{
-		mColorArray = colors;
+		mColorArray = const_cast<GLvoid*>(colors);
+		mColorDim = dim;
+        mColorType = colorType;
 	}
 
 	virtual void setNormalArray(float* norms)
-    {
-        mNormalArray = norms;
-    }
+	{
+		mNormalArray = norms;
+	}
 
-    virtual void resetArrays()
-    {
-        mPositionArray = NULL;
-        mTexCoordArray = NULL;
-        mColorArray    = NULL;
-        mNormalArray   = NULL;
-    }
+	virtual void resetArrays()
+	{
+		mPositionArray = NULL;
+		mTexCoordArray = NULL;
+		mColorArray	= NULL;
+		mNormalArray   = NULL;
+	}
 
 	virtual void bind()
 	{
-        if (!mBound) {
-            mShader.bind();
-            mBound = true;
-        }
+		if (!mBound) {
+			mShader.bind();
+			mBound = true;
+		}
 	}
 
 	virtual void unbind()
 	{
-        if (mBound) {
-            mShader.unbind();
-            mBound = false;
-        }
+		if (mBound) {
+			mShader.unbind();
+			mBound = false;
+		}
 	}
 
-	virtual void enableClientState()
+	virtual void enableClientState( uint32_t clientState )
 	{
-		glEnableVertexAttribArray(mPositionAttrib);
-		if ( mColorArray )
-			glEnableVertexAttribArray(mColorAttrib);
-        if ( mTexCoordArray )
-            glEnableVertexAttribArray(mTexCoordAttrib);
-        // if ( mNormalArray )
-        //     glEnableVertexAttribArray(mNormalAttrib);
-
-		glVertexAttribPointer( mPositionAttrib, mPositionDim, GL_FLOAT, GL_FALSE, 0, mPositionArray );
-		glVertexAttribPointer( mTexCoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, mTexCoordArray );
-
-		if ( mColorArray ) {
-			mShader.uniform("uEnableColorAttr", true);
-			glVertexAttribPointer( mColorAttrib, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, mColorArray );
-		}
-		else {
-			mShader.uniform("uColor", mColor);
-			mShader.uniform("uEnableColorAttr", false);
+		if (clientState & STATE_ENABLE) {
+			glEnableVertexAttribArray(mPositionAttrib);
+			if ( mColorArray )
+				glEnableVertexAttribArray(mColorAttrib);
+			if ( mTexCoordArray )
+				glEnableVertexAttribArray(mTexCoordAttrib);
 		}
 
-        if (mTexCoordArray) {
-            mShader.uniform("sTexture", 0);
-            mShader.uniform("uEnableTextureAttr", true);
-        }
-        else {
-            mShader.uniform("uEnableTextureAttr", false);
-        }
+		if ( clientState & STATE_UNIFORM ) {
+			if ( mColorArray ) {
+				mShader.uniform("uEnableColorAttr", true);
+			}
+			else {
+				mShader.uniform("uColor", mColor);
+				mShader.uniform("uEnableColorAttr", false);
+			}
 
-        // if ( mNormalArray )
-        //     glVertexAttribPointer("");
+			if (mTexCoordArray) {
+				mShader.uniform("sTexture", 0);
+				mShader.uniform("uEnableTextureAttr", true);
+			}
+			else {
+				mShader.uniform("uEnableTextureAttr", false);
+			}
 
-		mShader.uniform("uModelView", mModelView);
-		mShader.uniform("uProjection", mProjection);
+			mShader.uniform("uModelView", mModelView);
+			mShader.uniform("uProjection", mProjection);
+		}
+
+		if ( clientState & STATE_UPLOAD ) {
+			glVertexAttribPointer( mPositionAttrib, mPositionDim, GL_FLOAT, GL_FALSE, 0, mPositionArray );
+			glVertexAttribPointer( mTexCoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, mTexCoordArray );
+			if ( mColorArray )
+				glVertexAttribPointer( mColorAttrib, mColorDim, mColorType, GL_FALSE, 0, mColorArray );
+		}
 	}
 
 	virtual void disableClientState()
@@ -126,7 +129,6 @@ public:
 		glDisableVertexAttribArray(mPositionAttrib);
 		glDisableVertexAttribArray(mColorAttrib);
 		glDisableVertexAttribArray(mTexCoordAttrib);
-        // glDisableVertexAttribArray(mNormalAttrib);
 	}
 
 	static const char* vert;
@@ -143,61 +145,64 @@ protected:
 	GLuint mColorAttrib;
 	GLuint mNormalAttrib;
 
-    int       mPositionDim;
-	ColorA8u  mColor;
+	int    mPositionDim;
+	int    mColorDim;
+	int    mColorType;
 
-	float*    mPositionArray;
-	float*    mTexCoordArray;
-	GLubyte*  mColorArray;
-    float*    mNormalArray;
+	ColorA8u mColor;
+
+	GLfloat* mPositionArray;
+	GLfloat* mTexCoordArray;
+	GLvoid*  mColorArray;
+	GLfloat* mNormalArray;
 };
 
 const char* PPRenderer::vert =
-        "attribute vec4 aPosition;\n"
-        "attribute vec2 aTexCoord;\n"
-        "attribute vec4 aColor;\n"
+		"attribute vec4 aPosition;\n"
+		"attribute vec2 aTexCoord;\n"
+		"attribute vec4 aColor;\n"
 
-        "uniform mat4 uModelView;\n"
-        "uniform mat4 uProjection;\n"
-        "uniform vec4 uColor;\n"
+		"uniform mat4 uModelView;\n"
+		"uniform mat4 uProjection;\n"
+		"uniform vec4 uColor;\n"
 
-        "uniform bool uEnableColorAttr;\n"
-        "uniform bool uEnableTextureAttr;\n"
+		"uniform bool uEnableColorAttr;\n"
+		"uniform bool uEnableTextureAttr;\n"
 
-        "varying vec4 vColor;\n"
-        "varying vec2 vTexCoord;\n"
+		"varying vec4 vColor;\n"
+		"varying vec2 vTexCoord;\n"
 
-        "void main() {\n"
-        "  if (uEnableColorAttr) {\n"
-        "    vColor = aColor;\n"
-        "  }\n"
-		"  else {\n"
-		"    vColor = uColor;\n"
+		"void main() {\n"
+		"  if (uEnableColorAttr) {\n"
+		"	vColor = aColor;\n"
 		"  }\n"
-        "  if (uEnableTextureAttr) {\n"
-        "    vTexCoord = aTexCoord;\n"
-        "  }\n"
-        "  gl_Position = uProjection * uModelView * aPosition;\n"
-        "}\n";
+		"  else {\n"
+		"	vColor = uColor;\n"
+		"  }\n"
+		"  if (uEnableTextureAttr) {\n"
+		"	vTexCoord = aTexCoord;\n"
+		"  }\n"
+		"  gl_Position = uProjection * uModelView * aPosition;\n"
+		"}\n";
 
 const char* PPRenderer::frag =
-        "precision mediump float;\n"
+		"precision mediump float;\n"
 
-        "uniform sampler2D sTexture;\n"
+		"uniform sampler2D sTexture;\n"
 
-        "uniform bool uEnableTextureAttr;\n"
+		"uniform bool uEnableTextureAttr;\n"
 
-        "varying vec4 vColor;\n"
-        "varying vec2 vTexCoord;\n"
+		"varying vec4 vColor;\n"
+		"varying vec2 vTexCoord;\n"
 
-        "void main() {\n"
-        "  if (uEnableTextureAttr) {\n"
-        "    gl_FragColor = vColor * texture2D(sTexture, vTexCoord);\n"
-        "  }\n"
-        "  else {\n"
-        "    gl_FragColor = vColor;\n"
-        "  }\n"
-        "}\n";
+		"void main() {\n"
+		"  if (uEnableTextureAttr) {\n"
+		"    gl_FragColor = vColor * texture2D(sTexture, vTexCoord);\n"
+		"  }\n"
+		"  else {\n"
+		"    gl_FragColor = vColor;\n"
+		"  }\n"
+		"}\n";
 
 RendererRef Renderer::create(RendererType rendererType)
 {
