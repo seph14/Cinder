@@ -57,7 +57,7 @@ class DrawBase : public Renderer
 
 class Draw : public DrawBase
 {
-public:
+  public:
 	static DrawRef create(RendererRef renderer);
 
 	//! Draws a line from \a start to \a end
@@ -141,7 +141,7 @@ public:
 
 	virtual ~Draw();
 
-protected:
+  protected:
 	Draw(RendererRef renderer);
 };
 

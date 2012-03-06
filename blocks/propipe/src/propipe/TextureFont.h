@@ -33,7 +33,7 @@ class TextureFont : public gl::TextureFont
 typedef std::shared_ptr<class TextureFontDraw> TextureFontDrawRef;
 class TextureFontDraw : public DrawBase
 {
-public:
+  public:
 	static TextureFontDrawRef create(RendererRef renderer);
 
 	//! Draws string \a str at baseline \a baseline with DrawOptions \a options
@@ -48,7 +48,7 @@ public:
 
 	virtual ~TextureFontDraw();
 
-protected:
+  protected:
 	TextureFontDraw(RendererRef renderer);
 };
 
