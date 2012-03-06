@@ -1,13 +1,13 @@
 #include "cinder/app/AppNative.h"
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
-#include "cinder/Camera.h"
 #include "cinder/Rand.h"
 #include "cinder/Text.h"
 #include "cinder/Utilities.h"
 
 #include "propipe/Draw.h"
 #include "propipe/TextureFont.h"
+#include "propipe/Matrices.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -22,20 +22,19 @@ class TextureFontApp : public AppNative {
 	void draw();
 	void resize( ResizeEvent event );
 #if defined( CINDER_ANDROID )
-    void resume( bool renewContext );
+	void resume( bool renewContext );
 #endif
 
 	void setupMatrices();
 
-    Matrix44f              mModelView;
-    Matrix44f              mProjection;
+	pp::Matrices mMatrices;
 
-	Font			       mFont;
+	Font                   mFont;
 	pp::TextureFontRef     mTextureFont;
 
-    pp::RendererRef        mRenderer;
-    pp::DrawRef            mDraw;
-    pp::TextureFontDrawRef mFontDraw;
+	pp::RendererRef        mRenderer;
+	pp::DrawRef            mDraw;
+	pp::TextureFontDrawRef mFontDraw;
 };
 
 void TextureFontApp::setup()
@@ -45,17 +44,17 @@ void TextureFontApp::setup()
 #elif defined( CINDER_COCOA )
 	mFont = Font( "BigCaslon-Medium", 24 );
 #elif defined( CINDER_ANDROID )
-    // mFont = Font( loadFile("/system/fonts/DroidSans.ttf"), 24 );
-    mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 24 );
+	// mFont = Font( loadFile("/system/fonts/DroidSans.ttf"), 24 );
+	mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 24 );
 #else
 	mFont = Font( "Times New Roman", 24 );
 #endif
 
 	mTextureFont = pp::TextureFont::create( mFont );
 
-    mRenderer = pp::Renderer::create();
+	mRenderer = pp::Renderer::create();
 	mFontDraw = pp::TextureFontDraw::create( mRenderer );
-    mDraw = pp::Draw::create( mRenderer );
+	mDraw = pp::Draw::create( mRenderer );
 
 	setupMatrices();
 }
@@ -70,19 +69,19 @@ void TextureFontApp::resize( ResizeEvent event )
 
 void TextureFontApp::resume(bool renewContext)
 {
-    if (renewContext) {
-        //  Release GL resources
-        mTextureFont.reset();
+	if (renewContext) {
+		//  Release GL resources
+		mTextureFont.reset();
 		mDraw.reset();
 		mFontDraw.reset();
-        mRenderer.reset();
+		mRenderer.reset();
 
-        //  Recreate GL resources
-        mTextureFont = pp::TextureFont::create( mFont );
-        mRenderer = pp::Renderer::create();
-        mDraw = pp::Draw::create(mRenderer);
-        mFontDraw = pp::TextureFontDraw::create( mRenderer );
-    }
+		//  Recreate GL resources
+		mTextureFont = pp::TextureFont::create( mFont );
+		mRenderer = pp::Renderer::create();
+		mDraw = pp::Draw::create(mRenderer);
+		mFontDraw = pp::TextureFontDraw::create( mRenderer );
+	}
 }
 #endif
 
@@ -112,13 +111,8 @@ void TextureFontApp::mouseDown( MouseEvent event )
 
 void TextureFontApp::setupMatrices()
 {
-	//  Set up an ortho modelview-projection matrix
-    CameraOrtho cam;
-    Vec2i windowSize = getWindowSize();
-    cam.setOrtho(0, windowSize.x, windowSize.y, 0, 1.0f, -1.0f);
-
-    mModelView  = cam.getModelViewMatrix();
-    mProjection = cam.getProjectionMatrix();
+	Vec2i windowSize = getWindowSize();
+	mMatrices.setMatricesWindow(windowSize.x, windowSize.y);
 }
 
 void TextureFontApp::draw()
@@ -130,21 +124,21 @@ void TextureFontApp::draw()
 	Rectf boundsRect( 40, mTextureFont->getAscent() + 40, getWindowWidth() - 40, getWindowHeight() - 40 );
 
 	mRenderer->bind();
-    mRenderer->setModelView( mModelView );
-    mRenderer->setProjection( mProjection );
+	mRenderer->setModelView( mMatrices.getModelView() );
+	mRenderer->setProjection( mMatrices.getProjection() );
 
-    mFontDraw->setColor( ColorA( 0.17f, 0.72f, 0.88f, 1.0f ) );
+	mFontDraw->setColor( ColorA( 0.17f, 0.72f, 0.88f, 1.0f ) );
 	mFontDraw->drawStringWrapped( *mTextureFont, str, boundsRect );
 
 	// Draw FPS
 	mFontDraw->setColor( Color::white() );
 	mFontDraw->drawString( *mTextureFont, toString( floor(getAverageFps()) ) + " FPS", Vec2f( 10, getWindowHeight() - mTextureFont->getDescent() ) );
     
-    // Draw Font Name
+	// Draw Font Name
 	float fontNameWidth = mTextureFont->measureString( mTextureFont->getName() ).x;
 	mFontDraw->drawString( *mTextureFont, mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
 
-    //  shared renderer, actually not required to bind and set up matrices again
+	//  shared renderer, actually not required to bind and set up matrices again
 	mDraw->setColor( ColorA::white() );
 	mDraw->drawStrokedRect( boundsRect );
 

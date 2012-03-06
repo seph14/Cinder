@@ -44,8 +44,8 @@ public:
 	void multModelView( const Matrix44f &mtx );
 	void multProjection( const Matrix44f &mtx );
 
-	Matrix44f getModelView();
-	Matrix44f getProjection();
+	const Matrix44f& getModelView();
+	const Matrix44f& getProjection();
 
 	//! Produces a translation by \a pos in the modelview matrix.
 	void translate( const Vec2f &pos );

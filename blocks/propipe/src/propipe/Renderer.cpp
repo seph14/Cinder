@@ -87,7 +87,7 @@ public:
 
 	virtual void enableClientState( uint32_t clientState )
 	{
-		if (clientState & STATE_ENABLE) {
+		if (clientState & ENABLE_ATTRIBS) {
 			glEnableVertexAttribArray(mPositionAttrib);
 			if ( mColorArray )
 				glEnableVertexAttribArray(mColorAttrib);
@@ -95,7 +95,7 @@ public:
 				glEnableVertexAttribArray(mTexCoordAttrib);
 		}
 
-		if ( clientState & STATE_UNIFORM ) {
+		if ( clientState & UPDATE_UNIFORMS ) {
 			if ( mColorArray ) {
 				mShader.uniform("uEnableColorAttr", true);
 			}
@@ -116,7 +116,7 @@ public:
 			mShader.uniform("uProjection", mProjection);
 		}
 
-		if ( clientState & STATE_UPLOAD ) {
+		if ( clientState & UPLOAD_ATTRIBS ) {
 			glVertexAttribPointer( mPositionAttrib, mPositionDim, GL_FLOAT, GL_FALSE, 0, mPositionArray );
 			glVertexAttribPointer( mTexCoordAttrib, 2, GL_FLOAT, GL_FALSE, 0, mTexCoordArray );
 			if ( mColorArray )

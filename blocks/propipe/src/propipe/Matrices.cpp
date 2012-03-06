@@ -136,12 +136,12 @@ void Matrices::multProjection( const Matrix44f &mtx )
 	mProjection.multMatrix(mtx);
 }
 
-Matrix44f Matrices::getModelView()
+const Matrix44f& Matrices::getModelView()
 {
 	return mModelView.getMatrix();
 }
 
-Matrix44f Matrices::getProjection()
+const Matrix44f& Matrices::getProjection()
 {
 	return mProjection.getMatrix();
 }
