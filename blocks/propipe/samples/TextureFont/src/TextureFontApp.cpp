@@ -123,7 +123,7 @@ void TextureFontApp::draw()
 	std::string str( "Granted, then, that certain transformations do happen, it is essential that we should regard them in the philosophic manner of fairy tales, not in the unphilosophic manner of science and the \"Laws of Nature.\" When we are asked why eggs turn into birds or fruits fall in autumn, we must answer exactly as the fairy godmother would answer if Cinderella asked her why mice turned into horses or her clothes fell from her at twelve o'clock. We must answer that it is MAGIC. It is not a \"law,\" for we do not understand its general formula." );
 	Rectf boundsRect( 40, mTextureFont->getAscent() + 40, getWindowWidth() - 40, getWindowHeight() - 40 );
 
-	mRenderer->bind();
+	mRenderer->bindProg();
 	mRenderer->setModelView( mMatrices.getModelView() );
 	mRenderer->setProjection( mMatrices.getProjection() );
 
@@ -133,7 +133,7 @@ void TextureFontApp::draw()
 	// Draw FPS
 	mFontDraw->setColor( Color::white() );
 	mFontDraw->drawString( *mTextureFont, toString( floor(getAverageFps()) ) + " FPS", Vec2f( 10, getWindowHeight() - mTextureFont->getDescent() ) );
-    
+
 	// Draw Font Name
 	float fontNameWidth = mTextureFont->measureString( mTextureFont->getName() ).x;
 	mFontDraw->drawString( *mTextureFont, mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
@@ -142,7 +142,7 @@ void TextureFontApp::draw()
 	mDraw->setColor( ColorA::white() );
 	mDraw->drawStrokedRect( boundsRect );
 
-	mRenderer->unbind();
+	mRenderer->unbindProg();
 }
 
 CINDER_APP_NATIVE( TextureFontApp, RendererGl(0) )

@@ -42,8 +42,11 @@ class Renderer
 	//! Disables client state, called after drawing
 	virtual void disableClientState() = 0;
 
-	virtual void bind()   = 0;
-	virtual void unbind() = 0;
+	virtual void bindProg()   = 0;
+	virtual void unbindProg() = 0;
+
+	virtual void bindTexture(const gl::Texture& tex, GLuint textureUnit = 0) = 0;
+	virtual void unbindTexture(GLuint textureUnit = 0) = 0;
 
 	static RendererRef create(RendererType rendererType = DEFAULT);
 };

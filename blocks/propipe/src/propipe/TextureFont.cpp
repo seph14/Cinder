@@ -125,7 +125,7 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 		if( curIdx == 0 )
 			continue;
 		
-		curTex.bind();
+		renderer.bindTexture(curTex);
 
 		renderer.setPositionArray(&verts[0], 2);
 		renderer.setTexCoordArray(&texCoords[0]);
@@ -221,7 +221,7 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 		if( curIdx == 0 )
 			continue;
 		
-		curTex.bind();
+		renderer.bindTexture(curTex);
 
 		renderer.setPositionArray(&verts[0], 2);
 		renderer.setTexCoordArray(&texCoords[0]);

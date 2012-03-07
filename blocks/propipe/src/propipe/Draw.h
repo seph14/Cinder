@@ -45,8 +45,11 @@ class DrawBase : public Renderer
 	//! Disables client state, called after drawing
 	virtual void disableClientState();
 
-	virtual void bind();
-	virtual void unbind();
+	virtual void bindProg();
+	virtual void unbindProg();
+
+	virtual void bindTexture(const gl::Texture& tex, GLuint textureUnit = 0);
+	virtual void unbindTexture(GLuint textureUnit = 0);
 
 	virtual ~DrawBase();
 

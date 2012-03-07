@@ -1,5 +1,10 @@
 #include "Renderer.h"
 #include "cinder/gl/GlslProg.h"
+#include "cinder/gl/Texture.h"
+
+#include <map>
+
+using std::map;
 
 using namespace cinder::gl;
 
@@ -9,7 +14,7 @@ namespace cinder { namespace pp {
 class PPRenderer : public Renderer
 {
 public:
-	PPRenderer() : mBound(false), 
+	PPRenderer() : mBound(false), mBoundTextures(0),
 		mPositionDim(3), mPositionArray(0), mTexCoordArray(0), mColorArray(0), mNormalArray(0)
 	{
 		try {
@@ -53,7 +58,7 @@ public:
 	{
 		mColorArray = const_cast<GLvoid*>(colors);
 		mColorDim = dim;
-        mColorType = colorType;
+		mColorType = colorType;
 	}
 
 	virtual void setNormalArray(float* norms)
@@ -69,7 +74,7 @@ public:
 		mNormalArray   = NULL;
 	}
 
-	virtual void bind()
+	virtual void bindProg()
 	{
 		if (!mBound) {
 			mShader.bind();
@@ -77,11 +82,29 @@ public:
 		}
 	}
 
-	virtual void unbind()
+	virtual void unbindProg()
 	{
 		if (mBound) {
 			mShader.unbind();
 			mBound = false;
+		}
+	}
+
+	virtual void bindTexture(const gl::Texture& tex, GLuint textureUnit)
+	{
+		tex.bind(textureUnit);
+		mBoundTextures |= (1 << textureUnit);
+		mTextureTargets[textureUnit] = tex.getTarget();
+	}
+
+	virtual void unbindTexture(GLuint textureUnit)
+	{
+		map<int, GLenum>::iterator it = mTextureTargets.find(textureUnit);
+		if (it != mTextureTargets.end()) {
+			glActiveTexture( GL_TEXTURE0 + textureUnit );
+			glBindTexture( it->second, 0 );
+			glActiveTexture( GL_TEXTURE0 );
+			mBoundTextures &= ~(1 << textureUnit);
 		}
 	}
 
@@ -104,7 +127,7 @@ public:
 				mShader.uniform("uEnableColorAttr", false);
 			}
 
-			if (mTexCoordArray) {
+			if (mTexCoordArray && (mBoundTextures & 1)) {
 				mShader.uniform("sTexture", 0);
 				mShader.uniform("uEnableTextureAttr", true);
 			}
@@ -135,7 +158,10 @@ public:
 	static const char* frag;
 
 protected:
-	bool mBound;
+	bool     mBound;
+	uint32_t mBoundTextures;
+	map<int, GLenum> mTextureTargets;
+
 	gl::GlslProg mShader;
 	Matrix44f mModelView;
 	Matrix44f mProjection;

@@ -58,14 +58,24 @@ void DrawBase::disableClientState()
 	mRenderer->disableClientState();
 }
 
-void DrawBase::bind()
+void DrawBase::bindProg()
 {
-	mRenderer->bind();
+	mRenderer->bindProg();
 }
 
-void DrawBase::unbind()
+void DrawBase::unbindProg()
 {
-	mRenderer->unbind();
+	mRenderer->unbindProg();
+}
+
+void DrawBase::bindTexture(const gl::Texture& tex, GLuint textureUnit)
+{
+	mRenderer->bindTexture(tex, textureUnit);
+}
+
+void DrawBase::unbindTexture(GLuint textureUnit)
+{
+	mRenderer->unbindTexture(textureUnit);
 }
 
 DrawBase::DrawBase(RendererRef renderer)
