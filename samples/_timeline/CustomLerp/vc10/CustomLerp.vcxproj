@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 <?xml version="1.0" encoding="utf-8"?>
-=======
-﻿<?xml version="1.0" encoding="utf-8"?>
->>>>>>> 1a3dbaa9cc09dab39e69c623b4a6dec55741a3f0
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -15,11 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-<<<<<<< HEAD
-    <ProjectGuid>{74202EDD-91D2-4D2A-B0B6-355CEB16E6BE}</ProjectGuid>
-=======
     <ProjectGuid>{A8B47228-FF83-46BC-84AE-17BC1052CE7D}</ProjectGuid>
->>>>>>> 1a3dbaa9cc09dab39e69c623b4a6dec55741a3f0
     <RootNamespace>CustomLerpApp</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -119,11 +111,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources.rc" />
-<<<<<<< HEAD
-  </ItemGroup>  
-=======
   </ItemGroup>
->>>>>>> 1a3dbaa9cc09dab39e69c623b4a6dec55741a3f0
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

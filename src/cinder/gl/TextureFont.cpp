@@ -288,7 +288,8 @@ TextureFont::TextureFont( const Font &font, const string &utf8Chars, const Forma
 			gl::Texture::Format textureFormat = gl::Texture::Format();
 			textureFormat.enableMipmapping( mFormat.hasMipmapping() );
 			textureFormat.setInternalFormat( GL_LUMINANCE_ALPHA );
-			ip::fill<uint8_t>( &channel, 0 );			
+			mTextures.push_back( gl::Texture( tempSurface, textureFormat ) );
+			ip::fill<uint8_t>( &channel, 0 );
 			curOffset = Vec2i::zero();
 			curGlyphIndex = 0;
 			++curTextureIndex;
