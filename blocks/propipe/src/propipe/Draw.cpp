@@ -115,7 +115,7 @@ void Draw::drawLine( const Vec3f &start, const Vec3f &end )
 
 namespace {
 
-void drawCubeImpl( Renderer& render, const Vec3f &c, const Vec3f &size, bool drawColors, bool textured )
+void drawCubeImpl( Renderer& render, const Vec3f &c, const Vec3f &size, bool drawColors )
 {
 	GLfloat sx = size.x * 0.5f;
 	GLfloat sy = size.y * 0.5f;
@@ -159,9 +159,8 @@ void drawCubeImpl( Renderer& render, const Vec3f &c, const Vec3f &size, bool dra
 	render.resetArrays();
 
 	render.setNormalArray( normals );
-	if ( textured ) {
-		render.setTexCoordArray( texs );
-	}
+	render.setTexCoordArray( texs );
+
 	if ( drawColors ) {
 		render.setColorArray( colors );
 	}
@@ -174,14 +173,14 @@ void drawCubeImpl( Renderer& render, const Vec3f &c, const Vec3f &size, bool dra
 } // anonymous namespace
 
 
-void Draw::drawCube( const Vec3f &center, const Vec3f &size, bool textured )
+void Draw::drawCube( const Vec3f &center, const Vec3f &size )
 {
-	drawCubeImpl( *mRenderer, center, size, false, textured );
+	drawCubeImpl( *mRenderer, center, size, false );
 }
 
-void Draw::drawColorCube( const Vec3f &center, const Vec3f &size, bool textured )
+void Draw::drawColorCube( const Vec3f &center, const Vec3f &size )
 {
-	drawCubeImpl( *mRenderer, center, size, true, textured );
+	drawCubeImpl( *mRenderer, center, size, true );
 }
 
 void Draw::drawStrokedCube( const Vec3f &center, const Vec3f &size )
@@ -205,7 +204,7 @@ void Draw::drawStrokedCube( const Vec3f &center, const Vec3f &size )
 	drawLine( Vec3f(max.x, min.y, min.z), Vec3f(max.x, min.y, max.z) );
 }
 
-void Draw::drawSphere( const Vec3f &center, float radius, int segments, bool textured )
+void Draw::drawSphere( const Vec3f &center, float radius, int segments )
 {
 	if( segments < 0 )
 		return;
@@ -216,8 +215,7 @@ void Draw::drawSphere( const Vec3f &center, float radius, int segments, bool tex
 
 	mRenderer->resetArrays();
 	mRenderer->setPositionArray( verts, 3 );
-	if ( textured )
-		mRenderer->setTexCoordArray( texCoords );
+	mRenderer->setTexCoordArray( texCoords );
 	mRenderer->setNormalArray( normals );
 
 	mRenderer->enableClientState();
@@ -256,9 +254,9 @@ void Draw::drawSphere( const Vec3f &center, float radius, int segments, bool tex
 	delete [] texCoords;
 }
 
-void Draw::draw( const class Sphere &sphere, int segments, bool textured )
+void Draw::draw( const class Sphere &sphere, int segments )
 {
-	drawSphere( sphere.getCenter(), sphere.getRadius(), segments, textured );
+	drawSphere( sphere.getCenter(), sphere.getRadius(), segments );
 }
 
 void Draw::drawSolidCircle( const Vec2f &center, float radius, int numSegments )
@@ -496,7 +494,7 @@ void Draw::drawFrustum( const Camera &cam )
 	mRenderer->disableClientState();
 }
 
-void Draw::drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments, bool textured )
+void Draw::drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments )
 {
 	longitudeSegments = std::min( std::max( 7, longitudeSegments ) + 1, 255 );
 	latitudeSegments = std::min( std::max( 7, latitudeSegments ) + 1, 255 );
@@ -510,8 +508,7 @@ void Draw::drawTorus( float outterRadius, float innerRadius, int longitudeSegmen
 
 	mRenderer->resetArrays();
 	mRenderer->setPositionArray(vertex, 3);
-	if (textured)
-		mRenderer->setTexCoordArray(tex);
+	mRenderer->setTexCoordArray(tex);
 	mRenderer->setNormalArray(normal);
 	mRenderer->enableClientState();
 
@@ -552,7 +549,7 @@ void Draw::drawTorus( float outterRadius, float innerRadius, int longitudeSegmen
 	delete [] indices;
 }
 
-void Draw::drawCylinder( float baseRadius, float topRadius, float height, int slices, int stacks, bool textured )
+void Draw::drawCylinder( float baseRadius, float topRadius, float height, int slices, int stacks )
 {
 	stacks = math<int>::max(2, stacks + 1);	// minimum of 1 stack
 	slices = math<int>::max(4, slices + 1);	// minimum of 3 slices

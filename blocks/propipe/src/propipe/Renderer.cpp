@@ -135,8 +135,7 @@ public:
 				mShader.uniform("uEnableTextureAttr", false);
 			}
 
-			mShader.uniform("uModelView", mModelView);
-			mShader.uniform("uProjection", mProjection);
+			mShader.uniform("uMVP", mProjection * mModelView);
 		}
 
 		if ( clientState & UPLOAD_ATTRIBS ) {
@@ -188,8 +187,7 @@ const char* PPRenderer::vert =
 		"attribute vec2 aTexCoord;\n"
 		"attribute vec4 aColor;\n"
 
-		"uniform mat4 uModelView;\n"
-		"uniform mat4 uProjection;\n"
+		"uniform mat4 uMVP;\n"
 		"uniform vec4 uColor;\n"
 
 		"uniform bool uEnableColorAttr;\n"
@@ -208,7 +206,7 @@ const char* PPRenderer::vert =
 		"  if (uEnableTextureAttr) {\n"
 		"	vTexCoord = aTexCoord;\n"
 		"  }\n"
-		"  gl_Position = uProjection * uModelView * aPosition;\n"
+		"  gl_Position = uMVP * aPosition;\n"
 		"}\n";
 
 const char* PPRenderer::frag =

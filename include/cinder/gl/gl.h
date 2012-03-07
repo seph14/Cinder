@@ -53,8 +53,13 @@
 	#undef max
 	#include <gl/gl.h>
 #elif defined( CINDER_COCOA_TOUCH )
-	#include <OpenGLES/ES2/gl.h>
-	#include <OpenGLES/ES2/glext.h>
+	#if defined( CINDER_GLES1 )
+		#include <OpenGLES/ES1/gl.h>
+		#include <OpenGLES/ES1/glext.h>
+	#elif defined( CINDER_GLES2 )
+		#include <OpenGLES/ES2/gl.h>
+		#include <OpenGLES/ES2/glext.h>
+	#endif
 #elif defined( CINDER_MAC )
 	#include <OpenGL/gl.h>
 #elif defined( CINDER_ANDROID )

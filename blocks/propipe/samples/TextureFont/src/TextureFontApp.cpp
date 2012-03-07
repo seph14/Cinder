@@ -138,7 +138,7 @@ void TextureFontApp::draw()
 	float fontNameWidth = mTextureFont->measureString( mTextureFont->getName() ).x;
 	mFontDraw->drawString( *mTextureFont, mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
 
-	//  shared renderer, actually not required to bind and set up matrices again
+	//  mDraw shares its renderer with mFontDraw, so not required to bind prog and set up matrices again
 	mDraw->setColor( ColorA::white() );
 	mDraw->drawStrokedRect( boundsRect );
 

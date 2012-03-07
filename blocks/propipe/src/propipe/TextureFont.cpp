@@ -131,10 +131,11 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 		renderer.setTexCoordArray(&texCoords[0]);
 		renderer.setColorArray(colors.empty() ? NULL : (GLubyte*) &vertColors[0]);
 
-		renderer.enableClientState();
+		renderer.enableClientState(texIdx == 0 ? Renderer::STATE_ALL : Renderer::UPLOAD_ATTRIBS);
 		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
 		renderer.disableClientState();
 	}
+	renderer.unbindTexture();
 }
 
 void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options, const vector<ColorA8u> &colors )
@@ -227,10 +228,11 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 		renderer.setTexCoordArray(&texCoords[0]);
 		renderer.setColorArray(colors.empty() ? NULL : (GLubyte*) &vertColors[0]);
 
-		renderer.enableClientState();
+		renderer.enableClientState(texIdx == 0 ? Renderer::STATE_ALL : Renderer::UPLOAD_ATTRIBS);
 		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
-		renderer.disableClientState();
 	}
+	renderer.disableClientState();
+	renderer.unbindTexture();
 }
 
 TextureFontRef TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )

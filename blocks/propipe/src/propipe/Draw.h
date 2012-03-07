@@ -68,17 +68,17 @@ class Draw : public DrawBase
 	//! Draws a line from \a start to \a end
 	void drawLine( const Vec3f &start, const Vec3f &end );
 	//! Renders a solid cube centered at \a center of size \a size. Normals and created texture coordinates are generated for \c GL_TEXTURE_2D, with each face in the range [0,0] - [1.0,1.0]
-	void drawCube( const Vec3f &center, const Vec3f &size, bool textured = false );
+	void drawCube( const Vec3f &center, const Vec3f &size );
 	//! Renders a solid cube centered at \a center of size \a size. Each face is assigned a unique color, and no normals or texture coordinates are generated.
-	void drawColorCube( const Vec3f &center, const Vec3f &size, bool textured = false );
+	void drawColorCube( const Vec3f &center, const Vec3f &size );
 	//! Renders a stroked cube centered at \a center of size \a size.
 	void drawStrokedCube( const Vec3f &center, const Vec3f &size );
 	//! Renders a stroked cube \a aab
 	inline void drawStrokedCube( const AxisAlignedBox3f &aab ) { drawStrokedCube( aab.getCenter(), aab.getSize() ); }
 	//! Renders a solid sphere centered at \a center of radius \a radius. \a segments defines how many segments the sphere is subdivided into. Normals and texture coordinates in the range [0,1] are generated.
-	void drawSphere( const Vec3f &center, float radius, int segments = 12, bool textured = false );
+	void drawSphere( const Vec3f &center, float radius, int segments = 12 );
 	//! Renders a solid sphere. \a segments defines how many segments the sphere is subdivided into. Normals and texture coordinates in the range [0,1] are generated.
-	void draw( const class Sphere &sphere, int segments = 12, bool textured = false );
+	void draw( const class Sphere &sphere, int segments = 12 );
 	//! Renders a solid circle using triangle fans. The default value of zero for \a numSegments automatically determines a number of segments based on the circle's circumference.
 	void drawSolidCircle( const Vec2f &center, float radius, int numSegments = 0 );
 	//! Renders a stroked circle using a line loop. The default value of zero for \a numSegments automatically determines a number of segments based on the circle's circumference.
@@ -98,9 +98,9 @@ class Draw : public DrawBase
 	//! Draws a wireframe representation of the frustum defined by \a cam.
 	void drawFrustum( const Camera &cam );
 	//! Draws a torus at the origin, with an outter radius \a outterRadius and an inner radius \a innerRadius, subdivided into \a longitudeSegments and \a latitudeSegments. Normals and texture coordinates in the range [0,1] are generated.
-	void drawTorus( float outterRadius, float innerRadius, int longitudeSegments = 12, int latitudeSegments = 12, bool textured = false );
+	void drawTorus( float outterRadius, float innerRadius, int longitudeSegments = 12, int latitudeSegments = 12 );
 	//! Draws a open-ended cylinder, with base radius \a baseRadius and top radius \a topRadius, with height \a height, subdivided into \a slices and \a stacks. Normals and texture coordinates in the range [0,1] are generated.
-	void drawCylinder( float baseRadius, float topRadius, float height, int slices = 12, int stacks = 1, bool textured = false );
+	void drawCylinder( float baseRadius, float topRadius, float height, int slices = 12, int stacks = 1 );
 	//! Draws a 2d PolyLine \a polyLine
 	void draw( const class PolyLine<Vec2f> &polyLine );
 	//! Draws a 3d PolyLine \a polyLine
