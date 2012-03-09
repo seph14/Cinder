@@ -13,13 +13,31 @@ ifdef USE_FREETYPE
 include $(TOP_PATH)/freetype-2.4.5/Android.mk
 endif  # USE_FREETYPE
 
+# Propipe block
+ifdef USE_GLES2
+include $(CLEAR_VARS)
+PROPIPE_SRC  = ../../../blocks/propipe/src/propipe
+
+LOCAL_MODULE 	 := propipe
+LOCAL_CFLAGS     := -D_GLIBCPP_USE_WCHAR_T -D__LITTLE_ENDIAN__ -DCINDER_GLES2
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
+					$(LOCAL_PATH)/../../../boost
+LOCAL_SRC_FILES  := $(PROPIPE_SRC)/Draw.cpp \
+                    $(PROPIPE_SRC)/Matrices.cpp \
+                    $(PROPIPE_SRC)/Renderer.cpp \
+                    $(PROPIPE_SRC)/TextureFont.cpp
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../blocks/propipe/src
+LOCAL_EXPORT_LDLIBS := -lcinder -lGLESv2
+
+include $(BUILD_STATIC_LIBRARY)
+endif
+
 include $(CLEAR_VARS)
 
 CINDER_SRC   = ../../../src/cinder
 TESS_SRC     = ../../../src/libtess2
 STBIMAGE_SRC = ../../../src/stb_image
 UTF8_CPP_SRC = ../../../src/utf8-cpp/source
-PROPIPE_SRC  = ../../../blocks/propipe/src/propipe
 
 LOCAL_MODULE 	 := cinder
 
@@ -101,14 +119,8 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(TESS_SRC)/tess.c
 
 ifdef USE_GLES2
-LOCAL_C_INCLUDES += $(PROPIPE_SRC)
-LOCAL_SRC_FILES += $(CINDER_SRC)/gl/GlslProg.cpp \
-                   $(CINDER_SRC)/gl/Vbo.cpp \
-                   $(PROPIPE_SRC)/Draw.cpp \
-                   $(PROPIPE_SRC)/Matrices.cpp \
-                   $(PROPIPE_SRC)/Renderer.cpp \
-                   $(PROPIPE_SRC)/TextureFont.cpp
-
+LOCAL_SRC_FILES  += $(CINDER_SRC)/gl/GlslProg.cpp \
+                    $(CINDER_SRC)/gl/Vbo.cpp
 LOCAL_CFLAGS += -DCINDER_GLES2
 GLES_LDLIB = -lGLESv2
 else
@@ -146,3 +158,4 @@ LOCAL_EXPORT_LDLIBS := -llog -lEGL $(GLES_LDLIB) -lz
 include $(BUILD_STATIC_LIBRARY)
 
 $(call import-module,android/native_app_glue)
+

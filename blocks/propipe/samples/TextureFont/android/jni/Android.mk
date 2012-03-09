@@ -8,7 +8,7 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../../src
 LOCAL_SRC_FILES := ../../src/TextureFontApp.cpp
 
 LOCAL_LDLIBS    := -landroid 
-LOCAL_STATIC_LIBRARIES := cinder boost_system boost_filesystem freeimage ft2 android_native_app_glue 
+LOCAL_STATIC_LIBRARIES := propipe cinder boost_system boost_filesystem freeimage ft2 android_native_app_glue 
 
 include $(BUILD_SHARED_LIBRARY)
 

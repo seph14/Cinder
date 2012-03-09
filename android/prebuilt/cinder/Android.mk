@@ -34,6 +34,14 @@ LOCAL_MODULE := boost_thread
 LOCAL_SRC_FILES := $(TARGET_ARCH)/lib/libboost_thread.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+ifdef USE_GLES2
+include $(CLEAR_VARS)
+LOCAL_MODULE := propipe
+LOCAL_SRC_FILES := ../../obj/local/$(TARGET_ARCH_ABI)/libpropipe.a
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../blocks/propipe/src
+include $(PREBUILT_STATIC_LIBRARY)
+endif
+
 include $(CLEAR_VARS)
 
 include $(LOCAL_PATH)/../../jni/cinder/Configure.mk
