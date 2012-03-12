@@ -501,10 +501,6 @@ void App::cleanupLaunch()
 #if defined( CINDER_COCOA )
     sAutoReleasePool = [[NSAutoreleasePool alloc] init];
 #endif
-#if defined( CINDER_ANDROID )
-    //  Force the process to close after onDestroy()
-    // exit(0);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
