@@ -11,11 +11,13 @@ using namespace cel;
 
 using std::shared_ptr;
 using std::thread;
+using std::unique_lock;
+using std::mutex;
 
 const uint32_t MAXIMUM_CHANNEL_COUNT = 512;
 
 const int      kTicksPerBuffer = 1;
-const uint32_t kBufferSamples = 1024;
+const uint32_t kBufferSamples = 1024;  // must be a multiple of libpd block size (ie 64)
 
 CelPdRef CelPd::init(int inChannels, int outChannels, int sampleRate)
 {
@@ -34,20 +36,33 @@ void CelPd::play()
 
     //  Start playback by queuing an initial buffer (empty)
     {
-        std::unique_lock<std::mutex> lock(mMixerLock);
+        unique_lock<mutex> lock(mPlayerLock);
 
         mOutputBufIndex = 0;
-        memset(mOutputBuf[0], 0, sizeof(int16_t) * mBufSamples);
+        memset(mOutputBuf[0], 0, sizeof(int16_t) * mOutputBufSamples);
         (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, 
-                mOutputBuf[0], mBufSamples * sizeof(int16_t));
-        mMixerThread = shared_ptr<thread>(new thread(&CelPd::mixer, this));
+                mOutputBuf[0], mOutputBufSamples * sizeof(int16_t));
+        mMixerThread = shared_ptr<thread>(new thread(&CelPd::playerLoop, this));
         mMixerRunning = true;
-
-        //  Start DSP
-        libpd_start_message(1);
-        libpd_add_float(1.0f);
-        libpd_finish_message("pd", "dsp");
     }
+
+    computeAudio(true);
+}
+
+void CelPd::computeAudio(bool on)
+{
+    //  Start DSP
+    unique_lock<mutex> lock(mPdLock);
+    libpd_start_message(1);
+    libpd_add_float(on ? 1.0f : 0);
+    libpd_finish_message("pd", "dsp");
+}
+
+void* CelPd::openFile(const char* filename, const char* dir)
+{
+    unique_lock<mutex> lock(mPdLock);
+    // return libpd_openfile("hello.pd", "/mnt/sdcard/pd");
+    return libpd_openfile(filename, dir);
 }
 
 //  Stop the audio system
@@ -57,30 +72,25 @@ void CelPd::pause()
     SLresult result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PAUSED);
     assert(SL_RESULT_SUCCESS == result);
     {
-        std::unique_lock<std::mutex> lock(mMixerLock);
+        unique_lock<mutex> lock(mPlayerLock);
         mMixerRunning = false;
         mMixerThread->interrupt();
-
-        //  Stop DSP
-        // libpd_start_message(1);
-        // libpd_add_float(0);
-        // libpd_finish_message("pd", "dsp");
     }
 }
 
 void CelPd::bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
 {
-    // notify mixer thread we're ready to enqueue another buffer
+    // notify player thread we're ready to enqueue another buffer
     CelPd* audio = (CelPd*) audioPtr;
     {
-        std::unique_lock<std::mutex> lock(audio->mMixerLock);
+        unique_lock<mutex> lock(audio->mPlayerLock);
         audio->mOutputReady = true;
     }
     (audio->mBufferReady).notify_one();
 }
 
-//  mixer thread loop
-void CelPd::mixer()
+//  player thread loop
+void CelPd::playerLoop()
 {
     while (mMixerRunning)
     {
@@ -90,11 +100,14 @@ void CelPd::mixer()
 
         // CI_LOGD("Mixer thread output buf index %d", mOutputBufIndex);
 
-        memset(mOutputBuf[mOutputBufIndex], 0, sizeof(int16_t) * mBufSamples);
-        // libpd_process_short(kTicksPerBuffer, mInputBuf[mInputBufIndex], mOutputBuf[mOutputBufIndex]);
-        libpd_process_short(kBufferSamples / libpd_blocksize(), mInputBuf[mInputBufIndex], mOutputBuf[mOutputBufIndex]);
+        memset(mOutputBuf[mOutputBufIndex], 0, sizeof(int16_t) * mOutputBufSamples);
+
         {
-            std::unique_lock<std::mutex> lock(mMixerLock);
+            unique_lock<mutex> lock(mPdLock);
+            libpd_process_short(kBufferSamples / libpd_blocksize(), mInputBuf[mInputBufIndex], mOutputBuf[mOutputBufIndex]);
+        }
+        {
+            unique_lock<mutex> lock(mPlayerLock);
 
             // for (int i=0; i < mBufSamples; ++i) {
             //     CI_LOGD("  buffer[%d] : %d", i, mOutputBuf[mOutputBufIndex][i]);
@@ -110,12 +123,8 @@ void CelPd::mixer()
             mOutputReady = false;
         }
         SLresult result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, 
-                mOutputBuf[mOutputBufIndex], mBufSamples * sizeof(int16_t));
+                mOutputBuf[mOutputBufIndex], mOutputBufSamples * sizeof(int16_t));
         assert(SL_RESULT_SUCCESS == result);
-
-        // // the most likely other result is SL_RESULT_BUFFER_INSUFFICIENT,
-        // // which for this code example would indicate a programming error
-        // assert(SL_RESULT_SUCCESS == result);
     }
 }
 
@@ -126,18 +135,18 @@ CelPd::CelPd(int inChannels, int outChannels, int sampleRate)
 {
     initSL(inChannels, outChannels, sampleRate);
     libpd_init_audio(inChannels, outChannels, sampleRate);
-    // mBufSamples = kTicksPerBuffer * libpd_blocksize() * outChannels;
-    mBufSamples = kBufferSamples * outChannels;
+    // mOutputBufSamples = kTicksPerBuffer * libpd_blocksize() * outChannels;
+    mOutputBufSamples = kBufferSamples * outChannels;
+    mInputBufSamples = kBufferSamples * inChannels;
     CI_LOGD("OSL: Allocating buffers size kTicks (%d) * blocksize (%d) * channels (%d) = %d",
-            kTicksPerBuffer, libpd_blocksize(), outChannels, mBufSamples);
+            kTicksPerBuffer, libpd_blocksize(), outChannels, mOutputBufSamples);
 
     for (int i=0; i < 2; ++i) {
-        mOutputBuf[i] = new int16_t[mBufSamples];
-        mInputBuf[i]  = new int16_t[mBufSamples];
-        memset(mOutputBuf[i], 0, sizeof(int16_t) * mBufSamples);
-        memset(mInputBuf[i],  0, sizeof(int16_t) * mBufSamples);
+        mOutputBuf[i] = new int16_t[mOutputBufSamples];
+        mInputBuf[i]  = new int16_t[mInputBufSamples];
+        memset(mOutputBuf[i], 0, sizeof(int16_t) * mOutputBufSamples);
+        memset(mInputBuf[i],  0, sizeof(int16_t) * mInputBufSamples);
     }
-    libpd_openfile("hello.pd", "/mnt/sdcard/pd");
 }
 
 CelPd::~CelPd()

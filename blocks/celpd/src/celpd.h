@@ -35,6 +35,12 @@ public:
     //  Returns last error code
     AudioError_t error();
 
+    //  Pd interface
+    void  computeAudio(bool on);
+    void* openFile(const char* filename, const char* dir);
+
+    //  LibPD wrappers
+
     ~CelPd();
 
 protected:
@@ -49,7 +55,8 @@ protected:
     SLMuteSoloItf                 bqPlayerMuteSolo;
     SLVolumeItf                   bqPlayerVolume;
 
-    std::mutex                   mMixerLock;
+    std::mutex                   mPlayerLock;
+    std::mutex                   mPdLock;
     std::condition_variable      mBufferReady;
     std::shared_ptr<std::thread> mMixerThread;
 
@@ -59,7 +66,8 @@ protected:
 
     void initSL(int inChannels, int outChannels, int sampleRate);
     void setError(AudioError_t error);
-    void mixer();
+
+    void playerLoop();
 
     bool mMixerRunning;
     bool mOutputReady;
@@ -69,7 +77,8 @@ protected:
     int       mInputBufIndex;
     int16_t* mInputBuf[2];
 
-    int       mBufSamples;
+    int       mOutputBufSamples;
+    int       mInputBufSamples;
 
     static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
 };
