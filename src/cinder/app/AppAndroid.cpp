@@ -359,6 +359,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             //  app has been destroyed, will crash if we attempt to do anything else
             CI_LOGW("XXX APP_CMD_DESTROY");
             engine->activityState = ACTIVITY_DESTROY;
+            cinderApp->privateDestroy__();
             log_engine_state(engine);
             break;
 
@@ -421,7 +422,7 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
     engine.sensorEventQueue = ASensorManager_createEventQueue(engine.sensorManager,
             androidApp->looper, LOOPER_ID_USER, NULL, NULL);
 
-    CI_LOGW("XXX android_run");
+    // CI_LOGD("XXX android_run");
 
     if (androidApp->savedState != NULL) {
         // We are starting with a previous saved state; restore from it.
@@ -506,6 +507,10 @@ void AppAndroid::resume( bool renewContext )
     if (renewContext) {
         setup();
     }
+}
+
+void AppAndroid::destroy()
+{
 }
 
 void AppAndroid::setAndroidImpl( struct android_app* androidApp )
@@ -628,8 +633,12 @@ void AppAndroid::privatePause__()
 
 void AppAndroid::privateResume__(bool renewContext) 
 {
-    CI_LOGW("XXX privateResume__");
     resume(renewContext);
+}
+
+void AppAndroid::privateDestroy__()
+{
+    destroy();
 }
 
 void AppAndroid::privateTouchesBegan__( const TouchEvent &event )

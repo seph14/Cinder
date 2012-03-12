@@ -45,6 +45,7 @@ class AppAndroid : public App {
 	//! Android activity lifecycle callbacks
 	virtual void		pause();
 	virtual void		resume( bool renewContext );
+	virtual void		destroy();
     
 	//! Override to respond to the beginning of a multitouch sequence
 	virtual void		touchesBegan( TouchEvent event ) {}
@@ -150,6 +151,7 @@ class AppAndroid : public App {
 	void		privatePrepareSettings__();
 	void		privatePause__();
 	void		privateResume__(bool renewContext);
+	void		privateDestroy__();
 	void		privateTouchesBegan__( const TouchEvent &event );
 	void		privateTouchesMoved__( const TouchEvent &event );
 	void		privateTouchesEnded__( const TouchEvent &event );
