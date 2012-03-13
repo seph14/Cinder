@@ -66,13 +66,15 @@ fs::path expandPath( const fs::path &path )
 	NSString *pathNS = [NSString stringWithCString:path.c_str() encoding:NSUTF8StringEncoding];
 	NSString *resultPath = [pathNS stringByStandardizingPath];
 	result = string( [resultPath cStringUsingEncoding:NSUTF8StringEncoding] );
+	return fs::path( result );
 #elif defined( CINDER_MSW )
 	char buffer[MAX_PATH];
 	::PathCanonicalizeA( buffer, path.string().c_str() );
 	result = buffer; 
-#endif
-
 	return fs::path( result );
+#else
+	return fs::canonical( path );
+#endif
 }
 
 std::string getHomeDirectory()

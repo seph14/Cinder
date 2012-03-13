@@ -1,8 +1,10 @@
 #include "cinder/app/AppAndroid.h"
+#include "cinder/Stream.h"
 
 #include <jni.h>
 #include <errno.h>
 
+#include <android/asset_manager.h>
 #include <android/sensor.h>
 #include <android/log.h>
 #include <android_native_app_glue.h>
@@ -529,6 +531,44 @@ int32_t AppAndroid::getSdkVersion()
 {
 	return (mAndroidApp && mAndroidApp->activity) ?
 		mAndroidApp->activity->sdkVersion : -1;
+}
+
+void AppAndroid::copyAsset(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
+{
+	if (assetPath.empty())
+		return;
+
+	AAssetManager* mgr = mAndroidApp->activity->assetManager;
+	fs::path outPath = destDir / assetPath.filename();
+	{
+		// XXX fix createParentDirs in writeFileStream
+		OStreamFileRef os = writeFileStream(outPath);
+		if (!os) {
+			return;
+		}
+		AAsset* asset = AAssetManager_open(mgr, assetPath.string().c_str(), AASSET_MODE_STREAMING);
+
+		const int BUFSIZE = 8192;
+		unsigned char buf[BUFSIZE];
+		int readSize;
+
+		while (true) {
+			readSize = AAsset_read(asset, (void *) buf, BUFSIZE);
+			if (readSize > 0) {
+				os->writeData(buf, readSize);
+			}
+			else {
+				break;
+			}
+		}
+		AAsset_close(asset);
+	}
+}
+
+void AppAndroid::copyAssetDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
+{
+	// XXX TODO
+	AAssetManager* mgr = mAndroidApp->activity->assetManager;
 }
 
 void AppAndroid::setAndroidImpl( struct android_app* androidApp )

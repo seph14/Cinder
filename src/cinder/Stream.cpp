@@ -617,9 +617,12 @@ IStreamFileRef loadFileStream( const fs::path &path )
 
 std::shared_ptr<OStreamFile> writeFileStream( const fs::path &path, bool createParents )
 {
+// XXX TODO
+#if ! defined( CINDER_ANDROID )
 	if( createParents ) {
 		createDirectories( path.parent_path() );
 	}
+#endif
 	FILE *f = fopen( expandPath( path ).string().c_str(), "wb" );
 	if( f ) {
 		OStreamFileRef s = OStreamFile::create( f, true );

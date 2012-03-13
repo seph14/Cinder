@@ -3,6 +3,7 @@
 #include "cinder/app/App.h"
 #include "cinder/app/TouchEvent.h"
 #include "cinder/app/AccelEvent.h"
+#include "cinder/Filesystem.h"
 
 #include <time.h>
 
@@ -61,6 +62,9 @@ class AppAndroid : public App {
 	fs::path getExternalDataPath();
 	//! Returns Android SDK version
 	int32_t  getSdkVersion();
+
+	void copyAsset(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
+	void copyAssetDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
     
 	//! Override to respond to the beginning of a multitouch sequence
 	virtual void		touchesBegan( TouchEvent event ) {}
