@@ -17,11 +17,6 @@ enum AudioError_t {
 
 typedef std::shared_ptr<class CelPd> CelPdRef;
 
-enum BufferState_t {
-    WAITING = 0,
-    READY,
-    READABLE
-};
 class CelPd
 {
 public:
@@ -64,11 +59,9 @@ protected:
     SLMuteSoloItf                 bqPlayerMuteSolo;
     SLVolumeItf                   bqPlayerVolume;
 
-    // std::mutex                   mRecorderLock;
     std::mutex                   mPlayerLock;
     std::mutex                   mPdLock;
     std::condition_variable      mInputBufReady;
-    std::condition_variable      mInputBufReadable;
     std::condition_variable      mOutputBufReady;
     std::shared_ptr<std::thread> mMixerThread;
 
@@ -84,20 +77,19 @@ protected:
     void playerLoop();
     void enqueueRecorder();
     void enqueuePlayer();
-    // void recorderLoop();
 
     bool mPlayerRunning;
     bool mRecorderRunning;
     bool mOutputReady;
     bool mInputReady;
 
-    int       mOutputBufIndex;
+    int      mOutputBufIndex;
     int16_t* mOutputBuf[2];
-    int       mInputBufIndex;
+    int      mInputBufIndex;
     int16_t* mInputBuf[2];
 
-    int       mOutputBufSamples;
-    int       mInputBufSamples;
+    int      mOutputBufSamples;
+    int      mInputBufSamples;
 
     int mInputChannels;
     int mOutputChannels;
