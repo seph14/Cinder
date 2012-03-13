@@ -63,8 +63,10 @@ class AppAndroid : public App {
 	//! Returns Android SDK version
 	int32_t  getSdkVersion();
 
-	void copyAsset(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
-	void copyAssetDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
+	//! Copy an Android resource (asset) to a writable path
+	void copyResource(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
+	//! Copy an entire Android resource (asset) dir to a writable path
+	void copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
     
 	//! Override to respond to the beginning of a multitouch sequence
 	virtual void		touchesBegan( TouchEvent event ) {}

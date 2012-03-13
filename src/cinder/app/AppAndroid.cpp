@@ -533,7 +533,7 @@ int32_t AppAndroid::getSdkVersion()
 		mAndroidApp->activity->sdkVersion : -1;
 }
 
-void AppAndroid::copyAsset(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
+void AppAndroid::copyResource(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
 {
 	if (assetPath.empty())
 		return;
@@ -565,7 +565,7 @@ void AppAndroid::copyAsset(const fs::path& assetPath, const fs::path& destDir, b
 	}
 }
 
-void AppAndroid::copyAssetDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
+void AppAndroid::copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
 {
 	// XXX TODO
 	AAssetManager* mgr = mAndroidApp->activity->assetManager;
