@@ -17,6 +17,11 @@ enum AudioError_t {
 
 typedef std::shared_ptr<class CelPd> CelPdRef;
 
+enum BufferState_t {
+    WAITING = 0,
+    READY,
+    READABLE
+};
 class CelPd
 {
 public:
@@ -48,6 +53,10 @@ protected:
     SLEngineItf mEngineEngine;
     SLObjectItf mOutputMixObject;
 
+    SLObjectItf bqRecorderObject;
+    SLRecordItf bqRecorderRecord;
+    SLAndroidSimpleBufferQueueItf bqRecorderBufferQueue;;
+
     SLObjectItf                   bqPlayerObject;
     SLPlayItf                     bqPlayerPlay;
     SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
@@ -55,9 +64,12 @@ protected:
     SLMuteSoloItf                 bqPlayerMuteSolo;
     SLVolumeItf                   bqPlayerVolume;
 
+    // std::mutex                   mRecorderLock;
     std::mutex                   mPlayerLock;
     std::mutex                   mPdLock;
-    std::condition_variable      mBufferReady;
+    std::condition_variable      mInputBufReady;
+    std::condition_variable      mInputBufReadable;
+    std::condition_variable      mOutputBufReady;
     std::shared_ptr<std::thread> mMixerThread;
 
     AudioError_t mError;
@@ -65,12 +77,19 @@ protected:
     CelPd(int inChannels, int outChannels, int sampleRate);
 
     void initSL(int inChannels, int outChannels, int sampleRate);
+    void initInput(int channels, int sampleRate);
+    void initOutput(int channels, int sampleRate);
     void setError(AudioError_t error);
 
     void playerLoop();
+    void enqueueRecorder();
+    void enqueuePlayer();
+    // void recorderLoop();
 
-    bool mMixerRunning;
+    bool mPlayerRunning;
+    bool mRecorderRunning;
     bool mOutputReady;
+    bool mInputReady;
 
     int       mOutputBufIndex;
     int16_t* mOutputBuf[2];
@@ -80,7 +99,11 @@ protected:
     int       mOutputBufSamples;
     int       mInputBufSamples;
 
+    int mInputChannels;
+    int mOutputChannels;
+
     static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
+    static void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
 };
 
 }

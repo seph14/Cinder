@@ -48,8 +48,10 @@ void BasicAudioApp::setup()
 {
     CI_LOGD("OSL: ACTIVITY SETUP");
 
-    mAudio = CelPd::init(0, 2, 44100);
-    mAudio->openFile("hello.pd", "/mnt/sdcard/pd");
+    mAudio = CelPd::init(1, 2, 44100);
+
+	copyResource("inout.pd", getInternalDataPath());
+	mAudio->openFile("inout.pd", getInternalDataPath().string().c_str());
     mAudio->play();
 
     mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );

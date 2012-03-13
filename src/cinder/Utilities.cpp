@@ -73,7 +73,9 @@ fs::path expandPath( const fs::path &path )
 	result = buffer; 
 	return fs::path( result );
 #else
-	return fs::canonical( path );
+	return path;
+	// XXX crashes on Android when passing in internal data path
+	// return fs::canonical( path );
 #endif
 }
 

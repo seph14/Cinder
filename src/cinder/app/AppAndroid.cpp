@@ -535,9 +535,12 @@ int32_t AppAndroid::getSdkVersion()
 
 void AppAndroid::copyResource(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
 {
-	if (assetPath.empty())
+	if (assetPath.empty() || destDir.empty()) {
+		CI_LOGE("copyResource: Missing assetPath or destination dir");
 		return;
+	}
 
+	// CI_LOGD("Copying resource %s to %s", assetPath.string().c_str(), destDir.string().c_str());
 	AAssetManager* mgr = mAndroidApp->activity->assetManager;
 	fs::path outPath = destDir / assetPath.filename();
 	{
