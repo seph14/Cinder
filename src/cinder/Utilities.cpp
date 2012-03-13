@@ -201,6 +201,13 @@ bool createDirectories( const fs::path &path, bool createParents )
 	if( path.empty() )
 		return true;
 
+#if defined( CINDER_LINUX )
+	// if (!createParents)
+	// 	return fs::create_directory(path);
+
+	fs::create_directories(path);
+	return fs::exists(path);
+#else
 	fs::path dirPath = path.parent_path();
 
 #if defined( CINDER_COCOA )
@@ -209,8 +216,8 @@ bool createDirectories( const fs::path &path, bool createParents )
 #elif defined( CINDER_MSW )
 	return ::SHCreateDirectoryExA( NULL, dirPath.string().c_str(), NULL ) == ERROR_SUCCESS;
 #endif
-	// XXX Android/Linux TODO
-	return false;
+
+#endif // defined( CINDER_LINUX )
 }
 
 void launchWebBrowser( const Url &url )

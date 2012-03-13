@@ -617,9 +617,9 @@ IStreamFileRef loadFileStream( const fs::path &path )
 
 std::shared_ptr<OStreamFile> writeFileStream( const fs::path &path, bool createParents )
 {
-// XXX TODO
+// XXX TODO test and re-enable
 #if ! defined( CINDER_ANDROID )
-	if( createParents ) {
+	if( createParents && !fs::exists(path.parent_path()) ) {
 		createDirectories( path.parent_path() );
 	}
 #endif

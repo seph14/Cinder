@@ -567,8 +567,23 @@ void AppAndroid::copyResource(const fs::path& assetPath, const fs::path& destDir
 
 void AppAndroid::copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
 {
-	// XXX TODO
+	// XXX Untested
 	AAssetManager* mgr = mAndroidApp->activity->assetManager;
+
+	AAssetDir* dir = AAssetManager_openDir(mgr, assetPath.string().c_str());
+	fs::path outDir = destDir / assetPath.filename();
+	if (!fs::exists(outDir)) {
+		fs::create_directory(outDir);
+	}
+
+	char* filename = NULL;
+	while (true) {
+		const char* filename = AAssetDir_getNextFileName(dir);
+		if (filename == NULL) {
+			break;
+		}
+		copyResource(filename, outDir, overwrite);
+	}
 }
 
 void AppAndroid::setAndroidImpl( struct android_app* androidApp )
