@@ -14,15 +14,6 @@ using std::map;
 using ci::app::TouchEvent;
 using ci::app::Orientation_t;
 
-/**
- * Our saved state data.
- */
-struct saved_state {
-    float angle;
-    int32_t x;
-    int32_t y;
-};
-
 enum ActivityState {
     ACTIVITY_START = 0,
     ACTIVITY_RESUME,
@@ -45,14 +36,13 @@ struct TouchState {
 
 struct engine {
     struct android_app* androidApp;
+	void* savedState;
 
     ASensorManager*    sensorManager;
     const ASensor*     accelerometerSensor;
     ASensorEventQueue* sensorEventQueue;
 
     int animating;
-
-    struct saved_state savedState;
 
     ci::app::AppAndroid* cinderApp;
     ci::app::Renderer*   cinderRenderer;
@@ -259,10 +249,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
         case APP_CMD_SAVE_STATE:
             CI_LOGW("XXX APP_CMD_SAVE_STATE");
             log_engine_state(engine);
-            // The system has asked us to save our current state.  Do so.
-            engine->androidApp->savedState = malloc(sizeof(struct saved_state));
-            *((struct saved_state*)engine->androidApp->savedState) = engine->savedState;
-            engine->androidApp->savedStateSize = sizeof(struct saved_state);
+			cinderApp->saveState(engine->androidApp->savedState, engine->androidApp->savedStateSize);
             break;
 
         case APP_CMD_INIT_WINDOW:
@@ -403,7 +390,7 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
     engine.accelEnabled   = false;
 
     //  Activity state tracking
-    // engine.savedState     = NULL;
+    engine.savedState     = NULL;
     engine.setupCompleted = false;
     engine.resumed        = false;
     engine.renewContext   = true;
@@ -427,7 +414,7 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
     if (androidApp->savedState != NULL) {
         // We are starting with a previous saved state; restore from it.
         CI_LOGW("XXX android_run RESTORING SAVED STATE");
-        engine.savedState = *(struct saved_state*)androidApp->savedState;
+        engine.savedState = androidApp->savedState;
         engine.resumed = true;
     }
     else {
@@ -511,6 +498,37 @@ void AppAndroid::resume( bool renewContext )
 
 void AppAndroid::destroy()
 {
+}
+
+void AppAndroid::saveState(void*& state, size_t& size)
+{
+	state = NULL;
+	size = 0;
+}
+
+void* AppAndroid::getSavedState()
+{
+	return mEngine->savedState;
+}
+
+fs::path AppAndroid::getInternalDataPath()
+{
+	const char* path = (mAndroidApp && mAndroidApp->activity) ? 
+		mAndroidApp->activity->internalDataPath : NULL;
+	return path ? fs::path(path) : fs::path();
+}
+
+fs::path AppAndroid::getExternalDataPath()
+{
+	const char* path = (mAndroidApp && mAndroidApp->activity) ? 
+		mAndroidApp->activity->externalDataPath : NULL;
+	return path ? fs::path(path) : fs::path();
+}
+
+int32_t AppAndroid::getSdkVersion()
+{
+	return (mAndroidApp && mAndroidApp->activity) ?
+		mAndroidApp->activity->sdkVersion : -1;
 }
 
 void AppAndroid::setAndroidImpl( struct android_app* androidApp )
@@ -631,7 +649,7 @@ void AppAndroid::privatePause__()
     pause();
 }
 
-void AppAndroid::privateResume__(bool renewContext) 
+void AppAndroid::privateResume__( bool renewContext ) 
 {
     resume(renewContext);
 }

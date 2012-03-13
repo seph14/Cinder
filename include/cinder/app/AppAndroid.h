@@ -42,10 +42,25 @@ class AppAndroid : public App {
 
 	virtual void		prepareSettings( Settings *settings ) {}
 
-	//! Android activity lifecycle callbacks
-	virtual void		pause();
-	virtual void		resume( bool renewContext );
-	virtual void		destroy();
+	/* Android activity lifecycle callbacks */
+
+	//! Called before activity is paused
+	virtual void        pause();
+	//! Called when an activity resumes from a paused state
+	virtual void        resume( bool renewContext );
+	//! Called before an activity is destroyed
+	virtual void        destroy();
+	//! Called before an activity is paused, to save current state for resumption
+	virtual void        saveState(void*& state, size_t& size);
+	//! Returns a pointer to previously saved state, or NULL if none exists
+	virtual void*       getSavedState();
+
+	//! Return read-write data path located on internal storage
+	fs::path getInternalDataPath();
+	//! Return read-write data path located on external storage
+	fs::path getExternalDataPath();
+	//! Returns Android SDK version
+	int32_t  getSdkVersion();
     
 	//! Override to respond to the beginning of a multitouch sequence
 	virtual void		touchesBegan( TouchEvent event ) {}
@@ -118,7 +133,7 @@ class AppAndroid : public App {
 	virtual double		getElapsedSeconds() const;
 
 	//! Returns the path to the application on disk
-	virtual fs::path			getAppPath();
+	virtual fs::path	getAppPath();
 
 	//! Ceases execution of the application. Not implemented yet on iPhone
 	virtual void	quit();
@@ -133,8 +148,6 @@ class AppAndroid : public App {
 	virtual const Settings&	getSettings() const { return mSettings; }
 
     void setAndroidImpl( struct android_app* androidApp );
-	// void setAndroidApp( struct android_app* androidApp );
-    // void setAppFactory( IAppFactory* factory );
 
 	//! \cond
 	// These are called by application instantation macros and are only used in the launch process
