@@ -50,8 +50,8 @@ void BasicAudioApp::setup()
 
     mAudio = CelPd::init(1, 2, 44100);
 
-	copyResource("inout.pd", getInternalDataPath());
-	mAudio->openFile("inout.pd", getInternalDataPath().string().c_str());
+    copyResource("inout.pd", getInternalDataPath());
+    mAudio->openFile("inout.pd", getInternalDataPath().string().c_str());
     mAudio->play();
 
     mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
@@ -116,13 +116,13 @@ void BasicAudioApp::keyDown( KeyEvent event )
 
 void BasicAudioApp::mouseDown( MouseEvent event )
 {
-	console() << mFont.getName() << std::endl;
+    console() << mFont.getName() << std::endl;
 }
 
 void BasicAudioApp::setupMatrices()
 {
-	Vec2i windowSize = getWindowSize();
-	mMatrices.setMatricesWindow(windowSize.x, windowSize.y);
+    Vec2i windowSize = getWindowSize();
+    mMatrices.setMatricesWindow(windowSize.x, windowSize.y);
 }
 
 void BasicAudioApp::draw()
