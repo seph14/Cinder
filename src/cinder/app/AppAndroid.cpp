@@ -543,6 +543,10 @@ void AppAndroid::copyResource(const fs::path& assetPath, const fs::path& destDir
 	// CI_LOGD("Copying resource %s to %s", assetPath.string().c_str(), destDir.string().c_str());
 	AAssetManager* mgr = mAndroidApp->activity->assetManager;
 	fs::path outPath = destDir / assetPath.filename();
+
+	if (fs::exists(outPath) && !overwrite)
+		return;
+
 	{
 		// XXX fix createParentDirs in writeFileStream
 		OStreamFileRef os = writeFileStream(outPath);

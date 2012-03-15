@@ -48,11 +48,22 @@ void BasicAudioApp::setup()
 {
     CI_LOGD("OSL: ACTIVITY SETUP");
 
-    mAudio = CelPd::init(1, 2, 44100);
+    mAudio = CelPd::init(0, 2, 44100);
 
-    copyResource("inout.pd", getInternalDataPath());
-    mAudio->openFile("inout.pd", getInternalDataPath().string().c_str());
+    fs::path internalData = getInternalDataPath(); 
+    copyResource("oggread~.pd_linux", internalData, true);
+    copyResource("oggtest.pd", internalData, true);
+
+    //  Search for externals here
+    mAudio->addToSearchPath(internalData);
+
+    mAudio->openFile("oggtest.pd", internalData);
     mAudio->play();
+
+    //  Start the ogg file playing
+    CI_LOGD("Sending start bangs");
+    mAudio->sendBang("open");
+    mAudio->sendBang("start");
 
     mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
 
@@ -86,9 +97,9 @@ void BasicAudioApp::resume(bool renewContext)
 
         //  Recreate GL resources
         mTextureFont = pp::TextureFont::create( mFont );
-        mRenderer = pp::Renderer::create();
-        mDraw = pp::Draw::create(mRenderer);
-        mFontDraw = pp::TextureFontDraw::create( mRenderer );
+        mRenderer    = pp::Renderer::create();
+        mDraw        = pp::Draw::create(mRenderer);
+        mFontDraw    = pp::TextureFontDraw::create( mRenderer );
     }
 
     mAudio->play();
@@ -105,7 +116,6 @@ void BasicAudioApp::destroy()
     CI_LOGD("OSL: ACTIVITY DESTROY");
     mAudio->pause();
     mAudio->close();
-    mAudio.reset();
 }
 
 #endif

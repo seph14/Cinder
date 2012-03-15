@@ -5,6 +5,7 @@
 
 #include "cinder/Cinder.h"
 #include "cinder/Thread.h"
+#include "cinder/Filesystem.h"
 
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
@@ -37,7 +38,13 @@ public:
 
     //  Pd interface
     void  computeAudio(bool on);
-    void* openFile(const char* filename, const char* dir);
+    void* openFile(const char* filename, const ci::fs::path& dir);
+
+	void addToSearchPath(const ci::fs::path& path);
+
+	int sendBang(const char* recv);
+	int sendFloat(const char* recv, float x);
+	int sendSymbol(const char* recv, const char* sym);
 
     //  LibPD wrappers
 

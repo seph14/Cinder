@@ -19,10 +19,17 @@ const uint32_t MAXIMUM_CHANNEL_COUNT = 512;
 const int      kTicksPerBuffer = 1;
 const uint32_t kBufferSamples = 1024;  // must be a multiple of libpd block size (ie 64)
 
+static void cel_printhook(const char* msg) {
+	CI_LOGD("OSL/pd %s", msg);
+}
+
 CelPdRef CelPd::init(int inChannels, int outChannels, int sampleRate)
 {
     //  Initialize PD
+	libpd_printhook = (t_libpd_printhook) cel_printhook;
     libpd_init();
+	sys_debuglevel = 4;
+	sys_verbose = 1;
     return CelPdRef(new CelPd(inChannels, outChannels, sampleRate));
 }
 
@@ -62,11 +69,37 @@ void CelPd::computeAudio(bool on)
     libpd_finish_message("pd", "dsp");
 }
 
-void* CelPd::openFile(const char* filename, const char* dir)
+void* CelPd::openFile(const char* filename, const fs::path& dir)
 {
     unique_lock<mutex> lock(mPdLock);
-    // return libpd_openfile("hello.pd", "/mnt/sdcard/pd");
-    return libpd_openfile(filename, dir);
+	return dir.empty() ? NULL : libpd_openfile(filename, dir.string().c_str());
+}
+
+void CelPd::addToSearchPath(const fs::path& path)
+{
+	unique_lock<mutex> lock(mPdLock);
+	if (!path.empty()) {
+		CI_LOGD("OSL: Adding to PD search path: %s", path.string().c_str());
+		libpd_add_to_search_path(path.string().c_str());
+	}
+}
+
+int CelPd::sendBang(const char* recv)
+{
+	unique_lock<mutex> lock(mPdLock);
+	return libpd_bang(recv);
+}
+
+int CelPd::sendFloat(const char* recv, float x)
+{
+	unique_lock<mutex> lock(mPdLock);
+	return libpd_float(recv, x);
+}
+
+int CelPd::sendSymbol(const char* recv, const char* sym)
+{
+	unique_lock<mutex> lock(mPdLock);
+	return libpd_symbol(recv, sym);
 }
 
 //  Stop the audio system
