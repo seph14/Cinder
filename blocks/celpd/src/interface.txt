@@ -7,14 +7,6 @@ Symbol(string)
 List
 Message
 
-// midi
-Note(int pitch, int velocity, int channel=0)
-ControlChange(int controller, int value, int channel=0)
-ProgramChange(int program, int channel=0)
-PitchBend(int value, int channel=0)
-Aftertouch(int value, int channel=0)
-PolyAftertouch(int pitch, int value, int channel=0)
-
 SENDING
 
 // MESSAGES
@@ -53,6 +45,13 @@ pd.sendMessage("pd", "dsp", msg);
 pd.sendMessage("pd", "dsp") << 1;
 
 // MIDI
+
+Note(int pitch, int velocity, int channel=0)
+ControlChange(int controller, int value, int channel=0)
+ProgramChange(int program, int channel=0)
+PitchBend(int value, int channel=0)
+Aftertouch(int value, int channel=0)
+PolyAftertouch(int pitch, int value, int channel=0)
 
 // midi channels should be 1-16? ... same as patching
 

@@ -65,8 +65,6 @@ void BasicAudioApp::setup()
     CI_LOGD("Sending start bangs");
     mPd->sendBang("open");
     mPd->sendBang("start");
-    // mPd->send("open")  << Bang();
-    // mPd->send("start") << Bang();
 
     mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
 

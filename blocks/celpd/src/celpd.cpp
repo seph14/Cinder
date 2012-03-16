@@ -70,17 +70,114 @@ MessageChain& MessageChain::operator<<(const Atom& atom)
     return *this;
 }
 
-static void cel_printhook(const char* msg) {
-    CI_LOGD("pd: %s", msg);
+static void cel_printhook(const char* msg) 
+{
+    if (ReceiverRef recv = Pd::sReceiver)
+        recv->onPrint(msg);
 }
+
+static void cel_banghook(const char* src) 
+{
+    if (ReceiverRef recv = Pd::sReceiver)
+        recv->onBang(src);
+}
+
+static void cel_floathook(const char* src, float x) 
+{
+    if (ReceiverRef recv = Pd::sReceiver)
+        recv->onFloat(src, x);
+}
+
+static void cel_symbolhook(const char* src, const char* sym)
+{
+    if (ReceiverRef recv = Pd::sReceiver)
+        recv->onSymbol(src, sym);
+}
+
+static void cel_listhook(const char* src, int argc, t_atom* argv)
+{
+	List list;
+	for (int i=0; i < argc; ++i) {
+		t_atom a = argv[i];  
+		
+		if (a.a_type == A_FLOAT) {  
+            list << a.a_w.w_float;
+		}
+		else if (a.a_type == A_SYMBOL) {  
+            list << string(a.a_w.w_symbol->s_name);
+		}
+	}
+	
+    if (ReceiverRef recv = Pd::sReceiver)
+        recv->onList(src, list);
+}
+
+static void cel_messagehook(const char* src, const char *sym, int argc, t_atom* argv)
+{
+	Message list;
+	for (int i=0; i < argc; ++i) {
+		t_atom a = argv[i];  
+		
+		if (a.a_type == A_FLOAT) {  
+            list << a.a_w.w_float;
+		}
+		else if (a.a_type == A_SYMBOL) {  
+            list << string(a.a_w.w_symbol->s_name);
+		}
+	}
+	
+    if (ReceiverRef recv = Pd::sReceiver)
+        recv->onMessage(src, sym, list);
+}
+
+class PdReceiver : public Receiver
+{
+  public:
+    virtual void onPrint(const std::string& msg)
+    {
+        CI_LOGD("PD: %s", msg.c_str());
+    }
+
+    virtual void onBang(const std::string& dest)
+    {
+    }
+
+    virtual void onFloat(const std::string& dest, float value)
+    {
+    }
+
+    virtual void onSymbol(const std::string& dest, const std::string& symbol)
+    {
+    }
+
+    virtual void onList(const std::string& dest, const List& list)
+    {
+    }
+
+    virtual void onMessage(const std::string& dest, const std::string& msg, const Message& list)
+    {
+    }
+};
+
+ReceiverRef Pd::sReceiver;
 
 PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
 {
+    sReceiver = ReceiverRef(new PdReceiver());
+
     //  Initialize PD
-    libpd_printhook = (t_libpd_printhook) cel_printhook;
+    libpd_printhook   = (t_libpd_printhook) cel_printhook;
+
+	libpd_banghook    = (t_libpd_banghook) cel_banghook;
+	libpd_floathook   = (t_libpd_floathook) cel_floathook;
+	libpd_symbolhook  = (t_libpd_symbolhook) cel_symbolhook;
+	libpd_listhook    = (t_libpd_listhook) cel_listhook;
+	libpd_messagehook = (t_libpd_messagehook) cel_messagehook;
+	
     libpd_init();
     sys_debuglevel = 4;
     sys_verbose = 1;
+
     return PdRef(new Pd(inChannels, outChannels, sampleRate));
 }
 

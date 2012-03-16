@@ -119,6 +119,10 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(TESS_SRC)/tess.c
 
 ifdef USE_GLES2
+LOCAL_SRC_FILES  := $(PROPIPE_SRC)/Draw.cpp \
+                    $(PROPIPE_SRC)/Matrices.cpp \
+                    $(PROPIPE_SRC)/Renderer.cpp \
+                    $(PROPIPE_SRC)/TextureFont.cpp
 LOCAL_SRC_FILES  += $(CINDER_SRC)/gl/GlslProg.cpp \
                     $(CINDER_SRC)/gl/Vbo.cpp
 LOCAL_CFLAGS += -DCINDER_GLES2

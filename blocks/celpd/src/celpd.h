@@ -81,6 +81,33 @@ enum AudioError_t {
 
 typedef std::shared_ptr<class Pd> PdRef;
 
+class Patch
+{
+};
+
+class Receiver
+{
+  public:
+	// message handlers
+	virtual void onPrint(const std::string& msg) {}
+    virtual void onBang(const std::string& dest) {}
+    virtual void onFloat(const std::string& dest, float value) {}
+    virtual void onSymbol(const std::string& dest, const std::string& symbol) {}
+    virtual void onList(const std::string& dest, const List& list) {}
+    virtual void onMessage(const std::string& dest, const std::string& msg, const Message& list) {}
+};
+
+typedef std::shared_ptr<Receiver> ReceiverRef;
+
+// class Dispatcher : public Receiver
+// {
+//   public:
+// 	void subscribe(const std::string& src, Receiver& receiver);
+// 	void unsubscribe(const std::string& src, Receiver& receiver);
+// 	void unsubscribeAll();
+// 
+// };
+
 class Pd
 {
   public:
@@ -105,21 +132,37 @@ class Pd
 
     void addToSearchPath(const ci::fs::path& path);
 
+    //! send a bang
     int sendBang(const std::string& recv);
+    //! send a float
     int sendFloat(const std::string& recv, float x);
+    //! send a symbol
     int sendSymbol(const std::string& recv, const std::string& sym);
 
+    /**
+      List aList;
+      aList << 100 << 292.99 << 'c' << "string";
+      pd.sendList("test", aList);
+     */
     int sendList(const std::string& recv, AtomList& list);
+    /**
+      Message msg;
+      msg << 1;
+      pd.sendMessage("pd", "dsp", msg);
+     */
     int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
 
-    //  chainable
+    //! pd.send("test") << Bang() << 100 << "symbol1";
     SendChain    send(const std::string& recv);
+    //! pd.sendList("test") << 100 << 292.99 << 'c' << "string";
     MessageChain sendList(const std::string& recv);
+    //! pd.sendMessage("pd", "dsp") << 1;
     MessageChain sendMessage(const std::string& recv, const std::string& msg);
 
-    //  LibPD wrappers
-
     ~Pd();
+
+  public:
+	static ReceiverRef sReceiver;
 
   protected:
     SLObjectItf mEngineObject;
