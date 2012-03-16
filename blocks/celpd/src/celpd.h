@@ -112,7 +112,7 @@ class Pd
     int message(const std::string& recv, const std::string& msg, AtomList& list);
 
     //  chainable
-    SendChain     send(const std::string& recv);
+    SendChain    send(const std::string& recv);
     MessageChain list(const std::string& recv);
     MessageChain message(const std::string& recv, const std::string& msg);
 

@@ -1,9 +1,11 @@
 TYPES
 
-// messages
+// message classes
 Bang()
 Float(float)
 Symbol(string)
+List
+Message
 
 // midi
 Note(int pitch, int velocity, int channel=0)
