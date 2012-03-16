@@ -20,9 +20,9 @@ SENDING
 // MESSAGES
 
 // single messages
-pd.send("test", Bang());
-pd.send("test", 100);
-pd.send("test", "symbol1");
+pd.sendBang("test");
+pd.sendFloat("test", 100);
+pd.sendSymbol("test", "symbol1");
   ** OR **
 pd.send("test") << Bang() << 100 << "symbol1";
 
@@ -37,9 +37,9 @@ pd.send("test") << Bang() << 100 << "symbol1";
 
 List aList;
 aList << 100 << 292.99 << 'c' << "string";
-pd.list("test", aList);
+pd.sendList("test", aList);
   ** OR **
-pd.list("test") << 100 << 292.99 << 'c' << "string";
+pd.sendList("test") << 100 << 292.99 << 'c' << "string";
 
 // send a typed message
 //
@@ -48,32 +48,32 @@ pd.list("test") << 100 << 292.99 << 'c' << "string";
 
 Message msg;
 msg << "1";
-pd.message("pd", "dsp", msg);
+pd.sendMessage("pd", "dsp", msg);
    ** OR **
-pd.message("pd", "dsp") << 1;
+pd.sendMessage("pd", "dsp") << 1;
 
 // MIDI
 
 // midi channels should be 1-16? ... same as patching
 
 // note
-pd.midi(Note(60));
-pd.midi(Note(60, 100));
-pd.midi(Note(60, 100, 0));
-pd.midi() << Note(60) << Note(60, 100) << Note(60, 100, 0);
+pd.sendMidi(Note(60));
+pd.sendMidi(Note(60, 100));
+pd.sendMidi(Note(60, 100, 0));
+pd.sendMidi() << Note(60) << Note(60, 100) << Note(60, 100, 0);
 
 // controls
-pd.midi() << ControlChange(7, 100) << ControlChange(7, 100, 0);	// 7 - Volume
-pd.midi() << ProgamChange(40) << ProgramChange(40, 0);	// 40 - Violin
-pd.midi() << PitchBend(8000) << PitchBend(8000, 0);	// value -8192 to 8192
-pd.midi() << Aftertouch(100) << Aftertouch(100, 0);
-pd.midi() << PolyAftertouch(60, 100) << PolyAftertouch(60, 100, 0);
+pd.sendMidi() << ControlChange(7, 100) << ControlChange(7, 100, 0);	// 7 - Volume
+pd.sendMidi() << ProgamChange(40) << ProgramChange(40, 0);	// 40 - Violin
+pd.sendMidi() << PitchBend(8000) << PitchBend(8000, 0);	// value -8192 to 8192
+pd.sendMidi() << Aftertouch(100) << Aftertouch(100, 0);
+pd.sendMidi() << PolyAftertouch(60, 100) << PolyAftertouch(60, 100, 0);
 
 // raw midi
 // Noteon chan 0, Middle C, velocity
-pd.rawmidi() << 0x90 << 0x3c << 0x40;
-pd.sysex() << 0xF0 << 0x7D << 0xF7;
-pd.sysexRT() << 0xF0 << 0x7D << 0xF7;
+pd.sendRawMidi() << 0x90 << 0x3c << 0x40;
+pd.sendSysEx() << 0xF0 << 0x7D << 0xF7;
+pd.sendSysExRT() << 0xF0 << 0x7D << 0xF7;
 
 
 RECEIVING

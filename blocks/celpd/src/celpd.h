@@ -105,16 +105,17 @@ class Pd
 
     void addToSearchPath(const ci::fs::path& path);
 
-    int send(const std::string& recv, const Bang& bang);
-    int send(const std::string& recv, const Atom& atom);
+    int sendBang(const std::string& recv);
+    int sendFloat(const std::string& recv, float x);
+    int sendSymbol(const std::string& recv, const std::string& sym);
 
-    int list(const std::string& recv, AtomList& list);
-    int message(const std::string& recv, const std::string& msg, AtomList& list);
+    int sendList(const std::string& recv, AtomList& list);
+    int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
 
     //  chainable
     SendChain    send(const std::string& recv);
-    MessageChain list(const std::string& recv);
-    MessageChain message(const std::string& recv, const std::string& msg);
+    MessageChain sendList(const std::string& recv);
+    MessageChain sendMessage(const std::string& recv, const std::string& msg);
 
     //  LibPD wrappers
 

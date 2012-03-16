@@ -63,8 +63,10 @@ void BasicAudioApp::setup()
 
     //  Start the ogg file playing
     CI_LOGD("Sending start bangs");
-    mPd->send("open", Bang());
-    mPd->send("start", Bang());
+    mPd->sendBang("open");
+    mPd->sendBang("start");
+    // mPd->send("open")  << Bang();
+    // mPd->send("start") << Bang();
 
     mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
 

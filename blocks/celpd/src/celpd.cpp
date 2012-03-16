@@ -39,13 +39,18 @@ SendChain::SendChain(Pd& pd, const string& recv) : mPd(pd), mRecv(recv)
 
 SendChain& SendChain::operator<<(const Bang& bang)
 {
-    mPd.send(mRecv, bang);
+    mPd.sendBang(mRecv);
     return *this;
 }
 
 SendChain& SendChain::operator<<(const Atom& atom)
 {
-    mPd.send(mRecv, atom);
+    if (atom.mType == Atom::ATOM_FLOAT) {
+        mPd.sendFloat(mRecv, atom.mFloat);
+    }
+    else {
+        mPd.sendSymbol(mRecv, atom.mSymbol);
+    }
     return *this;
 }
 
@@ -56,7 +61,7 @@ MessageChain::MessageChain(Pd& pd, const string& recv, const string& msg)
 MessageChain::~MessageChain()
 {
     if (!mList.atoms.empty())
-        mPd.message(mRecv, mMsg, mList);
+        mPd.sendMessage(mRecv, mMsg, mList);
 }
 
 MessageChain& MessageChain::operator<<(const Atom& atom)
@@ -109,7 +114,7 @@ void Pd::play()
 void Pd::computeAudio(bool on)
 {
     //  Start/stop DSP
-    message("pd", "dsp") << (on ? 1.0f : 0);
+    sendMessage("pd", "dsp") << (on ? 1.0f : 0);
 }
 
 void* Pd::openFile(const char* filename, const fs::path& dir)
@@ -127,25 +132,30 @@ void Pd::addToSearchPath(const fs::path& path)
     }
 }
 
-int Pd::send(const string& recv, const Bang& bang)
+int Pd::sendBang(const string& recv)
 {
     unique_lock<mutex> lock(mPdLock);
     return libpd_bang(recv.c_str());
 }
 
-int Pd::send(const string& recv, const Atom& atom)
+int Pd::sendFloat(const string& recv, float x)
 {
     unique_lock<mutex> lock(mPdLock);
-    return (atom.mType == Atom::ATOM_FLOAT ? 
-        libpd_float(recv.c_str(), atom.mFloat) : libpd_symbol(recv.c_str(), atom.mSymbol.c_str()));
+    return libpd_float(recv.c_str(), x);
 }
 
-int Pd::list(const std::string& recv, AtomList& list)
+int Pd::sendSymbol(const string& recv, const string& sym)
 {
-    return message(recv, string(), list);
+    unique_lock<mutex> lock(mPdLock);
+    return libpd_symbol(recv.c_str(), sym.c_str());
 }
 
-int Pd::message(const std::string& recv, const std::string& msg, AtomList& list)
+int Pd::sendList(const std::string& recv, AtomList& list)
+{
+    return sendMessage(recv, string(), list);
+}
+
+int Pd::sendMessage(const std::string& recv, const std::string& msg, AtomList& list)
 {
     unique_lock<mutex> lock(mPdLock);
 
@@ -172,12 +182,12 @@ SendChain Pd::send(const string& recv)
     return SendChain(*this, recv);
 }
 
-MessageChain Pd::list(const string& recv)
+MessageChain Pd::sendList(const string& recv)
 {
     return MessageChain(*this, recv);
 }
 
-MessageChain Pd::message(const string& recv, const string& msg)
+MessageChain Pd::sendMessage(const string& recv, const string& msg)
 {
     return MessageChain(*this, recv, msg);
 }
