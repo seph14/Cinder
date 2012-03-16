@@ -12,6 +12,7 @@
 #include "propipe/Matrices.h"
 
 using namespace cel;
+using namespace cel::pd;
 using namespace ci;
 using namespace ci::app;
 using namespace std;
@@ -41,29 +42,29 @@ class BasicAudioApp : public AppNative {
     pp::DrawRef            mDraw;
     pp::TextureFontDrawRef mFontDraw;
 
-    CelPdRef               mAudio;
+    PdRef               mPd;
 };
 
 void BasicAudioApp::setup()
 {
     CI_LOGD("OSL: ACTIVITY SETUP");
 
-    mAudio = CelPd::init(0, 2, 44100);
+    mPd = Pd::init(0, 2, 44100);
 
     fs::path internalData = getInternalDataPath(); 
     copyResource("oggread~.pd_linux", internalData, true);
     copyResource("oggtest.pd", internalData, true);
 
     //  Search for externals here
-    mAudio->addToSearchPath(internalData);
+    mPd->addToSearchPath(internalData);
 
-    mAudio->openFile("oggtest.pd", internalData);
-    mAudio->play();
+    mPd->openFile("oggtest.pd", internalData);
+    mPd->play();
 
     //  Start the ogg file playing
     CI_LOGD("Sending start bangs");
-    mAudio->sendBang("open");
-    mAudio->sendBang("start");
+    mPd->send("open", Bang());
+    mPd->send("start", Bang());
 
     mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
 
@@ -102,20 +103,20 @@ void BasicAudioApp::resume(bool renewContext)
         mFontDraw    = pp::TextureFontDraw::create( mRenderer );
     }
 
-    mAudio->play();
+    mPd->play();
 }
 
 void BasicAudioApp::pause()
 {
     CI_LOGD("OSL: ACTIVITY PAUSE");
-    mAudio->pause();
+    mPd->pause();
 }
 
 void BasicAudioApp::destroy()
 {
     CI_LOGD("OSL: ACTIVITY DESTROY");
-    mAudio->pause();
-    mAudio->close();
+    mPd->pause();
+    mPd->close();
 }
 
 #endif

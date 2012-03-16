@@ -1,14 +1,16 @@
 #include "celpd.h"
 #include "cinder/CinderMath.h"
 
-#include "z_libpd.h"
 #include "s_stuff.h"
 
 #include <cassert>
 
 using namespace ci;
 using namespace cel;
+using namespace cel::pd;
 
+using std::string;
+using std::vector;
 using std::shared_ptr;
 using std::thread;
 using std::unique_lock;
@@ -17,27 +19,71 @@ using std::mutex;
 const uint32_t MAXIMUM_CHANNEL_COUNT = 512;
 
 const int      kTicksPerBuffer = 1;
-const uint32_t kBufferSamples = 1024;  // must be a multiple of libpd block size (ie 64)
+const uint32_t kBufferSamples  = 1024;  // must be a multiple of libpd block size (ie 64)
 
-static void cel_printhook(const char* msg) {
-	CI_LOGD("OSL/pd %s", msg);
+Atom::Atom(float x) : mType(ATOM_FLOAT), mFloat(x)
+{ }
+
+Atom::Atom(const string& sym) : mType(ATOM_SYMBOL), mSymbol(sym)
+{ }
+
+AtomList& AtomList::operator<<(const Atom& atom)
+{
+    // XXX convert to t_atom and push
+    atoms.push_back(atom);
+    return *this;
 }
 
-CelPdRef CelPd::init(int inChannels, int outChannels, int sampleRate)
+SendChain::SendChain(Pd& pd, const string& recv) : mPd(pd), mRecv(recv)
+{ }
+
+SendChain& SendChain::operator<<(const Bang& bang)
+{
+    mPd.send(mRecv, bang);
+    return *this;
+}
+
+SendChain& SendChain::operator<<(const Atom& atom)
+{
+    mPd.send(mRecv, atom);
+    return *this;
+}
+
+SendListChain::SendListChain(Pd& pd, const string& recv, const string& msg)
+    : mPd(pd), mRecv(recv), mMsg(msg)
+{ }
+
+SendListChain::~SendListChain()
+{
+    if (!mList.atoms.empty())
+        mPd.message(mRecv, mMsg, mList);
+}
+
+SendListChain& SendListChain::operator<<(const Atom& atom)
+{
+    mList << atom;
+    return *this;
+}
+
+static void cel_printhook(const char* msg) {
+    CI_LOGD("pd: %s", msg);
+}
+
+PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
 {
     //  Initialize PD
-	libpd_printhook = (t_libpd_printhook) cel_printhook;
+    libpd_printhook = (t_libpd_printhook) cel_printhook;
     libpd_init();
-	sys_debuglevel = 4;
-	sys_verbose = 1;
-    return CelPdRef(new CelPd(inChannels, outChannels, sampleRate));
+    sys_debuglevel = 4;
+    sys_verbose = 1;
+    return PdRef(new Pd(inChannels, outChannels, sampleRate));
 }
 
 //  Start the audio system
-void CelPd::play()
+void Pd::play()
 {
     // set the player's state to playing
-    CI_LOGD("CelPd: play()");
+    CI_LOGD("Pd: play()");
     SLresult result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING);
     assert(SL_RESULT_SUCCESS == result);
 
@@ -51,7 +97,7 @@ void CelPd::play()
             memset(mOutputBuf[i], 0, sizeof(int16_t) * mOutputBufSamples);
             memset(mInputBuf[i],  0, sizeof(int16_t) * mInputBufSamples);
         }
-        mMixerThread   = shared_ptr<thread>(new thread(&CelPd::playerLoop, this));
+        mMixerThread   = shared_ptr<thread>(new thread(&Pd::playerLoop, this));
     }
     mOutputBufReady.notify_one();
     if (mInputChannels > 0)
@@ -60,52 +106,86 @@ void CelPd::play()
     computeAudio(true);
 }
 
-void CelPd::computeAudio(bool on)
+void Pd::computeAudio(bool on)
 {
-    //  Start DSP
-    unique_lock<mutex> lock(mPdLock);
-    libpd_start_message(1);
-    libpd_add_float(on ? 1.0f : 0);
-    libpd_finish_message("pd", "dsp");
+    //  Start/stop DSP
+    message("pd", "dsp") << (on ? 1.0f : 0);
 }
 
-void* CelPd::openFile(const char* filename, const fs::path& dir)
+void* Pd::openFile(const char* filename, const fs::path& dir)
 {
     unique_lock<mutex> lock(mPdLock);
-	return dir.empty() ? NULL : libpd_openfile(filename, dir.string().c_str());
+    return dir.empty() ? NULL : libpd_openfile(filename, dir.string().c_str());
 }
 
-void CelPd::addToSearchPath(const fs::path& path)
+void Pd::addToSearchPath(const fs::path& path)
 {
-	unique_lock<mutex> lock(mPdLock);
-	if (!path.empty()) {
-		CI_LOGD("OSL: Adding to PD search path: %s", path.string().c_str());
-		libpd_add_to_search_path(path.string().c_str());
-	}
+    unique_lock<mutex> lock(mPdLock);
+    if (!path.empty()) {
+        CI_LOGD("OSL: Adding to PD search path: %s", path.string().c_str());
+        libpd_add_to_search_path(path.string().c_str());
+    }
 }
 
-int CelPd::sendBang(const char* recv)
+int Pd::send(const string& recv, const Bang& bang)
 {
-	unique_lock<mutex> lock(mPdLock);
-	return libpd_bang(recv);
+    unique_lock<mutex> lock(mPdLock);
+    return libpd_bang(recv.c_str());
 }
 
-int CelPd::sendFloat(const char* recv, float x)
+int Pd::send(const string& recv, const Atom& atom)
 {
-	unique_lock<mutex> lock(mPdLock);
-	return libpd_float(recv, x);
+    unique_lock<mutex> lock(mPdLock);
+    return (atom.mType == Atom::ATOM_FLOAT ? 
+        libpd_float(recv.c_str(), atom.mFloat) : libpd_symbol(recv.c_str(), atom.mSymbol.c_str()));
 }
 
-int CelPd::sendSymbol(const char* recv, const char* sym)
+int Pd::list(const std::string& recv, AtomList& list)
 {
-	unique_lock<mutex> lock(mPdLock);
-	return libpd_symbol(recv, sym);
+    return message(recv, string(), list);
+}
+
+int Pd::message(const std::string& recv, const std::string& msg, AtomList& list)
+{
+    unique_lock<mutex> lock(mPdLock);
+
+    vector<Atom>& atoms = list.atoms;
+    libpd_start_message(atoms.size());
+    for (vector<Atom>::iterator it = atoms.begin(); it != atoms.end(); ++it) {
+        if (it->mType == Atom::ATOM_FLOAT) {
+            libpd_add_float(it->mFloat);
+        }
+        else {
+            libpd_add_symbol(it->mSymbol.c_str());
+        }
+    }
+
+    if (!msg.empty()) {
+        return libpd_finish_message(recv.c_str(), msg.c_str());
+    }
+
+    return libpd_finish_list(recv.c_str());
+}
+
+SendChain Pd::send(const string& recv)
+{
+    return SendChain(*this, recv);
+}
+
+SendListChain Pd::list(const string& recv)
+{
+    return SendListChain(*this, recv);
+}
+
+SendListChain Pd::message(const string& recv, const string& msg)
+{
+    return SendListChain(*this, recv, msg);
 }
 
 //  Stop the audio system
-void CelPd::pause()
+void Pd::pause()
 {
-    CI_LOGD("CelPd: pause()");
+    CI_LOGD("Pd: pause()");
     {
         unique_lock<mutex> lock(mPlayerLock);
         mPlayerRunning = false;
@@ -115,10 +195,10 @@ void CelPd::pause()
     assert(SL_RESULT_SUCCESS == result);
 }
 
-void CelPd::bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
+void Pd::bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
 {
     // notify player thread we're ready to enqueue another buffer
-    CelPd* audio = (CelPd*) audioPtr;
+    Pd* audio = (Pd*) audioPtr;
     {
         unique_lock<mutex> lock(audio->mPlayerLock);
         audio->mOutputReady = true;
@@ -127,10 +207,10 @@ void CelPd::bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
     (audio->mOutputBufReady).notify_one();
 }
 
-void CelPd::bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
+void Pd::bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
 {
     // notify player thread we're ready to enqueue another buffer
-    CelPd* pd = (CelPd*) audioPtr;
+    Pd* pd = (Pd*) audioPtr;
     {
         unique_lock<mutex> lock(pd->mPlayerLock);
         pd->mInputReady = true;
@@ -139,7 +219,7 @@ void CelPd::bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
     (pd->mInputBufReady).notify_one();
 }
 
-void CelPd::enqueueRecorder()
+void Pd::enqueueRecorder()
 {
     {
         unique_lock<mutex> lock(mPlayerLock);
@@ -159,7 +239,7 @@ void CelPd::enqueueRecorder()
     assert(SL_RESULT_SUCCESS == result);
 }
 
-void CelPd::enqueuePlayer()
+void Pd::enqueuePlayer()
 {
     {
         unique_lock<mutex> lock(mPlayerLock);
@@ -178,7 +258,7 @@ void CelPd::enqueuePlayer()
 }
 
 //  player thread loop
-void CelPd::playerLoop()
+void Pd::playerLoop()
 {
     while (mPlayerRunning)
     {
@@ -199,7 +279,7 @@ void CelPd::playerLoop()
     }
 }
 
-CelPd::CelPd(int inChannels, int outChannels, int sampleRate) 
+Pd::Pd(int inChannels, int outChannels, int sampleRate) 
     : mEngineObject(NULL), mOutputMixObject(NULL), bqPlayerObject(NULL), 
       mPlayerRunning(false), mRecorderRunning(false), mOutputReady(false),
       mOutputBufIndex(0), mInputBufIndex(0), 
@@ -219,7 +299,7 @@ CelPd::CelPd(int inChannels, int outChannels, int sampleRate)
     }
 }
 
-CelPd::~CelPd()
+Pd::~Pd()
 {
     delete[] mOutputBuf[0];
     delete[] mOutputBuf[1];
@@ -233,50 +313,50 @@ SLuint32 slSampleRate(int sampleRate)
     int slrate = -1;
 
     switch (sampleRate) {
-      case 8000:
-        slrate = SL_SAMPLINGRATE_8;
-        break;
-      case 11025:
-        slrate = SL_SAMPLINGRATE_11_025;
-        break;
-      case 16000:
-        slrate = SL_SAMPLINGRATE_16;
-        break;
-      case 22050:
-        slrate = SL_SAMPLINGRATE_22_05;
-        break;
-      case 24000:
-        slrate = SL_SAMPLINGRATE_24;
-        break;
-      case 32000:
-        slrate = SL_SAMPLINGRATE_32;
-        break;
-      case 44100:
-        slrate = SL_SAMPLINGRATE_44_1;
-        break;
-      case 48000:
-        slrate = SL_SAMPLINGRATE_48;
-        break;
-      case 64000:
-        slrate = SL_SAMPLINGRATE_64;
-        break;
-      case 88200:
-        slrate = SL_SAMPLINGRATE_88_2;
-        break;
-      case 96000:
-        slrate = SL_SAMPLINGRATE_96;
-        break;
-      case 192000:
-        slrate = SL_SAMPLINGRATE_192;
-        break;
-      default:
-        break;
+        case 8000:
+            slrate = SL_SAMPLINGRATE_8;
+            break;
+        case 11025:
+            slrate = SL_SAMPLINGRATE_11_025;
+            break;
+        case 16000:
+            slrate = SL_SAMPLINGRATE_16;
+            break;
+        case 22050:
+            slrate = SL_SAMPLINGRATE_22_05;
+            break;
+        case 24000:
+            slrate = SL_SAMPLINGRATE_24;
+            break;
+        case 32000:
+            slrate = SL_SAMPLINGRATE_32;
+            break;
+        case 44100:
+            slrate = SL_SAMPLINGRATE_44_1;
+            break;
+        case 48000:
+            slrate = SL_SAMPLINGRATE_48;
+            break;
+        case 64000:
+            slrate = SL_SAMPLINGRATE_64;
+            break;
+        case 88200:
+            slrate = SL_SAMPLINGRATE_88_2;
+            break;
+        case 96000:
+            slrate = SL_SAMPLINGRATE_96;
+            break;
+        case 192000:
+            slrate = SL_SAMPLINGRATE_192;
+            break;
+        default:
+            break;
     }
 
     return slrate;
 }
 
-void CelPd::initInput(int channels, int sampleRate)
+void Pd::initInput(int channels, int sampleRate)
 {
     SLresult result;
     SLuint32 slrate = slSampleRate(sampleRate);
@@ -328,7 +408,7 @@ void CelPd::initInput(int channels, int sampleRate)
 
 }
 
-void CelPd::initOutput(int channels, int sampleRate)
+void Pd::initOutput(int channels, int sampleRate)
 {
     SLresult result;
     SLuint32 slrate = slSampleRate(sampleRate);
@@ -352,8 +432,8 @@ void CelPd::initOutput(int channels, int sampleRate)
         SL_PCMSAMPLEFORMAT_FIXED_16, 
         SL_PCMSAMPLEFORMAT_FIXED_16,
         speakers, 
-        SL_BYTEORDER_LITTLEENDIAN}
-    ;
+        SL_BYTEORDER_LITTLEENDIAN
+    };
     SLDataSource audioSrc = {&loc_bufq, &format_pcm};
 
     // configure audio sink
@@ -385,7 +465,7 @@ void CelPd::initOutput(int channels, int sampleRate)
     assert(SL_RESULT_SUCCESS == result);
 }
 
-void CelPd::initSL(int inChannels, int outChannels, int sampleRate)
+void Pd::initSL(int inChannels, int outChannels, int sampleRate)
 {
     CI_LOGD("OSL: initializing");
 
@@ -406,11 +486,10 @@ void CelPd::initSL(int inChannels, int outChannels, int sampleRate)
     initOutput(outChannels, sampleRate);
 
     CI_LOGD("OSL: completed initialization");
-
 }
 
 //  Shut down audio system
-void CelPd::close()
+void Pd::close()
 {
     // destroy buffer queue audio player object, and invalidate all associated interfaces
     if (bqPlayerObject != NULL) {
@@ -432,15 +511,14 @@ void CelPd::close()
         mEngineObject = NULL;
         mEngineEngine = NULL;
     }
-
 }
 
 //  Returns last error code
-AudioError_t CelPd::error()
+AudioError_t Pd::error()
 {
 }
 
-void CelPd::setError(AudioError_t error)
+void Pd::setError(AudioError_t error)
 {
     mError = error;
 }
