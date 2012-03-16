@@ -49,17 +49,17 @@ SendChain& SendChain::operator<<(const Atom& atom)
     return *this;
 }
 
-SendListChain::SendListChain(Pd& pd, const string& recv, const string& msg)
+MessageChain::MessageChain(Pd& pd, const string& recv, const string& msg)
     : mPd(pd), mRecv(recv), mMsg(msg)
 { }
 
-SendListChain::~SendListChain()
+MessageChain::~MessageChain()
 {
     if (!mList.atoms.empty())
         mPd.message(mRecv, mMsg, mList);
 }
 
-SendListChain& SendListChain::operator<<(const Atom& atom)
+MessageChain& MessageChain::operator<<(const Atom& atom)
 {
     mList << atom;
     return *this;
@@ -172,14 +172,14 @@ SendChain Pd::send(const string& recv)
     return SendChain(*this, recv);
 }
 
-SendListChain Pd::list(const string& recv)
+MessageChain Pd::list(const string& recv)
 {
-    return SendListChain(*this, recv);
+    return MessageChain(*this, recv);
 }
 
-SendListChain Pd::message(const string& recv, const string& msg)
+MessageChain Pd::message(const string& recv, const string& msg)
 {
-    return SendListChain(*this, recv, msg);
+    return MessageChain(*this, recv, msg);
 }
 
 //  Stop the audio system

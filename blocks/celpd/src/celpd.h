@@ -62,12 +62,12 @@ protected:
 };
 
 //  For chaining lists/typed messages
-class SendListChain
+class MessageChain
 {
 public:
-    SendListChain(Pd& pd, const std::string& recv, const std::string& msg=std::string());
-    ~SendListChain();
-    SendListChain& operator<<(const Atom& atom);
+    MessageChain(Pd& pd, const std::string& recv, const std::string& msg=std::string());
+    ~MessageChain();
+    MessageChain& operator<<(const Atom& atom);
 protected:
     Pd& mPd;
     std::string mRecv;
@@ -113,8 +113,8 @@ class Pd
 
     //  chainable
     SendChain     send(const std::string& recv);
-    SendListChain list(const std::string& recv);
-    SendListChain message(const std::string& recv, const std::string& msg);
+    MessageChain list(const std::string& recv);
+    MessageChain message(const std::string& recv, const std::string& msg);
 
     //  LibPD wrappers
 
