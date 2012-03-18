@@ -122,10 +122,11 @@ public:
         UNSUBSCRIBE
     };
 
-    SubscribeChain(DispatcherRef dispatcher, Receiver& receiver, Subscribe_t mode);
+    SubscribeChain(Pd& pd, DispatcherRef dispatcher, Receiver& receiver, Subscribe_t mode);
     SubscribeChain& operator<<(const std::string& dest);
 
 protected:
+    Pd& mPd;
     DispatcherRef mDispatcher;
     Receiver&     mReceiver;
     Subscribe_t   mMode;
@@ -189,7 +190,7 @@ class Pd : public PdInterface
 {
   public:
     //  Create and initialize the audio system
-    static PdRef init(int inChannels, int outChannels, int sampleRate, bool lockPd=true);
+    static PdRef init(int inChannels, int outChannels, int sampleRate);
 
     //  Start the audio system playing
     void play();
@@ -242,7 +243,9 @@ class Pd : public PdInterface
     SubscribeChain unsubscribe(Receiver& receiver);
     void unsubscribeAll();
 
-    //  Lockable concept, locks the audio (Pd) thread
+    //  Lockable concept, locks mPdLock (Pd calls from the audio thread)
+    typedef std::unique_lock<Pd> Lock;
+
     void lock();
     bool try_lock();
     void unlock();
@@ -268,8 +271,8 @@ class Pd : public PdInterface
     SLMuteSoloItf                 bqPlayerMuteSolo;
     SLVolumeItf                   bqPlayerVolume;
 
+    std::mutex                   mPdLock;
     std::mutex                   mPlayerLock;
-    std::recursive_mutex         mPdLock;
     std::condition_variable      mInputBufReady;
     std::condition_variable      mOutputBufReady;
     std::shared_ptr<std::thread> mMixerThread;

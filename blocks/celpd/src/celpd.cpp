@@ -58,7 +58,7 @@ SendChain& SendChain::operator<<(const Atom& atom)
     return *this;
 }
 
-MessageChain::MessageChain(Pd& pd, const string& recv, const string& msg)
+MessageChain::MessageChain(Pd& pd, const string& recv, const string& msg) 
     : mPd(pd), mRecv(recv), mMsg(msg)
 { }
 
@@ -74,8 +74,8 @@ MessageChain& MessageChain::operator<<(const Atom& atom)
     return *this;
 }
 
-SubscribeChain::SubscribeChain(DispatcherRef dispatcher, Receiver& receiver, Subscribe_t mode)
-    : mDispatcher(dispatcher), mReceiver(receiver), mMode(mode)
+SubscribeChain::SubscribeChain(Pd& pd, DispatcherRef dispatcher, Receiver& receiver, Subscribe_t mode)
+    : mPd(pd), mDispatcher(dispatcher), mReceiver(receiver), mMode(mode)
 {
 }
 
@@ -97,28 +97,24 @@ void cel_printhook(const char* msg)
 
 void cel_banghook(const char* src) 
 {
-    CI_LOGD("cel_banghook %s %s", src);
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onBang(src);
 }
 
 void cel_floathook(const char* src, float x) 
 {
-    CI_LOGD("cel_floathook %s %f", src, x);
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onFloat(src, x);
 }
 
 void cel_symbolhook(const char* src, const char* sym)
 {
-    CI_LOGD("cel_symbolhook %s %s", src, sym);
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onSymbol(src, sym);
 }
 
 void cel_listhook(const char* src, int argc, t_atom* argv)
 {
-    CI_LOGD("cel_listhook %s %d", src, argc);
 	List list;
 	for (int i=0; i < argc; ++i) {
 		t_atom a = argv[i];  
@@ -137,7 +133,6 @@ void cel_listhook(const char* src, int argc, t_atom* argv)
 
 void cel_messagehook(const char* src, const char *sym, int argc, t_atom* argv)
 {
-    CI_LOGD("cel_messagehook %s %s %d", src, sym, argc);
 	Message list;
 	for (int i=0; i < argc; ++i) {
 		t_atom a = argv[i];  
@@ -189,7 +184,6 @@ void Dispatcher::onPrint(const std::string& msg)
 
 void Dispatcher::onBang(const std::string& dest)
 {
-    CI_LOGD("Dispatcher onBang: %s", dest.c_str());
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
         it->second.onBang(dest);
@@ -198,7 +192,6 @@ void Dispatcher::onBang(const std::string& dest)
 
 void Dispatcher::onFloat(const std::string& dest, float value)
 {
-    CI_LOGD("Dispatcher onFloat: %s %f", dest.c_str(), value);
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
         it->second.onFloat(dest, value);
@@ -273,30 +266,6 @@ void Dispatcher::unsubscribeAll()
     mSubs.clear();
 }
 
-class PdDispatcher : public Dispatcher
-{
-protected:
-    PdRef mPd;
-
-public:
-    PdDispatcher(PdRef pd) : mPd(pd)
-    { }
-
-    ~PdDispatcher() { }
-
-    virtual void subscribe(Receiver& receiver, const std::string& dest)
-    {
-        unique_lock<Pd> lock(*mPd);
-        Dispatcher::subscribe(receiver, dest);
-    }
-
-    virtual void unsubscribe(Receiver& receiver, const std::string& dest)
-    {
-        unique_lock<Pd> lock(*mPd);
-        Dispatcher::unsubscribe(receiver, dest);
-    }
-};
-
 DispatcherRef Pd::sDispatcher;
 
 PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
@@ -323,7 +292,7 @@ PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
     sys_verbose = 1;
 
     PdRef pd = PdRef(new Pd(inChannels, outChannels, sampleRate));
-    sDispatcher = DispatcherRef(new PdDispatcher(pd));
+    sDispatcher = DispatcherRef(new Dispatcher());
 
     return pd;
 }
@@ -338,7 +307,6 @@ void Pd::play()
 
     //  Start playback by queuing an initial buffer (empty)
     {
-        unique_lock<mutex> lock(mPlayerLock);
         mInputReady    = true;
         mOutputReady   = true;
         mPlayerRunning = true;
@@ -363,13 +331,11 @@ void Pd::computeAudio(bool on)
 
 void* Pd::openFile(const char* filename, const fs::path& dir)
 {
-    unique_lock<mutex> lock(mPdLock);
     return dir.empty() ? NULL : libpd_openfile(filename, dir.string().c_str());
 }
 
 void Pd::addToSearchPath(const fs::path& path)
 {
-    unique_lock<mutex> lock(mPdLock);
     if (!path.empty()) {
         CI_LOGD("OSL: Adding to PD search path: %s", path.string().c_str());
         libpd_add_to_search_path(path.string().c_str());
@@ -378,19 +344,16 @@ void Pd::addToSearchPath(const fs::path& path)
 
 int Pd::sendBang(const string& recv)
 {
-    unique_lock<mutex> lock(mPdLock);
     return libpd_bang(recv.c_str());
 }
 
 int Pd::sendFloat(const string& recv, float x)
 {
-    unique_lock<mutex> lock(mPdLock);
     return libpd_float(recv.c_str(), x);
 }
 
 int Pd::sendSymbol(const string& recv, const string& sym)
 {
-    unique_lock<mutex> lock(mPdLock);
     return libpd_symbol(recv.c_str(), sym.c_str());
 }
 
@@ -401,8 +364,6 @@ int Pd::sendList(const std::string& recv, AtomList& list)
 
 int Pd::sendMessage(const std::string& recv, const std::string& msg, AtomList& list)
 {
-    unique_lock<mutex> lock(mPdLock);
-
     vector<Atom>& atoms = list.atoms;
     libpd_start_message(atoms.size());
     for (vector<Atom>::iterator it = atoms.begin(); it != atoms.end(); ++it) {
@@ -438,12 +399,12 @@ MessageChain Pd::sendMessage(const string& recv, const string& msg)
 
 SubscribeChain Pd::subscribe(Receiver& receiver)
 {
-    return SubscribeChain(sDispatcher, receiver, SubscribeChain::SUBSCRIBE);
+    return SubscribeChain(*this, sDispatcher, receiver, SubscribeChain::SUBSCRIBE);
 }
 
 SubscribeChain Pd::unsubscribe(Receiver& receiver)
 {
-    return SubscribeChain(sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE);
+    return SubscribeChain(*this, sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE);
 }
 
 void Pd::unsubscribeAll()
@@ -536,7 +497,8 @@ void Pd::playerLoop()
         }
 
         {
-            unique_lock<mutex> lock(mPdLock);
+            // unique_lock<mutex> lock(mPdLock);
+            Lock lock(*this);
             libpd_process_short(kBufferSamples / libpd_blocksize(), mInputBuf[mInputBufIndex], mOutputBuf[mOutputBufIndex]);
         }
 
@@ -581,7 +543,6 @@ void Pd::unlock()
 {
     mPdLock.unlock();
 }
-
 
 Pd::~Pd()
 {
