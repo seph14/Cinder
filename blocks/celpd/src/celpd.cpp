@@ -4,6 +4,8 @@
 #include "s_stuff.h"
 
 #include <cassert>
+#include <map>
+#include <utility>
 
 using namespace ci;
 using namespace cel;
@@ -11,6 +13,8 @@ using namespace cel::pd;
 
 using std::string;
 using std::vector;
+using std::multimap;
+using std::make_pair;
 using std::shared_ptr;
 using std::thread;
 using std::unique_lock;
@@ -70,27 +74,42 @@ MessageChain& MessageChain::operator<<(const Atom& atom)
     return *this;
 }
 
+SubscribeChain::SubscribeChain(DispatcherRef dispatcher, ReceiverRef receiver, Subscribe_t mode)
+    : mDispatcher(dispatcher), mReceiver(receiver), mMode(mode)
+{
+}
+
+SubscribeChain& SubscribeChain::operator<<(const std::string& dest)
+{
+    if (mMode == SubscribeChain::SUBSCRIBE) {
+        mDispatcher->subscribe(mReceiver, dest);
+    }
+    else if (mMode == SubscribeChain::UNSUBSCRIBE) {
+        mDispatcher->unsubscribe(mReceiver, dest);
+    }
+}
+
 static void cel_printhook(const char* msg) 
 {
-    if (ReceiverRef recv = Pd::sReceiver)
+    if (ReceiverRef recv = Pd::sDispatcher)
         recv->onPrint(msg);
 }
 
 static void cel_banghook(const char* src) 
 {
-    if (ReceiverRef recv = Pd::sReceiver)
+    if (ReceiverRef recv = Pd::sDispatcher)
         recv->onBang(src);
 }
 
 static void cel_floathook(const char* src, float x) 
 {
-    if (ReceiverRef recv = Pd::sReceiver)
+    if (ReceiverRef recv = Pd::sDispatcher)
         recv->onFloat(src, x);
 }
 
 static void cel_symbolhook(const char* src, const char* sym)
 {
-    if (ReceiverRef recv = Pd::sReceiver)
+    if (ReceiverRef recv = Pd::sDispatcher)
         recv->onSymbol(src, sym);
 }
 
@@ -108,7 +127,7 @@ static void cel_listhook(const char* src, int argc, t_atom* argv)
 		}
 	}
 	
-    if (ReceiverRef recv = Pd::sReceiver)
+    if (ReceiverRef recv = Pd::sDispatcher)
         recv->onList(src, list);
 }
 
@@ -126,44 +145,89 @@ static void cel_messagehook(const char* src, const char *sym, int argc, t_atom* 
 		}
 	}
 	
-    if (ReceiverRef recv = Pd::sReceiver)
+    if (ReceiverRef recv = Pd::sDispatcher)
         recv->onMessage(src, sym, list);
 }
 
-class PdReceiver : public Receiver
+void Dispatcher::onPrint(const std::string& msg)
 {
-  public:
-    virtual void onPrint(const std::string& msg)
-    {
-        CI_LOGD("PD: %s", msg.c_str());
+    CI_LOGD("PD: %s", msg.c_str());
+}
+
+void Dispatcher::onBang(const std::string& dest)
+{
+    std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
+    for (SubsMap::iterator it = found.first; it != found.second; ++it) {
+        it->second->onBang(dest);
+    }
+}
+
+void Dispatcher::onFloat(const std::string& dest, float value)
+{
+    std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
+    for (SubsMap::iterator it = found.first; it != found.second; ++it) {
+        it->second->onFloat(dest, value);
+    }
+}
+
+void Dispatcher::onSymbol(const std::string& dest, const std::string& symbol)
+{
+    std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
+    for (SubsMap::iterator it = found.first; it != found.second; ++it) {
+        it->second->onSymbol(dest, symbol);
+    }
+}
+
+void Dispatcher::onList(const std::string& dest, const List& list)
+{
+    std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
+    for (SubsMap::iterator it = found.first; it != found.second; ++it) {
+        it->second->onList(dest, list);
+    }
+}
+
+void Dispatcher::onMessage(const std::string& dest, const std::string& msg, const Message& list)
+{
+    std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
+    for (SubsMap::iterator it = found.first; it != found.second; ++it) {
+        it->second->onMessage(dest, msg, list);
+    }
+}
+
+void Dispatcher::subscribe(ReceiverRef receiver, const string& dest)
+{
+    std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
+    for (SubsMap::iterator it = found.first; it != found.second; ++it) {
+        if (it->second == receiver) {
+            //  Already subscribed
+            return;
+        }
     }
 
-    virtual void onBang(const std::string& dest)
-    {
-    }
+    mSubs.insert(make_pair(dest, receiver));
+}
 
-    virtual void onFloat(const std::string& dest, float value)
-    {
+void Dispatcher::unsubscribe(ReceiverRef receiver, const string& dest)
+{
+    std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
+    for (SubsMap::iterator it = found.first; it != found.second; ++it) {
+        if (it->second == receiver) {
+            mSubs.erase(it);
+            break;
+        }
     }
+}
 
-    virtual void onSymbol(const std::string& dest, const std::string& symbol)
-    {
-    }
+void Dispatcher::unsubscribeAll()
+{
+    mSubs.clear();
+}
 
-    virtual void onList(const std::string& dest, const List& list)
-    {
-    }
-
-    virtual void onMessage(const std::string& dest, const std::string& msg, const Message& list)
-    {
-    }
-};
-
-ReceiverRef Pd::sReceiver;
+DispatcherRef Pd::sDispatcher;
 
 PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
 {
-    sReceiver = ReceiverRef(new PdReceiver());
+    sDispatcher = DispatcherRef(new Dispatcher());
 
     //  Initialize PD
     libpd_printhook   = (t_libpd_printhook) cel_printhook;
@@ -287,6 +351,20 @@ MessageChain Pd::sendList(const string& recv)
 MessageChain Pd::sendMessage(const string& recv, const string& msg)
 {
     return MessageChain(*this, recv, msg);
+}
+
+SubscribeChain Pd::subscribe(ReceiverRef receiver)
+{
+    return SubscribeChain(sDispatcher, receiver, SubscribeChain::SUBSCRIBE);
+}
+
+SubscribeChain Pd::unsubscribe(ReceiverRef receiver)
+{
+    return SubscribeChain(sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE);
+}
+
+void Pd::unsubscribeAll()
+{
 }
 
 //  Stop the audio system

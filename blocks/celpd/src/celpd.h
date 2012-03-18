@@ -49,6 +49,40 @@ public:
 typedef AtomList Message;
 typedef AtomList List;
 
+class Receiver
+{
+  public:
+	// message handlers
+	virtual void onPrint(const std::string& msg) {}
+    virtual void onBang(const std::string& dest) {}
+    virtual void onFloat(const std::string& dest, float value) {}
+    virtual void onSymbol(const std::string& dest, const std::string& symbol) {}
+    virtual void onList(const std::string& dest, const List& list) {}
+    virtual void onMessage(const std::string& dest, const std::string& msg, const Message& list) {}
+};
+typedef std::shared_ptr<Receiver> ReceiverRef;
+
+class Dispatcher : public Receiver
+{
+  protected:
+    typedef std::multimap<std::string, ReceiverRef> SubsMap;
+    SubsMap mSubs;
+
+  public:
+    void subscribe(ReceiverRef receiver, const std::string& dest);
+    void unsubscribe(ReceiverRef receiver, const std::string& dest);
+    void unsubscribeAll();
+
+    virtual void onPrint(const std::string& msg);
+    virtual void onBang(const std::string& dest);
+    virtual void onFloat(const std::string& dest, float value);
+    virtual void onSymbol(const std::string& dest, const std::string& symbol);
+    virtual void onList(const std::string& dest, const List& list);
+    virtual void onMessage(const std::string& dest, const std::string& msg, const Message& list);
+};
+typedef std::shared_ptr<Dispatcher> DispatcherRef;
+
+
 //  For chaining single messages (bang, float, symbol)
 class SendChain
 {
@@ -75,6 +109,24 @@ protected:
     AtomList mList;
 };
 
+class SubscribeChain
+{
+public:
+    enum Subscribe_t{
+        SUBSCRIBE,
+        UNSUBSCRIBE
+    };
+
+    SubscribeChain(DispatcherRef dispatcher, ReceiverRef receiver, Subscribe_t mode);
+    SubscribeChain& operator<<(const std::string& dest);
+
+protected:
+    DispatcherRef mDispatcher;
+    ReceiverRef   mReceiver;
+    Subscribe_t   mMode;
+};
+
+
 enum AudioError_t {
     NONE,
 };
@@ -84,29 +136,6 @@ typedef std::shared_ptr<class Pd> PdRef;
 class Patch
 {
 };
-
-class Receiver
-{
-  public:
-	// message handlers
-	virtual void onPrint(const std::string& msg) {}
-    virtual void onBang(const std::string& dest) {}
-    virtual void onFloat(const std::string& dest, float value) {}
-    virtual void onSymbol(const std::string& dest, const std::string& symbol) {}
-    virtual void onList(const std::string& dest, const List& list) {}
-    virtual void onMessage(const std::string& dest, const std::string& msg, const Message& list) {}
-};
-
-typedef std::shared_ptr<Receiver> ReceiverRef;
-
-// class Dispatcher : public Receiver
-// {
-//   public:
-// 	void subscribe(const std::string& src, Receiver& receiver);
-// 	void unsubscribe(const std::string& src, Receiver& receiver);
-// 	void unsubscribeAll();
-// 
-// };
 
 class Pd
 {
@@ -159,10 +188,16 @@ class Pd
     //! pd.sendMessage("pd", "dsp") << 1;
     MessageChain sendMessage(const std::string& recv, const std::string& msg);
 
+    //! pd.subscribe(receiver) << "pitch";
+    SubscribeChain subscribe(ReceiverRef receiver);
+    //! pd.unsubscribe(receiver) << "pitch";
+    SubscribeChain unsubscribe(ReceiverRef receiver);
+    void unsubscribeAll();
+
     ~Pd();
 
   public:
-	static ReceiverRef sReceiver;
+	static DispatcherRef sDispatcher;
 
   protected:
     SLObjectItf mEngineObject;
