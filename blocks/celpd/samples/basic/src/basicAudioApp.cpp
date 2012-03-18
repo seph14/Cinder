@@ -17,7 +17,7 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-class BasicAudioApp : public AppNative {
+class BasicAudioApp : public AppNative, public pd::Receiver {
   public:
     void prepareSettings( Settings *settings ) { settings->enableMultiTouch( false ); }
     void setup();
@@ -30,6 +30,8 @@ class BasicAudioApp : public AppNative {
     void pause();
     void destroy();
 #endif
+
+    virtual void onFloat(const std::string& dest, float value);
 
     void setupMatrices();
 
@@ -57,7 +59,7 @@ void BasicAudioApp::setup()
 
     //  Search for externals here
     mPd->addToSearchPath(internalData);
-
+    mPd->subscribe(*this) << "timer";
     mPd->openFile("oggtest.pd", internalData);
     mPd->play();
 
@@ -157,6 +159,11 @@ void BasicAudioApp::draw()
             Vec2f( 10, getWindowHeight() - mTextureFont->getDescent() ) );
 
     mRenderer->unbindProg();
+}
+
+void BasicAudioApp::onFloat(const std::string& dest, float value)
+{
+    CI_LOGD("BasicAudioApp::onFloat %s %f", dest.c_str(), value);
 }
 
 CINDER_APP_NATIVE( BasicAudioApp, RendererGl(0) )

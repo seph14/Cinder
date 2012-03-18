@@ -74,7 +74,7 @@ MessageChain& MessageChain::operator<<(const Atom& atom)
     return *this;
 }
 
-SubscribeChain::SubscribeChain(DispatcherRef dispatcher, ReceiverRef receiver, Subscribe_t mode)
+SubscribeChain::SubscribeChain(DispatcherRef dispatcher, Receiver& receiver, Subscribe_t mode)
     : mDispatcher(dispatcher), mReceiver(receiver), mMode(mode)
 {
 }
@@ -89,32 +89,36 @@ SubscribeChain& SubscribeChain::operator<<(const std::string& dest)
     }
 }
 
-static void cel_printhook(const char* msg) 
+void cel_printhook(const char* msg) 
 {
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onPrint(msg);
 }
 
-static void cel_banghook(const char* src) 
+void cel_banghook(const char* src) 
 {
+    CI_LOGD("cel_banghook %s %s", src);
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onBang(src);
 }
 
-static void cel_floathook(const char* src, float x) 
+void cel_floathook(const char* src, float x) 
 {
+    CI_LOGD("cel_floathook %s %f", src, x);
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onFloat(src, x);
 }
 
-static void cel_symbolhook(const char* src, const char* sym)
+void cel_symbolhook(const char* src, const char* sym)
 {
+    CI_LOGD("cel_symbolhook %s %s", src, sym);
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onSymbol(src, sym);
 }
 
-static void cel_listhook(const char* src, int argc, t_atom* argv)
+void cel_listhook(const char* src, int argc, t_atom* argv)
 {
+    CI_LOGD("cel_listhook %s %d", src, argc);
 	List list;
 	for (int i=0; i < argc; ++i) {
 		t_atom a = argv[i];  
@@ -131,8 +135,9 @@ static void cel_listhook(const char* src, int argc, t_atom* argv)
         recv->onList(src, list);
 }
 
-static void cel_messagehook(const char* src, const char *sym, int argc, t_atom* argv)
+void cel_messagehook(const char* src, const char *sym, int argc, t_atom* argv)
 {
+    CI_LOGD("cel_messagehook %s %s %d", src, sym, argc);
 	Message list;
 	for (int i=0; i < argc; ++i) {
 		t_atom a = argv[i];  
@@ -149,6 +154,34 @@ static void cel_messagehook(const char* src, const char *sym, int argc, t_atom* 
         recv->onMessage(src, sym, list);
 }
 
+void cel_noteon(int channel, int pitch, int velocity)
+{
+}
+
+void cel_controlchange(int channel, int controller, int velocity)
+{
+}
+
+void cel_programchange(int channel, int value)
+{
+}
+
+void cel_pitchbend(int channel, int value)
+{
+}
+
+void cel_aftertouch(int channel, int value)
+{
+}
+
+void cel_polyaftertouch(int channel, int pitch, int value)
+{
+}
+
+void cel_midibyte(int port, int byte) 
+{
+}
+
 void Dispatcher::onPrint(const std::string& msg)
 {
     CI_LOGD("PD: %s", msg.c_str());
@@ -156,17 +189,19 @@ void Dispatcher::onPrint(const std::string& msg)
 
 void Dispatcher::onBang(const std::string& dest)
 {
+    CI_LOGD("Dispatcher onBang: %s", dest.c_str());
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
-        it->second->onBang(dest);
+        it->second.onBang(dest);
     }
 }
 
 void Dispatcher::onFloat(const std::string& dest, float value)
 {
+    CI_LOGD("Dispatcher onFloat: %s %f", dest.c_str(), value);
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
-        it->second->onFloat(dest, value);
+        it->second.onFloat(dest, value);
     }
 }
 
@@ -174,7 +209,7 @@ void Dispatcher::onSymbol(const std::string& dest, const std::string& symbol)
 {
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
-        it->second->onSymbol(dest, symbol);
+        it->second.onSymbol(dest, symbol);
     }
 }
 
@@ -182,7 +217,7 @@ void Dispatcher::onList(const std::string& dest, const List& list)
 {
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
-        it->second->onList(dest, list);
+        it->second.onList(dest, list);
     }
 }
 
@@ -190,30 +225,45 @@ void Dispatcher::onMessage(const std::string& dest, const std::string& msg, cons
 {
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
-        it->second->onMessage(dest, msg, list);
+        it->second.onMessage(dest, msg, list);
     }
 }
 
-void Dispatcher::subscribe(ReceiverRef receiver, const string& dest)
+void Dispatcher::subscribe(Receiver& receiver, const string& dest)
 {
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
+
+    if (found.first == found.second) {
+        //  No existing subscriber, new bind
+        mBinders[dest] = libpd_bind(dest.c_str());
+    }
+
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
-        if (it->second == receiver) {
+        if (&(it->second) == &(receiver)) {
             //  Already subscribed
             return;
         }
     }
 
-    mSubs.insert(make_pair(dest, receiver));
+    mSubs.insert(make_pair(dest, boost::ref(receiver)));
 }
 
-void Dispatcher::unsubscribe(ReceiverRef receiver, const string& dest)
+void Dispatcher::unsubscribe(Receiver& receiver, const string& dest)
 {
     std::pair<SubsMap::iterator, SubsMap::iterator> found = mSubs.equal_range(dest);
     for (SubsMap::iterator it = found.first; it != found.second; ++it) {
-        if (it->second == receiver) {
+        if (&(it->second) == &receiver) {
             mSubs.erase(it);
             break;
+        }
+    }
+
+        
+    if (mSubs.find(dest) == mSubs.end()) {
+        std::map<string, void*>::iterator bind = mBinders.find(dest);
+        if (bind != mBinders.end()) {
+            libpd_unbind(bind->second);
+            mBinders.erase(bind);
         }
     }
 }
@@ -223,26 +273,59 @@ void Dispatcher::unsubscribeAll()
     mSubs.clear();
 }
 
+class PdDispatcher : public Dispatcher
+{
+protected:
+    PdRef mPd;
+
+public:
+    PdDispatcher(PdRef pd) : mPd(pd)
+    { }
+
+    ~PdDispatcher() { }
+
+    virtual void subscribe(Receiver& receiver, const std::string& dest)
+    {
+        unique_lock<Pd> lock(*mPd);
+        Dispatcher::subscribe(receiver, dest);
+    }
+
+    virtual void unsubscribe(Receiver& receiver, const std::string& dest)
+    {
+        unique_lock<Pd> lock(*mPd);
+        Dispatcher::unsubscribe(receiver, dest);
+    }
+};
+
 DispatcherRef Pd::sDispatcher;
 
 PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
 {
-    sDispatcher = DispatcherRef(new Dispatcher());
-
     //  Initialize PD
-    libpd_printhook   = (t_libpd_printhook) cel_printhook;
-
-	libpd_banghook    = (t_libpd_banghook) cel_banghook;
-	libpd_floathook   = (t_libpd_floathook) cel_floathook;
-	libpd_symbolhook  = (t_libpd_symbolhook) cel_symbolhook;
-	libpd_listhook    = (t_libpd_listhook) cel_listhook;
+    libpd_printhook   = (t_libpd_printhook)   cel_printhook;
+	libpd_banghook    = (t_libpd_banghook)    cel_banghook;
+	libpd_floathook   = (t_libpd_floathook)   cel_floathook;
+	libpd_symbolhook  = (t_libpd_symbolhook)  cel_symbolhook;
+	libpd_listhook    = (t_libpd_listhook)    cel_listhook;
 	libpd_messagehook = (t_libpd_messagehook) cel_messagehook;
+
+	libpd_noteonhook         = (t_libpd_noteonhook)         cel_noteon;
+	libpd_controlchangehook  = (t_libpd_controlchangehook)  cel_controlchange;
+	libpd_programchangehook  = (t_libpd_programchangehook)  cel_programchange;
+	libpd_pitchbendhook      = (t_libpd_pitchbendhook)      cel_pitchbend;
+	libpd_aftertouchhook     = (t_libpd_aftertouchhook)     cel_aftertouch;
+	libpd_polyaftertouchhook = (t_libpd_polyaftertouchhook) cel_polyaftertouch;
+	
+	libpd_midibytehook = (t_libpd_midibytehook) cel_midibyte;
 	
     libpd_init();
     sys_debuglevel = 4;
     sys_verbose = 1;
 
-    return PdRef(new Pd(inChannels, outChannels, sampleRate));
+    PdRef pd = PdRef(new Pd(inChannels, outChannels, sampleRate));
+    sDispatcher = DispatcherRef(new PdDispatcher(pd));
+
+    return pd;
 }
 
 //  Start the audio system
@@ -353,12 +436,12 @@ MessageChain Pd::sendMessage(const string& recv, const string& msg)
     return MessageChain(*this, recv, msg);
 }
 
-SubscribeChain Pd::subscribe(ReceiverRef receiver)
+SubscribeChain Pd::subscribe(Receiver& receiver)
 {
     return SubscribeChain(sDispatcher, receiver, SubscribeChain::SUBSCRIBE);
 }
 
-SubscribeChain Pd::unsubscribe(ReceiverRef receiver)
+SubscribeChain Pd::unsubscribe(Receiver& receiver)
 {
     return SubscribeChain(sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE);
 }
@@ -483,6 +566,22 @@ Pd::Pd(int inChannels, int outChannels, int sampleRate)
         mInputBuf[i]  = new int16_t[mInputBufSamples];
     }
 }
+
+void Pd::lock()
+{
+    mPdLock.lock();
+}
+
+bool Pd::try_lock()
+{
+    return mPdLock.try_lock();
+}
+
+void Pd::unlock()
+{
+    mPdLock.unlock();
+}
+
 
 Pd::~Pd()
 {

@@ -17,9 +17,14 @@
 #X obj 321 61 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X msg 11 130 open /mnt/sdcard/test.ogg;
+#X floatatom 286 222 5 0 0 0 - - -;
+#X obj 286 283 s timer;
+#X obj 332 164 s ONSTART;
 #X connect 0 0 4 0;
 #X connect 0 1 4 1;
+#X connect 0 2 14 0;
 #X connect 1 0 0 0;
+#X connect 1 0 16 0;
 #X connect 2 0 0 0;
 #X connect 3 0 0 0;
 #X connect 5 0 9 0;
@@ -31,3 +36,4 @@
 #X connect 11 0 2 0;
 #X connect 12 0 3 0;
 #X connect 13 0 0 0;
+#X connect 14 0 15 0;
