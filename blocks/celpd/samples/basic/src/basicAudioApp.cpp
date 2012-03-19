@@ -45,6 +45,7 @@ class BasicAudioApp : public AppNative, public pd::Receiver {
     pp::TextureFontDrawRef mFontDraw;
 
     PdRef               mPd;
+    PdClientRef         mPdClient;
 };
 
 void BasicAudioApp::setup()
@@ -57,19 +58,18 @@ void BasicAudioApp::setup()
     copyResource("oggread~.pd_linux", internalData, true);
     copyResource("oggtest.pd", internalData, true);
 
-    {
-        Pd::Lock lock(*mPd);
-        //  Search for externals here
-        mPd->addToSearchPath(internalData);
-        mPd->subscribe(*this) << "timer";
-        mPd->openFile("oggtest.pd", internalData);
-        mPd->play();
+    mPdClient = mPd->getLockingClient();
+    //  Search for externals here
+    mPdClient->addToSearchPath(internalData);
+    mPdClient->subscribe(*this) << "timer";
+    mPdClient->openFile("oggtest.pd", internalData);
 
-        //  Start the ogg file playing
-        CI_LOGD("Sending start bangs");
-        mPd->sendBang("open");
-        mPd->sendBang("start");
-    }
+    mPd->play();
+
+    //  Start the ogg file playing
+    CI_LOGD("Sending start bangs");
+    mPdClient->sendBang("open");
+    mPdClient->sendBang("start");
 
     mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
 
@@ -108,21 +108,18 @@ void BasicAudioApp::resume(bool renewContext)
         mFontDraw    = pp::TextureFontDraw::create( mRenderer );
     }
 
-    Pd::Lock lock(*mPd);
     mPd->play();
 }
 
 void BasicAudioApp::pause()
 {
     CI_LOGD("OSL: ACTIVITY PAUSE");
-    Pd::Lock lock(*mPd);
     mPd->pause();
 }
 
 void BasicAudioApp::destroy()
 {
     CI_LOGD("OSL: ACTIVITY DESTROY");
-    Pd::Lock lock(*mPd);
     mPd->pause();
     mPd->close();
 }

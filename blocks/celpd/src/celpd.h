@@ -21,7 +21,7 @@ class Bang { };
 //  A float or a symbol, for building lists/messages
 class Atom
 {
-public:
+  public:
     enum Atom_t {
         ATOM_FLOAT,
         ATOM_SYMBOL
@@ -41,7 +41,7 @@ typedef Atom Symbol;
 //  A list of atoms representing a list/message
 class AtomList
 {
-public:
+  public:
     AtomList& operator<<(const Atom& atom);
     std::vector<Atom> atoms;
 };
@@ -87,47 +87,53 @@ class Dispatcher : public Receiver
 };
 typedef std::shared_ptr<Dispatcher> DispatcherRef;
 
+class Chain
+{
+  public:
+    Chain(Pd& pd, bool lock=false);
+    virtual ~Chain();
+  protected:
+    Pd& mPd;
+    bool mLock;
+};
 
 //  For chaining single messages (bang, float, symbol)
-class SendChain
+class SendChain : public Chain
 {
-public:
-    SendChain(Pd& pd, const std::string& recv);
+  public:
+    SendChain(Pd& pd, const std::string& recv, bool lock=false);
     SendChain& operator<<(const Bang& bang);
     SendChain& operator<<(const Atom& atom);
-protected:
-    Pd& mPd;
+  protected:
     std::string mRecv;
 };
 
 //  For chaining lists/typed messages
-class MessageChain
+class MessageChain : public Chain
 {
-public:
-    MessageChain(Pd& pd, const std::string& recv, const std::string& msg=std::string());
+  public:
+    MessageChain(Pd& pd, const std::string& recv, const std::string& msg=std::string(), bool lock=false);
     ~MessageChain();
     MessageChain& operator<<(const Atom& atom);
-protected:
-    Pd& mPd;
+  protected:
     std::string mRecv;
     std::string mMsg;
     AtomList mList;
 };
 
-class SubscribeChain
+class SubscribeChain : public Chain
 {
-public:
+  public:
     enum Subscribe_t{
         SUBSCRIBE,
         UNSUBSCRIBE
     };
 
-    SubscribeChain(Pd& pd, DispatcherRef dispatcher, Receiver& receiver, Subscribe_t mode);
+    SubscribeChain(Pd& pd, Dispatcher& dispatcher, Receiver& receiver, Subscribe_t mode, bool lock=false);
     SubscribeChain& operator<<(const std::string& dest);
 
-protected:
-    Pd& mPd;
-    DispatcherRef mDispatcher;
+  protected:
+    Dispatcher&   mDispatcher;
     Receiver&     mReceiver;
     Subscribe_t   mMode;
 };
@@ -143,8 +149,12 @@ class Patch
 {
 };
 
-class PdInterface
+/**
+ * Client interface to Pd
+ */
+class PdClient
 {
+  public:
     //  Pd interface
     virtual void  computeAudio(bool on) = 0;
     virtual void* openFile(const char* filename, const ci::fs::path& dir) = 0;
@@ -178,77 +188,57 @@ class PdInterface
     //! pd.sendMessage("pd", "dsp") << 1;
     virtual MessageChain sendMessage(const std::string& recv, const std::string& msg) = 0;
 
-    //! pd.subscribe(receiver) << "pitch";
+    //! pd.subscribe(receiver) << "pitch" << "timer";
     virtual SubscribeChain subscribe(Receiver& receiver) = 0;
-    //! pd.unsubscribe(receiver) << "pitch";
+    //! pd.unsubscribe(receiver) << "pitch" << "timer";
     virtual SubscribeChain unsubscribe(Receiver& receiver) = 0;
     virtual void unsubscribeAll() = 0;
-
 };
+typedef std::shared_ptr<PdClient> PdClientRef;
 
-class Pd : public PdInterface
+class Pd : public PdClient
 {
   public:
-    //  Create and initialize the audio system
+    //!  Create and initialize the audio system
     static PdRef init(int inChannels, int outChannels, int sampleRate);
 
-    //  Start the audio system playing
+    //!  Start the audio system playing
     void play();
 
-    //  Pause the audio system
+    //!  Pause the audio system
     void pause();
 
-    //  Shut down audio system
+    //!  Shut down audio system
     void close();
 
-    //  Returns last error code
+    //!  Returns last error code
     AudioError_t error();
 
-    //  Pd interface implementation
-    virtual void  computeAudio(bool on);
-    virtual void* openFile(const char* filename, const ci::fs::path& dir);
+    //!  Returns an auto-locking Pd client interface
+    PdClientRef getLockingClient();
 
-    virtual void addToSearchPath(const ci::fs::path& path);
-
-    //! send a bang
-    virtual int sendBang(const std::string& recv);
-    //! send a float
-    virtual int sendFloat(const std::string& recv, float x);
-    //! send a symbol
-    virtual int sendSymbol(const std::string& recv, const std::string& sym);
-
-    /**
-      List aList;
-      aList << 100 << 292.99 << 'c' << "string";
-      pd.sendList("test", aList);
-     */
-    virtual int sendList(const std::string& recv, AtomList& list);
-    /**
-      Message msg;
-      msg << 1;
-      pd.sendMessage("pd", "dsp", msg);
-     */
-    virtual int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
-
-    //! pd.send("test") << Bang() << 100 << "symbol1";
-    virtual SendChain    send(const std::string& recv);
-    //! pd.sendList("test") << 100 << 292.99 << 'c' << "string";
-    virtual MessageChain sendList(const std::string& recv);
-    //! pd.sendMessage("pd", "dsp") << 1;
-    virtual MessageChain sendMessage(const std::string& recv, const std::string& msg);
-
-    //! pd.subscribe(receiver) << "pitch";
+    //  Pd client interface implementation (no locking)
+    virtual void           computeAudio(bool on);
+    virtual void*          openFile(const char* filename, const ci::fs::path& dir);
+    virtual void           addToSearchPath(const ci::fs::path& path);
+    virtual int            sendBang(const std::string& recv);
+    virtual int            sendFloat(const std::string& recv, float x);
+    virtual int            sendSymbol(const std::string& recv, const std::string& sym);
+    virtual int            sendList(const std::string& recv, AtomList& list);
+    virtual int            sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
+    virtual SendChain      send(const std::string& recv);
+    virtual MessageChain   sendList(const std::string& recv);
+    virtual MessageChain   sendMessage(const std::string& recv, const std::string& msg);
     virtual SubscribeChain subscribe(Receiver& receiver);
-    //! pd.unsubscribe(receiver) << "pitch";
     virtual SubscribeChain unsubscribe(Receiver& receiver);
-    virtual void unsubscribeAll();
+    virtual void           unsubscribeAll();
 
-    //  Lockable concept, locks mPdLock (Pd calls from the audio thread)
-    typedef std::unique_lock<Pd> Lock;
-
+    //  Lockable concept implementation, locks the audio thread via mPdLock
     void lock();
     bool try_lock();
     void unlock();
+
+    typedef std::unique_lock<Pd> Lock;
 
     ~Pd();
 
@@ -309,53 +299,5 @@ class Pd : public PdInterface
     static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
     static void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
 };
-
-// //  Helper class delegating the receiver interface to another class
-// template <typename T>
-// class ReceiverDelegate : Receiver
-// {
-// protected:
-//     T& mTarget;
-// 
-// public:
-//     static ReceiverRef create(T& target)
-//     {
-//         return ReceiverRef(new ReceiverDelegate(target));
-//     }
-// 
-//     ReceiverDelegate(T& target) : mTarget(target)
-//     { }
-// 
-// 	virtual void onPrint(const std::string& msg) 
-//     {
-//         mTarget.onPrint(msg);
-//     }
-// 
-//     virtual void onBang(const std::string& dest)
-//     {
-//         mTarget.onBang(dest);
-//     }
-// 
-//     virtual void onFloat(const std::string& dest, float value)
-//     {
-//         mTarget.onFloat(dest, value);
-//     }
-// 
-//     virtual void onSymbol(const std::string& dest, const std::string& symbol)
-//     {
-//         mTarget.onSymbol(dest, symbol);
-//     }
-// 
-//     virtual void onList(const std::string& dest, const List& list)
-//     {
-//         mTarget.onList(dest, list);
-//     }
-// 
-//     virtual void onMessage(const std::string& dest, const std::string& msg, const Message& list)
-//     {
-//         mTarget.onMessage(dest, msg, list);
-//     }
-// };
-
 
 } }

@@ -38,7 +38,20 @@ AtomList& AtomList::operator<<(const Atom& atom)
     return *this;
 }
 
-SendChain::SendChain(Pd& pd, const string& recv) : mPd(pd), mRecv(recv)
+Chain::Chain(Pd& pd, bool lock) : mPd(pd), mLock(lock)
+{ 
+    if (mLock)
+        mPd.lock();
+}
+
+Chain::~Chain()
+{
+    if (mLock)
+        mPd.unlock();
+}
+
+SendChain::SendChain(Pd& pd, const string& recv, bool lock) 
+    : Chain(pd, lock), mRecv(recv)
 { }
 
 SendChain& SendChain::operator<<(const Bang& bang)
@@ -58,8 +71,8 @@ SendChain& SendChain::operator<<(const Atom& atom)
     return *this;
 }
 
-MessageChain::MessageChain(Pd& pd, const string& recv, const string& msg) 
-    : mPd(pd), mRecv(recv), mMsg(msg)
+MessageChain::MessageChain(Pd& pd, const string& recv, const string& msg, bool lock) 
+    : Chain(pd, lock), mRecv(recv), mMsg(msg)
 { }
 
 MessageChain::~MessageChain()
@@ -74,18 +87,18 @@ MessageChain& MessageChain::operator<<(const Atom& atom)
     return *this;
 }
 
-SubscribeChain::SubscribeChain(Pd& pd, DispatcherRef dispatcher, Receiver& receiver, Subscribe_t mode)
-    : mPd(pd), mDispatcher(dispatcher), mReceiver(receiver), mMode(mode)
+SubscribeChain::SubscribeChain(Pd& pd, Dispatcher& dispatcher, Receiver& receiver, Subscribe_t mode, bool lock)
+    : Chain(pd, lock), mDispatcher(dispatcher), mReceiver(receiver), mMode(mode)
 {
 }
 
 SubscribeChain& SubscribeChain::operator<<(const std::string& dest)
 {
     if (mMode == SubscribeChain::SUBSCRIBE) {
-        mDispatcher->subscribe(mReceiver, dest);
+        mDispatcher.subscribe(mReceiver, dest);
     }
     else if (mMode == SubscribeChain::UNSUBSCRIBE) {
-        mDispatcher->unsubscribe(mReceiver, dest);
+        mDispatcher.unsubscribe(mReceiver, dest);
     }
 }
 
@@ -266,6 +279,95 @@ void Dispatcher::unsubscribeAll()
     mSubs.clear();
 }
 
+/**  Wraps PdClient calls with a lock on the audio thread  */
+class PdLockingClient : public PdClient
+{
+protected:
+    Pd& mPd;
+
+public:
+    PdLockingClient(Pd& pd) : mPd(pd) { }
+
+    virtual void computeAudio(bool on)
+    {
+        Pd::Lock lock(mPd);
+        mPd.computeAudio(on);
+    }
+
+    virtual void* openFile(const char* filename, const ci::fs::path& dir)
+    {
+        Pd::Lock lock(mPd);
+        return mPd.openFile(filename, dir);
+    }
+
+    virtual void addToSearchPath(const ci::fs::path& path)
+    {
+        Pd::Lock lock(mPd);
+        mPd.addToSearchPath(path);
+    }
+
+    virtual int sendBang(const std::string& recv)
+    {
+        Pd::Lock lock(mPd);
+        return mPd.sendBang(recv);
+    }
+
+    virtual int sendFloat(const std::string& recv, float x)
+    {
+        Pd::Lock lock(mPd);
+        return mPd.sendFloat(recv, x);
+    }
+
+    virtual int sendSymbol(const std::string& recv, const std::string& sym)
+    {
+        Pd::Lock lock(mPd);
+        return mPd.sendSymbol(recv, sym);
+    }
+
+    virtual int sendList(const std::string& recv, AtomList& list)
+    {
+        Pd::Lock lock(mPd);
+        return mPd.sendList(recv, list);
+    }
+
+    virtual int sendMessage(const std::string& recv, const std::string& msg, AtomList& list)
+    {
+        Pd::Lock lock(mPd);
+        return mPd.sendMessage(recv, msg, list);
+    }
+
+    virtual SendChain send(const string& recv)
+    {
+        return SendChain(mPd, recv, true);
+    }
+
+    virtual MessageChain sendList(const string& recv)
+    {
+        return MessageChain(mPd, recv, string(), true);
+    }
+
+    virtual MessageChain sendMessage(const string& recv, const string& msg)
+    {
+        return MessageChain(mPd, recv, msg, true);
+    }
+
+    virtual SubscribeChain subscribe(Receiver& receiver)
+    {
+        return SubscribeChain(mPd, *Pd::sDispatcher, receiver, SubscribeChain::SUBSCRIBE, true);
+    }
+
+    virtual SubscribeChain unsubscribe(Receiver& receiver)
+    {
+        return SubscribeChain(mPd, *Pd::sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE, true);
+    }
+
+    virtual void unsubscribeAll()
+    {
+        Pd::Lock lock(mPd);
+        mPd.unsubscribeAll();
+    }
+};
+
 DispatcherRef Pd::sDispatcher;
 
 PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
@@ -292,9 +394,15 @@ PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
     sys_verbose = 1;
 
     PdRef pd = PdRef(new Pd(inChannels, outChannels, sampleRate));
+    pd->computeAudio(true);
     sDispatcher = DispatcherRef(new Dispatcher());
 
     return pd;
+}
+
+PdClientRef Pd::getLockingClient()
+{
+    return PdClientRef(new PdLockingClient(*this));
 }
 
 //  Start the audio system
@@ -319,8 +427,6 @@ void Pd::play()
     mOutputBufReady.notify_one();
     if (mInputChannels > 0)
         mInputBufReady.notify_one();
-
-    computeAudio(true);
 }
 
 void Pd::computeAudio(bool on)
@@ -399,12 +505,12 @@ MessageChain Pd::sendMessage(const string& recv, const string& msg)
 
 SubscribeChain Pd::subscribe(Receiver& receiver)
 {
-    return SubscribeChain(*this, sDispatcher, receiver, SubscribeChain::SUBSCRIBE);
+    return SubscribeChain(*this, *Pd::sDispatcher, receiver, SubscribeChain::SUBSCRIBE);
 }
 
 SubscribeChain Pd::unsubscribe(Receiver& receiver)
 {
-    return SubscribeChain(*this, sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE);
+    return SubscribeChain(*this, *Pd::sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE);
 }
 
 void Pd::unsubscribeAll()
@@ -497,7 +603,6 @@ void Pd::playerLoop()
         }
 
         {
-            // unique_lock<mutex> lock(mPdLock);
             Lock lock(*this);
             libpd_process_short(kBufferSamples / libpd_blocksize(), mInputBuf[mInputBufIndex], mOutputBuf[mOutputBufIndex]);
         }
@@ -551,7 +656,6 @@ Pd::~Pd()
     delete[] mInputBuf[0];
     delete[] mInputBuf[1];
 }
-
 
 SLuint32 slSampleRate(int sampleRate)
 {
