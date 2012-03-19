@@ -19,7 +19,3 @@ ifdef USE_FREETYPE
 APP_MODULES += ft2
 endif
 
-ifdef USE_GLES2
-APP_MODULES += propipe
-endif
-

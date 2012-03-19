@@ -89,31 +89,31 @@ SubscribeChain& SubscribeChain::operator<<(const std::string& dest)
     }
 }
 
-void cel_printhook(const char* msg) 
+static void cel_printhook(const char* msg) 
 {
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onPrint(msg);
 }
 
-void cel_banghook(const char* src) 
+static void cel_banghook(const char* src) 
 {
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onBang(src);
 }
 
-void cel_floathook(const char* src, float x) 
+static void cel_floathook(const char* src, float x) 
 {
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onFloat(src, x);
 }
 
-void cel_symbolhook(const char* src, const char* sym)
+static void cel_symbolhook(const char* src, const char* sym)
 {
     if (ReceiverRef recv = Pd::sDispatcher)
         recv->onSymbol(src, sym);
 }
 
-void cel_listhook(const char* src, int argc, t_atom* argv)
+static void cel_listhook(const char* src, int argc, t_atom* argv)
 {
 	List list;
 	for (int i=0; i < argc; ++i) {
@@ -131,7 +131,7 @@ void cel_listhook(const char* src, int argc, t_atom* argv)
         recv->onList(src, list);
 }
 
-void cel_messagehook(const char* src, const char *sym, int argc, t_atom* argv)
+static void cel_messagehook(const char* src, const char *sym, int argc, t_atom* argv)
 {
 	Message list;
 	for (int i=0; i < argc; ++i) {
@@ -149,31 +149,31 @@ void cel_messagehook(const char* src, const char *sym, int argc, t_atom* argv)
         recv->onMessage(src, sym, list);
 }
 
-void cel_noteon(int channel, int pitch, int velocity)
+static void cel_noteon(int channel, int pitch, int velocity)
 {
 }
 
-void cel_controlchange(int channel, int controller, int velocity)
+static void cel_controlchange(int channel, int controller, int velocity)
 {
 }
 
-void cel_programchange(int channel, int value)
+static void cel_programchange(int channel, int value)
 {
 }
 
-void cel_pitchbend(int channel, int value)
+static void cel_pitchbend(int channel, int value)
 {
 }
 
-void cel_aftertouch(int channel, int value)
+static void cel_aftertouch(int channel, int value)
 {
 }
 
-void cel_polyaftertouch(int channel, int pitch, int value)
+static void cel_polyaftertouch(int channel, int pitch, int value)
 {
 }
 
-void cel_midibyte(int port, int byte) 
+static void cel_midibyte(int port, int byte) 
 {
 }
 

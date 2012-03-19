@@ -204,44 +204,44 @@ class Pd : public PdInterface
     //  Returns last error code
     AudioError_t error();
 
-    //  Pd interface
-    void  computeAudio(bool on);
-    void* openFile(const char* filename, const ci::fs::path& dir);
+    //  Pd interface implementation
+    virtual void  computeAudio(bool on);
+    virtual void* openFile(const char* filename, const ci::fs::path& dir);
 
-    void addToSearchPath(const ci::fs::path& path);
+    virtual void addToSearchPath(const ci::fs::path& path);
 
     //! send a bang
-    int sendBang(const std::string& recv);
+    virtual int sendBang(const std::string& recv);
     //! send a float
-    int sendFloat(const std::string& recv, float x);
+    virtual int sendFloat(const std::string& recv, float x);
     //! send a symbol
-    int sendSymbol(const std::string& recv, const std::string& sym);
+    virtual int sendSymbol(const std::string& recv, const std::string& sym);
 
     /**
       List aList;
       aList << 100 << 292.99 << 'c' << "string";
       pd.sendList("test", aList);
      */
-    int sendList(const std::string& recv, AtomList& list);
+    virtual int sendList(const std::string& recv, AtomList& list);
     /**
       Message msg;
       msg << 1;
       pd.sendMessage("pd", "dsp", msg);
      */
-    int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
+    virtual int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
 
     //! pd.send("test") << Bang() << 100 << "symbol1";
-    SendChain    send(const std::string& recv);
+    virtual SendChain    send(const std::string& recv);
     //! pd.sendList("test") << 100 << 292.99 << 'c' << "string";
-    MessageChain sendList(const std::string& recv);
+    virtual MessageChain sendList(const std::string& recv);
     //! pd.sendMessage("pd", "dsp") << 1;
-    MessageChain sendMessage(const std::string& recv, const std::string& msg);
+    virtual MessageChain sendMessage(const std::string& recv, const std::string& msg);
 
     //! pd.subscribe(receiver) << "pitch";
-    SubscribeChain subscribe(Receiver& receiver);
+    virtual SubscribeChain subscribe(Receiver& receiver);
     //! pd.unsubscribe(receiver) << "pitch";
-    SubscribeChain unsubscribe(Receiver& receiver);
-    void unsubscribeAll();
+    virtual SubscribeChain unsubscribe(Receiver& receiver);
+    virtual void unsubscribeAll();
 
     //  Lockable concept, locks mPdLock (Pd calls from the audio thread)
     typedef std::unique_lock<Pd> Lock;
