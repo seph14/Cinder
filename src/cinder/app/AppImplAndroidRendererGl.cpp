@@ -6,10 +6,6 @@
 
 #include <android_native_app_glue.h>
 
-//  XXX activity ending hack
-// #include <android/native_window.h>
-// #include "cinder/app/AppAndroid.h"
-
 namespace cinder { namespace app {
 
 const char* EGLErrorString()
@@ -62,6 +58,7 @@ void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
             EGL_BLUE_SIZE, 5,
             EGL_GREEN_SIZE, 6,
             EGL_RED_SIZE, 5,
+			EGL_DEPTH_SIZE, 16,
 #if defined( CINDER_GLES2 )
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 #endif
@@ -83,7 +80,7 @@ void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
 
     mSurface = eglCreateWindowSurface(mDisplay, config, mAndroidApp->window, NULL);
     if (mSurface == EGL_NO_SURFACE) {
-        CI_LOGW("Error in eglCreateWindowSurface, %s", EGLErrorString());
+        CI_LOGE("Error in eglCreateWindowSurface, %s", EGLErrorString());
     }
 
 #if defined( CINDER_GLES2 )
@@ -94,10 +91,10 @@ void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
 #endif
 
     if (mContext == EGL_NO_CONTEXT) {
-        CI_LOGW("ERROR in eglCreateContext, returned EGL_NO_CONTEXT");
+        CI_LOGE("eglCreateContext returned EGL_NO_CONTEXT");
     }
     else {
-        CI_LOGW("eglCreateContext succeeded, returned %p", mContext);
+        CI_LOGD("eglCreateContext succeeded, returned %p", mContext);
     }
 
     makeCurrentContext();
@@ -106,7 +103,7 @@ void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
     eglQuerySurface(mDisplay, mSurface, EGL_WIDTH, &w);
     eglQuerySurface(mDisplay, mSurface, EGL_HEIGHT, &h);
 
-    width  = w; height = h;
+    width = w; height = h;
 
     // Initialize GL state
     glDisable(GL_DITHER);
@@ -121,18 +118,14 @@ void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
 void AppImplAndroidRendererGl::makeCurrentContext()
 {
     if (eglMakeCurrent(mDisplay, mSurface, mSurface, mContext) == EGL_FALSE) {
-        CI_LOGW("makeCurrentContext(): Unable to eglMakeCurrent");
+        CI_LOGE("makeCurrentContext(): Unable to eglMakeCurrent");
     }
 }
 
 void AppImplAndroidRendererGl::swapBuffers()
 {
     if (EGL_FALSE == eglSwapBuffers(mDisplay, mSurface)) {
-        CI_LOGW("XXX ERROR eglSwapBuffers returned EGL_FALSE : %s", EGLErrorString());
-        //  XXX NASTY HACK
-        // CI_LOGW("ABORTING...");
-        // struct android_app* app = static_cast<AppAndroid*>(mApp)->mAndroidApp;
-        // ANativeActivity_finish(app->activity);
+        CI_LOGE("eglSwapBuffers returned EGL_FALSE : %s", EGLErrorString());
     }
 }
 
@@ -140,7 +133,7 @@ void AppImplAndroidRendererGl::defaultResize()
 {
     int width  = mApp->getWindowWidth();
     int height = mApp->getWindowHeight();
-    CI_LOGW("Setting viewport to %d x %d", width, height); 
+    CI_LOGD("Setting viewport to %d x %d", width, height); 
 	glViewport( 0, 0, width, height );
 
 #if ! defined( CINDER_GLES2 )
@@ -151,14 +144,10 @@ void AppImplAndroidRendererGl::defaultResize()
 void AppImplAndroidRendererGl::teardown()
 {
     if (mDisplay != EGL_NO_DISPLAY) {
-        // XXX These teardown methods consistently hard-crash the HTC Evo 3D
-        // running 2.3.3, not sure of a good workaround.
-
         eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         if (mContext != EGL_NO_CONTEXT) {
             eglDestroyContext(mDisplay, mContext);
         }
-        CI_LOGW("DESTROY SURFACE");
         if (mSurface != EGL_NO_SURFACE) {
             eglDestroySurface(mDisplay, mSurface);
         }
