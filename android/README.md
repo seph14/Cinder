@@ -7,7 +7,7 @@ When linked as an activity it uses the NDK Native Activity code, which
 restricts it to running on Android versions 2.3 (Gingerbread) and upwards. This
 restriction does not apply when linked as a static library called through JNI.
 
-Tested to build on Windows (cygwin), OS X and Linux.
+Tested to build on Windows, OS X and Linux.
 
 
 Quickstart
@@ -15,8 +15,10 @@ Quickstart
 
 * Install prerequisites:
 
-  - Android SDK and Android NDK R5c or later
-  - Boost, installed in the top Cinder directory
+  - Android SDK and Android NDK R5c or later (tested with R7b)
+  - Boost is required as usual in the top Cinder directory.  The setup-android script will
+    automatically install this if there is no "boost" directory under Cinder.
+  - Cygwin on Windows
   - bash, curl, unzip, tar and bzip2 command-line tools (required by setup-android)
 
 * Run setup-android
@@ -34,23 +36,21 @@ Quickstart
 
     USE_GLES2     - select OpenGL ES2 - if disabled then OpenGL ES1.5 is used instead
 
-* Build the library.  Tip: use -j <num cores> to enable parallel build.
+* Build the library from within the android folder.  Tip: use -j <num cores> to
+  enable parallel build.
 
 ```
     % ndk-build -j 4
 ```
 
-* Build one of the sample programs (AndroidTest, EaseGallery, FBOBasic,
-  iPhoneAccelerometer, MultiTouchBasic, AndroidTestES2, TextureFont or
-  shaderTestES2)
+* Build one of the sample programs (EaseGallery, FBOBasic, iPhoneAccelerometer,
+  MultiTouchBasic, TextureFont or shaderTestES2)
 
 ```
     % cd cinder/samples/<SAMPLE>/android
     % . ./setup-android
     % ndk-build && ant debug && adb install -r bin/<SAMPLE-APK>
 ```
-
-  NB: The ES2 samples will only build against an ES2 build of Cinder
 
 
 Linking against Cinder
@@ -62,7 +62,7 @@ $CINDER_PATH/android/jni to build a new copy of Cinder against each importing
 project.
 
 Each sample has a setup-android script fragment that will automatically set
-NDK_MODULE_PATH if it hasn't already been defined.
+NDK_MODULE_PATH if it is not already defined.
 
 See $NDK/docs/IMPORT-MODULE.html for more details of how to use
 NDK_MODULE_PATH.
@@ -103,7 +103,6 @@ samples for examples of this.
 The default implementation of resume() just calls setup() if renewContext
 is true.  This is unsuitable for non-trivial apps.
 
-TODO: saved state onPause / onResume.
 
 Status
 ------
@@ -113,16 +112,18 @@ Status
 * FreeImage image source, tested to work with PNG/JPEG/BMP files so far
 * stb_image image source, a smaller image backend compatible with PNG/JPEG/GIF
 * OpenGL ES2 supported at compile time with a subset of the gl namespace
-* OpenGL ES2 context class, supporting most gl namespace methods
-* TextureFont implementation using Freetype
-* Static boost libraries included (date_time, filesystem, regex, system and thread)
-
+* TextureFont implementation using Freetype (ES1 and ES2 via propipe)
+* Static prebuilt Boost libraries for ARM included (date_time, filesystem,
+  regex, system and thread)
+* Android save/restore state callbacks
+* Propipe block (programmable pipeline), supporting most gl namespace draw
+  methods in ES2
+* CelPD block (libpd audio interface)
 
 TODO
 ----
 
-* Android save/restore state callbacks
-* Audio support (using OpenSL ES)
+* Cinder Audio support (using OpenSL ES)
 * URL implementation (currently stubbed out)
 * Camera capture (may require JNI)
 
@@ -143,5 +144,5 @@ Parts of the font rendering code are based on freetype-gl (http://code.google.co
 Copyright 2011 Nicolas P. Rougier. All rights reserved
 
 
-safetydank 20120229
+safetydank 20120323
 
