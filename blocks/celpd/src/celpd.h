@@ -1,5 +1,3 @@
-#pragma once
-
 #include <vector>  
 #include <string>
 
@@ -15,6 +13,9 @@
 namespace cel { namespace pd {
 
 class Pd;
+typedef std::shared_ptr<Pd> PdRef;
+
+class PdClient;
 
 class Bang { };
 
@@ -90,18 +91,17 @@ typedef std::shared_ptr<Dispatcher> DispatcherRef;
 class Chain
 {
   public:
-    Chain(Pd& pd, bool lock=false);
+    Chain(PdClient& pd);
     virtual ~Chain();
   protected:
-    Pd& mPd;
-    bool mLock;
+    PdClient& mPd;
 };
 
 //  For chaining single messages (bang, float, symbol)
 class SendChain : public Chain
 {
   public:
-    SendChain(Pd& pd, const std::string& recv, bool lock=false);
+    SendChain(PdClient& pd, const std::string& recv);
     SendChain& operator<<(const Bang& bang);
     SendChain& operator<<(const Atom& atom);
   protected:
@@ -112,7 +112,7 @@ class SendChain : public Chain
 class MessageChain : public Chain
 {
   public:
-    MessageChain(Pd& pd, const std::string& recv, const std::string& msg=std::string(), bool lock=false);
+    MessageChain(PdClient& pd, const std::string& recv, const std::string& msg=std::string());
     ~MessageChain();
     MessageChain& operator<<(const Atom& atom);
   protected:
@@ -129,7 +129,7 @@ class SubscribeChain : public Chain
         UNSUBSCRIBE
     };
 
-    SubscribeChain(Pd& pd, Dispatcher& dispatcher, Receiver& receiver, Subscribe_t mode, bool lock=false);
+    SubscribeChain(PdClient& pd, Dispatcher& dispatcher, Receiver& receiver, Subscribe_t mode);
     SubscribeChain& operator<<(const std::string& dest);
 
   protected:
@@ -143,10 +143,30 @@ enum AudioError_t {
     NONE,
 };
 
-typedef std::shared_ptr<class Pd> PdRef;
-
 class Patch
 {
+};
+
+/**
+  * Audio interface
+  */
+typedef std::shared_ptr<class PdAudio> PdAudioRef;
+class PdAudio
+{
+  public:
+    //!  Start the audio system playing
+    virtual void play()          = 0;
+    //!  Pause the audio system
+    virtual void pause()         = 0;
+    //!  Shut down audio system
+    virtual void close()         = 0;
+    //!  Returns last error code
+    virtual AudioError_t error() = 0;
+
+    virtual ~PdAudio() { }
+
+    //  Factory method implemented by platform backend
+    static PdAudioRef create(Pd& pd, int inChannels, int outChannels, int sampleRate);
 };
 
 /**
@@ -156,82 +176,56 @@ class PdClient
 {
   public:
     //  Pd interface
-    virtual void  computeAudio(bool on) = 0;
-    virtual void* openFile(const char* filename, const ci::fs::path& dir) = 0;
+    virtual void  computeAudio(bool on);
+    virtual void* openFile(const char* filename, const ci::fs::path& dir);
 
-    virtual void addToSearchPath(const ci::fs::path& path) = 0;
+    virtual void addToSearchPath(const ci::fs::path& path);
 
     //! send a bang
-    virtual int sendBang(const std::string& recv) = 0;
+    virtual int sendBang(const std::string& recv);
     //! send a float
-    virtual int sendFloat(const std::string& recv, float x) = 0;
+    virtual int sendFloat(const std::string& recv, float x);
     //! send a symbol
-    virtual int sendSymbol(const std::string& recv, const std::string& sym) = 0;
+    virtual int sendSymbol(const std::string& recv, const std::string& sym);
 
     /**
       List aList;
       aList << 100 << 292.99 << 'c' << "string";
       pd.sendList("test", aList);
      */
-    virtual int sendList(const std::string& recv, AtomList& list) = 0;
+    virtual int sendList(const std::string& recv, AtomList& list);
     /**
       Message msg;
       msg << 1;
       pd.sendMessage("pd", "dsp", msg);
      */
-    virtual int sendMessage(const std::string& recv, const std::string& msg, AtomList& list) = 0;
+    virtual int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
 
     //! pd.send("test") << Bang() << 100 << "symbol1";
-    virtual SendChain    send(const std::string& recv) = 0;
+    virtual SendChain    send(const std::string& recv);
     //! pd.sendList("test") << 100 << 292.99 << 'c' << "string";
-    virtual MessageChain sendList(const std::string& recv) = 0;
+    virtual MessageChain sendList(const std::string& recv);
     //! pd.sendMessage("pd", "dsp") << 1;
-    virtual MessageChain sendMessage(const std::string& recv, const std::string& msg) = 0;
+    virtual MessageChain sendMessage(const std::string& recv, const std::string& msg);
 
     //! pd.subscribe(receiver) << "pitch" << "timer";
-    virtual SubscribeChain subscribe(Receiver& receiver) = 0;
+    virtual SubscribeChain subscribe(Receiver& receiver);
     //! pd.unsubscribe(receiver) << "pitch" << "timer";
-    virtual SubscribeChain unsubscribe(Receiver& receiver) = 0;
-    virtual void unsubscribeAll() = 0;
+    virtual SubscribeChain unsubscribe(Receiver& receiver);
+    virtual void unsubscribeAll();
+
+    virtual ~PdClient() { }
 };
 typedef std::shared_ptr<PdClient> PdClientRef;
 
-class Pd : public PdClient
+class Pd // : public PdClient
 {
   public:
     //!  Create and initialize the audio system
-    static PdRef init(int inChannels, int outChannels, int sampleRate);
+    static PdRef init(int inChannels, int outChannels, int sampleRate, bool autoLock=true);
 
-    //!  Start the audio system playing
-    void play();
-
-    //!  Pause the audio system
-    void pause();
-
-    //!  Shut down audio system
-    void close();
-
-    //!  Returns last error code
-    AudioError_t error();
-
-    //!  Returns an auto-locking Pd client interface
-    PdClientRef getLockingClient();
-
-    //  Pd client interface implementation (no locking)
-    virtual void           computeAudio(bool on);
-    virtual void*          openFile(const char* filename, const ci::fs::path& dir);
-    virtual void           addToSearchPath(const ci::fs::path& path);
-    virtual int            sendBang(const std::string& recv);
-    virtual int            sendFloat(const std::string& recv, float x);
-    virtual int            sendSymbol(const std::string& recv, const std::string& sym);
-    virtual int            sendList(const std::string& recv, AtomList& list);
-    virtual int            sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
-    virtual SendChain      send(const std::string& recv);
-    virtual MessageChain   sendList(const std::string& recv);
-    virtual MessageChain   sendMessage(const std::string& recv, const std::string& msg);
-    virtual SubscribeChain subscribe(Receiver& receiver);
-    virtual SubscribeChain unsubscribe(Receiver& receiver);
-    virtual void           unsubscribeAll();
+    PdAudio*  audio();
+    PdClient* client();
 
     //  Lockable concept implementation, locks the audio thread via mPdLock
     void lock();
@@ -243,61 +237,41 @@ class Pd : public PdClient
     ~Pd();
 
   public:
+    //  Convenience methods for accessing audio and client methods
+
+    //  Audio interface wrapper
+    void play();
+    void pause();
+    void close();
+    AudioError_t error();
+
+    //  Client interface wrapper
+    void  computeAudio(bool on);
+    void* openFile(const char* filename, const ci::fs::path& dir);
+    void addToSearchPath(const ci::fs::path& path);
+    int sendBang(const std::string& recv);
+    int sendFloat(const std::string& recv, float x);
+    int sendSymbol(const std::string& recv, const std::string& sym);
+    int sendList(const std::string& recv, AtomList& list);
+    int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
+    SendChain    send(const std::string& recv);
+    MessageChain sendList(const std::string& recv);
+    MessageChain sendMessage(const std::string& recv, const std::string& msg);
+    SubscribeChain subscribe(Receiver& receiver);
+    SubscribeChain unsubscribe(Receiver& receiver);
+    void unsubscribeAll();
+
+
+  public:
 	static DispatcherRef sDispatcher;
 
   protected:
-    SLObjectItf mEngineObject;
-    SLEngineItf mEngineEngine;
-    SLObjectItf mOutputMixObject;
+    PdAudioRef  mAudio;
+    PdClientRef mClient;
 
-    SLObjectItf bqRecorderObject;
-    SLRecordItf bqRecorderRecord;
-    SLAndroidSimpleBufferQueueItf bqRecorderBufferQueue;;
+    std::mutex  mPdLock;
 
-    SLObjectItf                   bqPlayerObject;
-    SLPlayItf                     bqPlayerPlay;
-    SLAndroidSimpleBufferQueueItf bqPlayerBufferQueue;
-    SLEffectSendItf               bqPlayerEffectSend;
-    SLMuteSoloItf                 bqPlayerMuteSolo;
-    SLVolumeItf                   bqPlayerVolume;
-
-    std::mutex                   mPdLock;
-    std::mutex                   mPlayerLock;
-    std::condition_variable      mInputBufReady;
-    std::condition_variable      mOutputBufReady;
-    std::shared_ptr<std::thread> mMixerThread;
-
-    AudioError_t mError;
-
-    Pd(int inChannels, int outChannels, int sampleRate);
-
-    void initSL(int inChannels, int outChannels, int sampleRate);
-    void initInput(int channels, int sampleRate);
-    void initOutput(int channels, int sampleRate);
-    void setError(AudioError_t error);
-
-    void playerLoop();
-    void enqueueRecorder();
-    void enqueuePlayer();
-
-    bool mPlayerRunning;
-    bool mRecorderRunning;
-    bool mOutputReady;
-    bool mInputReady;
-
-    int      mOutputBufIndex;
-    int16_t* mOutputBuf[2];
-    int      mInputBufIndex;
-    int16_t* mInputBuf[2];
-
-    int      mOutputBufSamples;
-    int      mInputBufSamples;
-
-    int mInputChannels;
-    int mOutputChannels;
-
-    static void bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
-    static void bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *context);
+    Pd(bool autoLock);
 };
 
 } }

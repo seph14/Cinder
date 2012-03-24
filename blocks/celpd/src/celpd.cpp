@@ -38,20 +38,16 @@ AtomList& AtomList::operator<<(const Atom& atom)
     return *this;
 }
 
-Chain::Chain(Pd& pd, bool lock) : mPd(pd), mLock(lock)
+Chain::Chain(PdClient& pd) : mPd(pd)
 { 
-    if (mLock)
-        mPd.lock();
 }
 
 Chain::~Chain()
 {
-    if (mLock)
-        mPd.unlock();
 }
 
-SendChain::SendChain(Pd& pd, const string& recv, bool lock) 
-    : Chain(pd, lock), mRecv(recv)
+SendChain::SendChain(PdClient& pd, const string& recv) 
+    : Chain(pd), mRecv(recv)
 { }
 
 SendChain& SendChain::operator<<(const Bang& bang)
@@ -71,8 +67,8 @@ SendChain& SendChain::operator<<(const Atom& atom)
     return *this;
 }
 
-MessageChain::MessageChain(Pd& pd, const string& recv, const string& msg, bool lock) 
-    : Chain(pd, lock), mRecv(recv), mMsg(msg)
+MessageChain::MessageChain(PdClient& pd, const string& recv, const string& msg) 
+    : Chain(pd), mRecv(recv), mMsg(msg)
 { }
 
 MessageChain::~MessageChain()
@@ -87,8 +83,8 @@ MessageChain& MessageChain::operator<<(const Atom& atom)
     return *this;
 }
 
-SubscribeChain::SubscribeChain(Pd& pd, Dispatcher& dispatcher, Receiver& receiver, Subscribe_t mode, bool lock)
-    : Chain(pd, lock), mDispatcher(dispatcher), mReceiver(receiver), mMode(mode)
+SubscribeChain::SubscribeChain(PdClient& pd, Dispatcher& dispatcher, Receiver& receiver, Subscribe_t mode)
+    : Chain(pd), mDispatcher(dispatcher), mReceiver(receiver), mMode(mode)
 {
 }
 
@@ -279,7 +275,7 @@ void Dispatcher::unsubscribeAll()
     mSubs.clear();
 }
 
-/**  Wraps PdClient calls with a lock on the audio thread  */
+/**  Wraps PdClient calls with a lock on the Pd object  */
 class PdLockingClient : public PdClient
 {
 protected:
@@ -288,89 +284,58 @@ protected:
 public:
     PdLockingClient(Pd& pd) : mPd(pd) { }
 
-    virtual void computeAudio(bool on)
-    {
-        Pd::Lock lock(mPd);
-        mPd.computeAudio(on);
-    }
-
     virtual void* openFile(const char* filename, const ci::fs::path& dir)
     {
         Pd::Lock lock(mPd);
-        return mPd.openFile(filename, dir);
+        return PdClient::openFile(filename, dir);
     }
 
     virtual void addToSearchPath(const ci::fs::path& path)
     {
         Pd::Lock lock(mPd);
-        mPd.addToSearchPath(path);
+        PdClient::addToSearchPath(path);
     }
 
     virtual int sendBang(const std::string& recv)
     {
         Pd::Lock lock(mPd);
-        return mPd.sendBang(recv);
+        return PdClient::sendBang(recv);
     }
 
     virtual int sendFloat(const std::string& recv, float x)
     {
         Pd::Lock lock(mPd);
-        return mPd.sendFloat(recv, x);
+        return PdClient::sendFloat(recv, x);
     }
 
     virtual int sendSymbol(const std::string& recv, const std::string& sym)
     {
         Pd::Lock lock(mPd);
-        return mPd.sendSymbol(recv, sym);
+        return PdClient::sendSymbol(recv, sym);
     }
 
     virtual int sendList(const std::string& recv, AtomList& list)
     {
         Pd::Lock lock(mPd);
-        return mPd.sendList(recv, list);
+        return PdClient::sendList(recv, list);
     }
 
     virtual int sendMessage(const std::string& recv, const std::string& msg, AtomList& list)
     {
         Pd::Lock lock(mPd);
-        return mPd.sendMessage(recv, msg, list);
-    }
-
-    virtual SendChain send(const string& recv)
-    {
-        return SendChain(mPd, recv, true);
-    }
-
-    virtual MessageChain sendList(const string& recv)
-    {
-        return MessageChain(mPd, recv, string(), true);
-    }
-
-    virtual MessageChain sendMessage(const string& recv, const string& msg)
-    {
-        return MessageChain(mPd, recv, msg, true);
-    }
-
-    virtual SubscribeChain subscribe(Receiver& receiver)
-    {
-        return SubscribeChain(mPd, *Pd::sDispatcher, receiver, SubscribeChain::SUBSCRIBE, true);
-    }
-
-    virtual SubscribeChain unsubscribe(Receiver& receiver)
-    {
-        return SubscribeChain(mPd, *Pd::sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE, true);
+        return PdClient::sendMessage(recv, msg, list);
     }
 
     virtual void unsubscribeAll()
     {
         Pd::Lock lock(mPd);
-        mPd.unsubscribeAll();
+        PdClient::unsubscribeAll();
     }
 };
 
 DispatcherRef Pd::sDispatcher;
 
-PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
+PdRef Pd::init(int inChannels, int outChannels, int sampleRate, bool autoLock)
 {
     //  Initialize PD
     libpd_printhook   = (t_libpd_printhook)   cel_printhook;
@@ -389,58 +354,51 @@ PdRef Pd::init(int inChannels, int outChannels, int sampleRate)
 	
 	libpd_midibytehook = (t_libpd_midibytehook) cel_midibyte;
 	
+    CI_LOGD("PD: libpd_init");
     libpd_init();
     sys_debuglevel = 4;
     sys_verbose = 1;
 
-    PdRef pd = PdRef(new Pd(inChannels, outChannels, sampleRate));
-    pd->computeAudio(true);
+    CI_LOGD("PD: Create dispatcher");
     sDispatcher = DispatcherRef(new Dispatcher());
 
+    CI_LOGD("PD: Create PD");
+    PdRef pd = PdRef(new Pd(autoLock));
+    CI_LOGD("PD: Create Audio");
+    pd->mAudio = PdAudio::create(*pd, inChannels, outChannels, sampleRate);
+    CI_LOGD("PD: Set compute audio to true");
+    pd->computeAudio(true);
+    CI_LOGD("PD: Return PD");
     return pd;
 }
 
-PdClientRef Pd::getLockingClient()
+Pd::Pd(bool autoLock)
 {
-    return PdClientRef(new PdLockingClient(*this));
+    mClient = PdClientRef(autoLock ? new PdLockingClient(*this) : new PdClient());
 }
 
-//  Start the audio system
-void Pd::play()
+PdAudio* Pd::audio()
 {
-    // set the player's state to playing
-    CI_LOGD("Pd: play()");
-    SLresult result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PLAYING);
-    assert(SL_RESULT_SUCCESS == result);
-
-    //  Start playback by queuing an initial buffer (empty)
-    {
-        mInputReady    = true;
-        mOutputReady   = true;
-        mPlayerRunning = true;
-        for (int i=0; i < 2; ++i) {
-            memset(mOutputBuf[i], 0, sizeof(int16_t) * mOutputBufSamples);
-            memset(mInputBuf[i],  0, sizeof(int16_t) * mInputBufSamples);
-        }
-        mMixerThread   = shared_ptr<thread>(new thread(&Pd::playerLoop, this));
-    }
-    mOutputBufReady.notify_one();
-    if (mInputChannels > 0)
-        mInputBufReady.notify_one();
+    return mAudio.get();
 }
 
-void Pd::computeAudio(bool on)
+PdClient* Pd::client()
+{
+    return mClient.get();
+}
+
+void PdClient::computeAudio(bool on)
 {
     //  Start/stop DSP
     sendMessage("pd", "dsp") << (on ? 1.0f : 0);
 }
 
-void* Pd::openFile(const char* filename, const fs::path& dir)
+void* PdClient::openFile(const char* filename, const fs::path& dir)
 {
     return dir.empty() ? NULL : libpd_openfile(filename, dir.string().c_str());
 }
 
-void Pd::addToSearchPath(const fs::path& path)
+void PdClient::addToSearchPath(const fs::path& path)
 {
     if (!path.empty()) {
         CI_LOGD("OSL: Adding to PD search path: %s", path.string().c_str());
@@ -448,27 +406,27 @@ void Pd::addToSearchPath(const fs::path& path)
     }
 }
 
-int Pd::sendBang(const string& recv)
+int PdClient::sendBang(const string& recv)
 {
     return libpd_bang(recv.c_str());
 }
 
-int Pd::sendFloat(const string& recv, float x)
+int PdClient::sendFloat(const string& recv, float x)
 {
     return libpd_float(recv.c_str(), x);
 }
 
-int Pd::sendSymbol(const string& recv, const string& sym)
+int PdClient::sendSymbol(const string& recv, const string& sym)
 {
     return libpd_symbol(recv.c_str(), sym.c_str());
 }
 
-int Pd::sendList(const std::string& recv, AtomList& list)
+int PdClient::sendList(const std::string& recv, AtomList& list)
 {
     return sendMessage(recv, string(), list);
 }
 
-int Pd::sendMessage(const std::string& recv, const std::string& msg, AtomList& list)
+int PdClient::sendMessage(const std::string& recv, const std::string& msg, AtomList& list)
 {
     vector<Atom>& atoms = list.atoms;
     libpd_start_message(atoms.size());
@@ -488,150 +446,33 @@ int Pd::sendMessage(const std::string& recv, const std::string& msg, AtomList& l
     return libpd_finish_list(recv.c_str());
 }
 
-SendChain Pd::send(const string& recv)
+SendChain PdClient::send(const string& recv)
 {
     return SendChain(*this, recv);
 }
 
-MessageChain Pd::sendList(const string& recv)
+MessageChain PdClient::sendList(const string& recv)
 {
     return MessageChain(*this, recv);
 }
 
-MessageChain Pd::sendMessage(const string& recv, const string& msg)
+MessageChain PdClient::sendMessage(const string& recv, const string& msg)
 {
     return MessageChain(*this, recv, msg);
 }
 
-SubscribeChain Pd::subscribe(Receiver& receiver)
+SubscribeChain PdClient::subscribe(Receiver& receiver)
 {
     return SubscribeChain(*this, *Pd::sDispatcher, receiver, SubscribeChain::SUBSCRIBE);
 }
 
-SubscribeChain Pd::unsubscribe(Receiver& receiver)
+SubscribeChain PdClient::unsubscribe(Receiver& receiver)
 {
     return SubscribeChain(*this, *Pd::sDispatcher, receiver, SubscribeChain::UNSUBSCRIBE);
 }
 
-void Pd::unsubscribeAll()
+void PdClient::unsubscribeAll()
 {
-}
-
-//  Stop the audio system
-void Pd::pause()
-{
-    CI_LOGD("Pd: pause()");
-    {
-        unique_lock<mutex> lock(mPlayerLock);
-        mPlayerRunning = false;
-        mMixerThread->interrupt();
-    }
-    SLresult result = (*bqPlayerPlay)->SetPlayState(bqPlayerPlay, SL_PLAYSTATE_PAUSED);
-    assert(SL_RESULT_SUCCESS == result);
-}
-
-void Pd::bqPlayerCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
-{
-    // notify player thread we're ready to enqueue another buffer
-    Pd* audio = (Pd*) audioPtr;
-    {
-        unique_lock<mutex> lock(audio->mPlayerLock);
-        audio->mOutputReady = true;
-        // CI_LOGD("bqPlayerCallback");
-    }
-    (audio->mOutputBufReady).notify_one();
-}
-
-void Pd::bqRecorderCallback(SLAndroidSimpleBufferQueueItf bq, void *audioPtr)
-{
-    // notify player thread we're ready to enqueue another buffer
-    Pd* pd = (Pd*) audioPtr;
-    {
-        unique_lock<mutex> lock(pd->mPlayerLock);
-        pd->mInputReady = true;
-        // CI_LOGD("bqRecorderCallback");
-    }
-    (pd->mInputBufReady).notify_one();
-}
-
-void Pd::enqueueRecorder()
-{
-    {
-        unique_lock<mutex> lock(mPlayerLock);
-
-        while (!mInputReady) {
-            mInputBufReady.wait(lock);
-        }
-        mInputReady = false;
-    }
-
-    SLresult result = (*bqRecorderBufferQueue)->Enqueue(bqRecorderBufferQueue, 
-            mInputBuf[mInputBufIndex], mInputBufSamples * sizeof(int16_t));
-    // for (int i=0; i < 100; ++i) {
-    //     CI_LOGD("  rec buffer[%d] : %d", i, mInputBuf[mInputBufIndex][i]);
-    // }
-
-    assert(SL_RESULT_SUCCESS == result);
-}
-
-void Pd::enqueuePlayer()
-{
-    {
-        unique_lock<mutex> lock(mPlayerLock);
-
-        while (!mOutputReady && mPlayerRunning) {
-            mOutputBufReady.wait(lock);
-        }
-        mOutputReady = false;
-    }
-    SLresult result = (*bqPlayerBufferQueue)->Enqueue(bqPlayerBufferQueue, 
-            mOutputBuf[mOutputBufIndex], mOutputBufSamples * sizeof(int16_t));
-    // for (int i=0; i < 100; ++i) {
-    //     CI_LOGD("  play buffer[%d] : %d", i, mOutputBuf[mOutputBufIndex][i]);
-    // }
-    assert(SL_RESULT_SUCCESS == result);
-}
-
-//  player thread loop
-void Pd::playerLoop()
-{
-    while (mPlayerRunning)
-    {
-        // CI_LOGD("OSL: Player running");
-        if (mInputChannels > 0) {
-            enqueueRecorder();
-        }
-
-        {
-            Lock lock(*this);
-            libpd_process_short(kBufferSamples / libpd_blocksize(), mInputBuf[mInputBufIndex], mOutputBuf[mOutputBufIndex]);
-        }
-
-        enqueuePlayer();
-
-        mInputBufIndex  ^= 1;
-        mOutputBufIndex ^= 1;
-    }
-}
-
-Pd::Pd(int inChannels, int outChannels, int sampleRate) 
-    : mEngineObject(NULL), mOutputMixObject(NULL), bqPlayerObject(NULL), 
-      mPlayerRunning(false), mRecorderRunning(false), mOutputReady(false),
-      mOutputBufIndex(0), mInputBufIndex(0), 
-      mInputChannels(inChannels), mOutputChannels(outChannels)
-{
-    initSL(inChannels, outChannels, sampleRate);
-    libpd_init_audio(inChannels, outChannels, sampleRate);
-    // mOutputBufSamples = kTicksPerBuffer * libpd_blocksize() * outChannels;
-    mOutputBufSamples = kBufferSamples * outChannels;
-    mInputBufSamples  = kBufferSamples * inChannels;
-    CI_LOGD("OSL: Allocating buffers size kTicks (%d) * blocksize (%d) * channels (%d) = %d",
-            kTicksPerBuffer, libpd_blocksize(), outChannels, mOutputBufSamples);
-
-    for (int i=0; i < 2; ++i) {
-        mOutputBuf[i] = new int16_t[mOutputBufSamples];
-        mInputBuf[i]  = new int16_t[mInputBufSamples];
-    }
 }
 
 void Pd::lock()
@@ -651,224 +492,96 @@ void Pd::unlock()
 
 Pd::~Pd()
 {
-    delete[] mOutputBuf[0];
-    delete[] mOutputBuf[1];
-    delete[] mInputBuf[0];
-    delete[] mInputBuf[1];
 }
 
-SLuint32 slSampleRate(int sampleRate)
+void Pd::play()
 {
-    int slrate = -1;
-
-    switch (sampleRate) {
-        case 8000:
-            slrate = SL_SAMPLINGRATE_8;
-            break;
-        case 11025:
-            slrate = SL_SAMPLINGRATE_11_025;
-            break;
-        case 16000:
-            slrate = SL_SAMPLINGRATE_16;
-            break;
-        case 22050:
-            slrate = SL_SAMPLINGRATE_22_05;
-            break;
-        case 24000:
-            slrate = SL_SAMPLINGRATE_24;
-            break;
-        case 32000:
-            slrate = SL_SAMPLINGRATE_32;
-            break;
-        case 44100:
-            slrate = SL_SAMPLINGRATE_44_1;
-            break;
-        case 48000:
-            slrate = SL_SAMPLINGRATE_48;
-            break;
-        case 64000:
-            slrate = SL_SAMPLINGRATE_64;
-            break;
-        case 88200:
-            slrate = SL_SAMPLINGRATE_88_2;
-            break;
-        case 96000:
-            slrate = SL_SAMPLINGRATE_96;
-            break;
-        case 192000:
-            slrate = SL_SAMPLINGRATE_192;
-            break;
-        default:
-            break;
-    }
-
-    return slrate;
+    mAudio->play();
 }
 
-void Pd::initInput(int channels, int sampleRate)
+void Pd::pause()
 {
-    SLresult result;
-    SLuint32 slrate = slSampleRate(sampleRate);
-    assert(slrate != -1);
-
-    // configure audio source
-    SLDataLocator_IODevice loc_dev = { 
-        SL_DATALOCATOR_IODEVICE, 
-        SL_IODEVICE_AUDIOINPUT, 
-        SL_DEFAULTDEVICEID_AUDIOINPUT, 
-        NULL
-    };
-    SLDataSource audioSrc = { &loc_dev, NULL };
-
-    // configure audio sink
-    int speakers = channels > 1 ? SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT : SL_SPEAKER_FRONT_CENTER;
-
-    SLDataLocator_AndroidSimpleBufferQueue loc_bq = { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2 };
-
-    SLDataFormat_PCM format_pcm = { 
-        SL_DATAFORMAT_PCM, channels, slrate,
-        SL_PCMSAMPLEFORMAT_FIXED_16, SL_PCMSAMPLEFORMAT_FIXED_16,
-        speakers, SL_BYTEORDER_LITTLEENDIAN
-    };
-    SLDataSink audioSnk = {&loc_bq, &format_pcm};
-
-    // create audio recorder (requires the RECORD_AUDIO permission)
-    const SLInterfaceID id[1] = { SL_IID_ANDROIDSIMPLEBUFFERQUEUE };
-    const SLboolean req[1]    = { SL_BOOLEAN_TRUE };
-    result = (*mEngineEngine)->CreateAudioRecorder(mEngineEngine, &bqRecorderObject, &audioSrc, &audioSnk, 1, id, req);
-    assert(SL_RESULT_SUCCESS == result);
-
-    // realize the audio recorder
-    result = (*bqRecorderObject)->Realize(bqRecorderObject, SL_BOOLEAN_FALSE);
-    assert(SL_RESULT_SUCCESS == result);
-
-    // get the record interface
-    result = (*bqRecorderObject)->GetInterface(bqRecorderObject, SL_IID_RECORD, &bqRecorderRecord);
-    assert(SL_RESULT_SUCCESS == result);
-
-    // get the buffer queue interface
-    result = (*bqRecorderObject)->GetInterface(bqRecorderObject, SL_IID_ANDROIDSIMPLEBUFFERQUEUE, &(bqRecorderBufferQueue));
-    assert(SL_RESULT_SUCCESS == result);
-
-    // register callback on the buffer queue
-    result = (*bqRecorderBufferQueue)->RegisterCallback(bqRecorderBufferQueue, bqRecorderCallback, (void*) this);
-    assert(SL_RESULT_SUCCESS == result);
-    result = (*bqRecorderRecord)->SetRecordState(bqRecorderRecord, SL_RECORDSTATE_RECORDING);
-
+    mAudio->pause();
 }
 
-void Pd::initOutput(int channels, int sampleRate)
-{
-    SLresult result;
-    SLuint32 slrate = slSampleRate(sampleRate);
-    assert(slrate != -1);
-
-    const SLInterfaceID ids[] = { SL_IID_VOLUME };
-    const SLboolean req[] = { SL_BOOLEAN_FALSE };
-    result = (*mEngineEngine)->CreateOutputMix(mEngineEngine, &mOutputMixObject, 1, ids, req);
-
-    assert(SL_RESULT_SUCCESS == result);
-
-    result = (*mOutputMixObject)->Realize(mOutputMixObject, SL_BOOLEAN_FALSE);
-    assert(SL_RESULT_SUCCESS == result);
-
-    int speakers = (channels > 1) ? SL_SPEAKER_FRONT_LEFT | SL_SPEAKER_FRONT_RIGHT : SL_SPEAKER_FRONT_CENTER;
-    SLDataLocator_AndroidSimpleBufferQueue loc_bufq = { SL_DATALOCATOR_ANDROIDSIMPLEBUFFERQUEUE, 2 };
-    SLDataFormat_PCM format_pcm = {
-        SL_DATAFORMAT_PCM, 
-        channels, 
-        slrate,
-        SL_PCMSAMPLEFORMAT_FIXED_16, 
-        SL_PCMSAMPLEFORMAT_FIXED_16,
-        speakers, 
-        SL_BYTEORDER_LITTLEENDIAN
-    };
-    SLDataSource audioSrc = {&loc_bufq, &format_pcm};
-
-    // configure audio sink
-    SLDataLocator_OutputMix loc_outmix = {SL_DATALOCATOR_OUTPUTMIX, mOutputMixObject};
-    SLDataSink audioSnk = {&loc_outmix, NULL};
-
-    // create audio player
-    const SLInterfaceID idsp[2] = {SL_IID_ANDROIDSIMPLEBUFFERQUEUE};
-    const SLboolean reqp[2] = {SL_BOOLEAN_TRUE};
-    result = (*mEngineEngine)->CreateAudioPlayer(mEngineEngine, 
-            &bqPlayerObject, &audioSrc, &audioSnk, 1, idsp, reqp);
-    assert(SL_RESULT_SUCCESS == result);
-
-    // realize the player
-    result = (*bqPlayerObject)->Realize(bqPlayerObject, SL_BOOLEAN_FALSE); 
-    assert(SL_RESULT_SUCCESS == result);
-
-    // get the play interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, SL_IID_PLAY, &bqPlayerPlay);
-    assert(SL_RESULT_SUCCESS == result);
-
-    // get the buffer queue interface
-    result = (*bqPlayerObject)->GetInterface(bqPlayerObject, 
-            SL_IID_ANDROIDSIMPLEBUFFERQUEUE, &bqPlayerBufferQueue);
-    assert(SL_RESULT_SUCCESS == result);
-
-    // register callback on the buffer queue
-    result = (*bqPlayerBufferQueue)->RegisterCallback(bqPlayerBufferQueue, bqPlayerCallback, (void*) this);
-    assert(SL_RESULT_SUCCESS == result);
-}
-
-void Pd::initSL(int inChannels, int outChannels, int sampleRate)
-{
-    CI_LOGD("OSL: initializing");
-
-    SLresult result;
-
-    result = slCreateEngine(&mEngineObject, 0, NULL, 0, NULL, NULL);
-    assert(SL_RESULT_SUCCESS == result);
-
-    result = (*mEngineObject)->Realize(mEngineObject, SL_BOOLEAN_FALSE);
-    assert(SL_RESULT_SUCCESS == result);
-
-    result = (*mEngineObject)->GetInterface(mEngineObject, SL_IID_ENGINE, &mEngineEngine);
-    assert(SL_RESULT_SUCCESS == result);
-
-    if (inChannels) {
-        initInput(inChannels, sampleRate);
-    }
-    initOutput(outChannels, sampleRate);
-
-    CI_LOGD("OSL: completed initialization");
-}
-
-//  Shut down audio system
 void Pd::close()
 {
-    // destroy buffer queue audio player object, and invalidate all associated interfaces
-    if (bqPlayerObject != NULL) {
-        (*bqPlayerObject)->Destroy(bqPlayerObject);
-        bqPlayerObject = NULL;
-        bqPlayerPlay = NULL;
-        bqPlayerBufferQueue = NULL;
-    }
-
-    // destroy output mix object, and invalidate all associated interfaces
-    if (mOutputMixObject != NULL) {
-        (*mOutputMixObject)->Destroy(mOutputMixObject);
-        mOutputMixObject = NULL;
-    }
-
-    // destroy engine object, and invalidate all associated interfaces
-    if (mEngineObject != NULL) {
-        (*mEngineObject)->Destroy(mEngineObject);
-        mEngineObject = NULL;
-        mEngineEngine = NULL;
-    }
+    mAudio->close();
 }
 
-//  Returns last error code
 AudioError_t Pd::error()
 {
+    return mAudio->error();
 }
 
-void Pd::setError(AudioError_t error)
+void  Pd::computeAudio(bool on)
 {
-    mError = error;
+    mClient->computeAudio(on);
 }
+
+void* Pd::openFile(const char* filename, const fs::path& dir)
+{
+    mClient->openFile(filename, dir);
+}
+
+void Pd::addToSearchPath(const fs::path& path)
+{
+    mClient->addToSearchPath(path);
+}
+
+int Pd::sendBang(const string& recv)
+{
+    return mClient->sendBang(recv);
+}
+
+int Pd::sendFloat(const string& recv, float x)
+{
+    return mClient->sendFloat(recv, x);
+}
+
+int Pd::sendSymbol(const string& recv, const string& sym)
+{
+    return mClient->sendSymbol(recv, sym);
+}
+
+int Pd::sendList(const string& recv, AtomList& list)
+{
+    return mClient->sendList(recv, list);
+}
+
+int Pd::sendMessage(const string& recv, const string& msg, AtomList& list)
+{
+    return mClient->sendMessage(recv, msg, list);
+}
+
+SendChain Pd::send(const string& recv)
+{
+    return mClient->send(recv);
+}
+
+MessageChain Pd::sendList(const string& recv)
+{
+    return mClient->sendList(recv);
+}
+
+MessageChain Pd::sendMessage(const string& recv, const string& msg)
+{
+    return mClient->sendMessage(recv, msg);
+}
+
+SubscribeChain Pd::subscribe(Receiver& receiver)
+{
+    return mClient->subscribe(receiver);
+}
+
+SubscribeChain Pd::unsubscribe(Receiver& receiver)
+{
+    return mClient->unsubscribe(receiver);
+}
+
+void Pd::unsubscribeAll()
+{
+    mClient->unsubscribeAll();
+}
+
 

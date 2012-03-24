@@ -45,7 +45,6 @@ class BasicAudioApp : public AppNative, public pd::Receiver {
     pp::TextureFontDrawRef mFontDraw;
 
     PdRef               mPd;
-    PdClientRef         mPdClient;
 };
 
 void BasicAudioApp::setup()
@@ -58,18 +57,16 @@ void BasicAudioApp::setup()
     copyResource("oggread~.pd_linux", internalData, true);
     copyResource("oggtest.pd", internalData, true);
 
-    mPdClient = mPd->getLockingClient();
-    //  Search for externals here
-    mPdClient->addToSearchPath(internalData);
-    mPdClient->subscribe(*this) << "timer";
-    mPdClient->openFile("oggtest.pd", internalData);
+    mPd->addToSearchPath(internalData);
+    mPd->subscribe(*this) << "timer";
+    mPd->openFile("oggtest.pd", internalData);
 
     mPd->play();
 
     //  Start the ogg file playing
     CI_LOGD("Sending start bangs");
-    mPdClient->sendBang("open");
-    mPdClient->sendBang("start");
+    mPd->sendBang("open");
+    mPd->sendBang("start");
 
     mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
 
