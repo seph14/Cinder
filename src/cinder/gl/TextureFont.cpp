@@ -375,15 +375,8 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 		vector<float> verts, texCoords;
 		vector<ColorA8u> vertColors;
 		const gl::Texture &curTex = mTextures[texIdx];
-#if defined( CINDER_GLES )
-		vector<uint16_t> indices;
-		uint16_t curIdx = 0;
-		GLenum indexType = GL_UNSIGNED_SHORT;
-#else
-		vector<uint32_t> indices;
-		uint32_t curIdx = 0;
-		GLenum indexType = GL_UNSIGNED_INT;
-#endif
+		vector<gl::index_t> indices;
+		gl::index_t curIdx = 0;
 		if( options.getPixelSnap() )
 			baseline = Vec2f( floor( baseline.x ), floor( baseline.y ) );
 			
@@ -432,7 +425,7 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 		glTexCoordPointer( 2, GL_FLOAT, 0, &texCoords[0] );
 		if( ! colors.empty() )
 			glColorPointer( 4, GL_UNSIGNED_BYTE, 0, &vertColors[0] );
-		glDrawElements( GL_TRIANGLES, indices.size(), indexType, &indices[0] );
+		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
 	}
 }
 
@@ -461,15 +454,8 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 		vector<float> verts, texCoords;
 		vector<ColorA8u> vertColors;
 		const gl::Texture &curTex = mTextures[texIdx];
-#if defined( CINDER_GLES )
-		vector<uint16_t> indices;
-		uint16_t curIdx = 0;
-		GLenum indexType = GL_UNSIGNED_SHORT;
-#else
-		vector<uint32_t> indices;
-		uint32_t curIdx = 0;
-		GLenum indexType = GL_UNSIGNED_INT;
-#endif
+		vector<gl::index_t> indices;
+		gl::index_t curIdx = 0;
 		if( options.getPixelSnap() )
 			offset = Vec2f( floor( offset.x ), floor( offset.y ) );
 
@@ -538,7 +524,7 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 		glTexCoordPointer( 2, GL_FLOAT, 0, &texCoords[0] );
 		if( ! colors.empty() )
 			glColorPointer( 4, GL_UNSIGNED_BYTE, 0, &vertColors[0] );
-		glDrawElements( GL_TRIANGLES, indices.size(), indexType, &indices[0] );
+		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
 	}
 }
 #endif

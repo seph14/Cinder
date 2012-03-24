@@ -58,7 +58,7 @@ void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
             EGL_BLUE_SIZE, 5,
             EGL_GREEN_SIZE, 6,
             EGL_RED_SIZE, 5,
-			EGL_DEPTH_SIZE, 16,
+            EGL_DEPTH_SIZE, 16,
 #if defined( CINDER_GLES2 )
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 #endif

@@ -81,7 +81,7 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 		vector<ColorA8u> vertColors;
 		const gl::Texture &curTex = mTextures[texIdx];
 		vector<gl::index_t> indices;
-		uint16_t curIdx = 0;
+        gl::index_t curIdx = 0;
 		if( options.getPixelSnap() )
 			baseline = Vec2f( floor( baseline.x ), floor( baseline.y ) );
 			
@@ -145,9 +145,7 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 
 	if( ! colors.empty() ) {
 		assert( glyphMeasures.size() == colors.size() );
-	}
-	else {
-	}
+    }
 
 	gl::SaveTextureBindState saveBindState( mTextures[0].getTarget() );
 	gl::enable( mTextures[0].getTarget() );
