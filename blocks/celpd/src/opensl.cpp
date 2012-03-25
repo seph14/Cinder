@@ -7,15 +7,10 @@ using namespace ci;
 using namespace cel;
 using namespace cel::pd;
 
-using std::string;
-using std::vector;
-using std::multimap;
-using std::make_pair;
 using std::shared_ptr;
 using std::thread;
 using std::unique_lock;
 using std::mutex;
-
 
 const int      kTicksPerBuffer = 1;
 const uint32_t kBufferSamples  = 1024;  // must be a multiple of libpd block size (ie 64)
@@ -74,8 +69,7 @@ class OpenSL : public PdAudio
   public:
     OpenSL(Pd& pd, int inChannels, int outChannels, int sampleRate) 
         : mPd(pd), mEngineObject(NULL), mOutputMixObject(NULL), bqPlayerObject(NULL), 
-          mPlayerRunning(false), mRecorderRunning(false), mOutputReady(false),
-          mOutputBufIndex(0), mInputBufIndex(0), 
+          mPlayerRunning(false), mOutputReady(false), mOutputBufIndex(0), mInputBufIndex(0), 
           mInputChannels(inChannels), mOutputChannels(outChannels)
     {
         initSL(inChannels, outChannels, sampleRate);

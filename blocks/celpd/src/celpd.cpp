@@ -1,6 +1,7 @@
 #include "celpd.h"
 #include "cinder/CinderMath.h"
 
+#include "z_libpd.h"
 #include "s_stuff.h"
 
 #include <cassert>
@@ -8,8 +9,6 @@
 #include <utility>
 
 using namespace ci;
-using namespace cel;
-using namespace cel::pd;
 
 using std::string;
 using std::vector;
@@ -24,6 +23,57 @@ const uint32_t MAXIMUM_CHANNEL_COUNT = 512;
 
 const int      kTicksPerBuffer = 1;
 const uint32_t kBufferSamples  = 1024;  // must be a multiple of libpd block size (ie 64)
+
+namespace cel { namespace pd {
+
+/**
+ * Client interface to Pd
+ */
+class PdClient
+{
+  public:
+    //  Pd interface
+    virtual void  computeAudio(bool on);
+    virtual void* openFile(const char* filename, const ci::fs::path& dir);
+
+    virtual void addToSearchPath(const ci::fs::path& path);
+
+    //! send a bang
+    virtual int sendBang(const std::string& recv);
+    //! send a float
+    virtual int sendFloat(const std::string& recv, float x);
+    //! send a symbol
+    virtual int sendSymbol(const std::string& recv, const std::string& sym);
+
+    /**
+      List aList;
+      aList << 100 << 292.99 << 'c' << "string";
+      pd.sendList("test", aList);
+     */
+    virtual int sendList(const std::string& recv, AtomList& list);
+    /**
+      Message msg;
+      msg << 1;
+      pd.sendMessage("pd", "dsp", msg);
+     */
+    virtual int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
+
+    //! pd.send("test") << Bang() << 100 << "symbol1";
+    virtual SendChain    send(const std::string& recv);
+    //! pd.sendList("test") << 100 << 292.99 << 'c' << "string";
+    virtual MessageChain sendList(const std::string& recv);
+    //! pd.sendMessage("pd", "dsp") << 1;
+    virtual MessageChain sendMessage(const std::string& recv, const std::string& msg);
+
+    //! pd.subscribe(receiver) << "pitch" << "timer";
+    virtual SubscribeChain subscribe(Receiver& receiver);
+    //! pd.unsubscribe(receiver) << "pitch" << "timer";
+    virtual SubscribeChain unsubscribe(Receiver& receiver);
+    virtual void unsubscribeAll();
+
+    virtual ~PdClient() { }
+};
+
 
 Atom::Atom(float x) : mType(ATOM_FLOAT), mFloat(x)
 { }
@@ -96,6 +146,8 @@ SubscribeChain& SubscribeChain::operator<<(const std::string& dest)
     else if (mMode == SubscribeChain::UNSUBSCRIBE) {
         mDispatcher.unsubscribe(mReceiver, dest);
     }
+
+    return *this;
 }
 
 static void cel_printhook(const char* msg) 
@@ -188,7 +240,7 @@ static void cel_midibyte(int port, int byte)
 
 void Dispatcher::onPrint(const std::string& msg)
 {
-    CI_LOGD("PD: %s", msg.c_str());
+    // CI_LOGD("PD: %s", msg.c_str());
 }
 
 void Dispatcher::onBang(const std::string& dest)
@@ -354,21 +406,21 @@ PdRef Pd::init(int inChannels, int outChannels, int sampleRate, bool autoLock)
 	
 	libpd_midibytehook = (t_libpd_midibytehook) cel_midibyte;
 	
-    CI_LOGD("PD: libpd_init");
+    // CI_LOGD("PD: libpd_init");
     libpd_init();
-    sys_debuglevel = 4;
-    sys_verbose = 1;
+    //sys_debuglevel = 4;
+    //sys_verbose = 1;
 
-    CI_LOGD("PD: Create dispatcher");
+    // CI_LOGD("PD: Create dispatcher");
     sDispatcher = DispatcherRef(new Dispatcher());
 
-    CI_LOGD("PD: Create PD");
+    // CI_LOGD("PD: Create PD");
     PdRef pd = PdRef(new Pd(autoLock));
-    CI_LOGD("PD: Create Audio");
+    // CI_LOGD("PD: Create Audio");
     pd->mAudio = PdAudio::create(*pd, inChannels, outChannels, sampleRate);
-    CI_LOGD("PD: Set compute audio to true");
+    // CI_LOGD("PD: Set compute audio to true");
     pd->computeAudio(true);
-    CI_LOGD("PD: Return PD");
+    // CI_LOGD("PD: Return PD");
     return pd;
 }
 
@@ -401,7 +453,7 @@ void* PdClient::openFile(const char* filename, const fs::path& dir)
 void PdClient::addToSearchPath(const fs::path& path)
 {
     if (!path.empty()) {
-        CI_LOGD("OSL: Adding to PD search path: %s", path.string().c_str());
+        // CI_LOGD("OSL: Adding to PD search path: %s", path.string().c_str());
         libpd_add_to_search_path(path.string().c_str());
     }
 }
@@ -521,7 +573,7 @@ void  Pd::computeAudio(bool on)
 
 void* Pd::openFile(const char* filename, const fs::path& dir)
 {
-    mClient->openFile(filename, dir);
+    return mClient->openFile(filename, dir);
 }
 
 void Pd::addToSearchPath(const fs::path& path)
@@ -584,4 +636,4 @@ void Pd::unsubscribeAll()
     mClient->unsubscribeAll();
 }
 
-
+} } // namespace cel::pd

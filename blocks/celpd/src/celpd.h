@@ -5,17 +5,13 @@
 #include "cinder/Thread.h"
 #include "cinder/Filesystem.h"
 
-#include <SLES/OpenSLES.h>
-#include <SLES/OpenSLES_Android.h>
-
-#include "z_libpd.h"
-
 namespace cel { namespace pd {
 
 class Pd;
 typedef std::shared_ptr<Pd> PdRef;
 
 class PdClient;
+typedef std::shared_ptr<PdClient> PdClientRef;
 
 class Bang { };
 
@@ -121,6 +117,7 @@ class MessageChain : public Chain
     AtomList mList;
 };
 
+//  For chaining subscribe receiver symbols
 class SubscribeChain : public Chain
 {
   public:
@@ -140,7 +137,9 @@ class SubscribeChain : public Chain
 
 
 enum AudioError_t {
-    NONE,
+    ERROR_NONE,
+    ERROR_INIT_AUDIO,
+    ERROR_OPEN_AUDIO,
 };
 
 class Patch
@@ -168,55 +167,6 @@ class PdAudio
     //  Factory method implemented by platform backend
     static PdAudioRef create(Pd& pd, int inChannels, int outChannels, int sampleRate);
 };
-
-/**
- * Client interface to Pd
- */
-class PdClient
-{
-  public:
-    //  Pd interface
-    virtual void  computeAudio(bool on);
-    virtual void* openFile(const char* filename, const ci::fs::path& dir);
-
-    virtual void addToSearchPath(const ci::fs::path& path);
-
-    //! send a bang
-    virtual int sendBang(const std::string& recv);
-    //! send a float
-    virtual int sendFloat(const std::string& recv, float x);
-    //! send a symbol
-    virtual int sendSymbol(const std::string& recv, const std::string& sym);
-
-    /**
-      List aList;
-      aList << 100 << 292.99 << 'c' << "string";
-      pd.sendList("test", aList);
-     */
-    virtual int sendList(const std::string& recv, AtomList& list);
-    /**
-      Message msg;
-      msg << 1;
-      pd.sendMessage("pd", "dsp", msg);
-     */
-    virtual int sendMessage(const std::string& recv, const std::string& msg, AtomList& list);
-
-    //! pd.send("test") << Bang() << 100 << "symbol1";
-    virtual SendChain    send(const std::string& recv);
-    //! pd.sendList("test") << 100 << 292.99 << 'c' << "string";
-    virtual MessageChain sendList(const std::string& recv);
-    //! pd.sendMessage("pd", "dsp") << 1;
-    virtual MessageChain sendMessage(const std::string& recv, const std::string& msg);
-
-    //! pd.subscribe(receiver) << "pitch" << "timer";
-    virtual SubscribeChain subscribe(Receiver& receiver);
-    //! pd.unsubscribe(receiver) << "pitch" << "timer";
-    virtual SubscribeChain unsubscribe(Receiver& receiver);
-    virtual void unsubscribeAll();
-
-    virtual ~PdClient() { }
-};
-typedef std::shared_ptr<PdClient> PdClientRef;
 
 class Pd // : public PdClient
 {
