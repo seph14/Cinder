@@ -13,7 +13,7 @@ const int      kTicksPerBuffer = 1;
 const uint32_t kBufferSamples  = 512;  // must be a multiple of libpd block size (ie 64)
 #define PA_SAMPLE_TYPE      paFloat32
 
-static int patestCallback( const void *inputBuffer, void *outputBuffer,
+static int pdCallback( const void *inputBuffer, void *outputBuffer,
                            unsigned long framesPerBuffer,
                            const PaStreamCallbackTimeInfo* timeInfo,
                            PaStreamCallbackFlags statusFlags,
@@ -75,7 +75,7 @@ class PortAudio : public PdAudio
                 sampleRate, 
                 kBufferSamples,
                 0,
-                patestCallback,
+                pdCallback,
                 &pd );
 
         if( err != paNoError )  {
