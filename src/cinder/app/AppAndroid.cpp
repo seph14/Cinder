@@ -72,8 +72,8 @@ static void engine_draw_frame(struct engine* engine) {
         return;
     }
 
-    // XXX not necessary?
-    // renderer.startDraw();
+    // XXX startDraw not necessary?
+    renderer.startDraw();
     app.privateUpdate__();
     app.privateDraw__();
     renderer.finishDraw();
