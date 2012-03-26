@@ -40,13 +40,9 @@ void TextureFontDraw::drawStringWrapped( TextureFont& texFont, const string &str
 	TextBox tbox = TextBox().font( texFont.getFont() ).text( str ).size( fitRect.getWidth(), fitRect.getHeight() ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
 #if defined( CINDER_COCOA )
-	texFont.drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
-#else
-	// texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
-
-	// Clipping affects italicized fonts on Android, so use baseline
-	// but have to compensate for rectangle upper border/ascent (?)
-	texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect.getUpperLeft() + offset + Vec2f(0, texFont.getFont().getAscent() ), options );
+	texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect.getUpperLeft() + offset, options );
+#elif defined( CINDER_ANDROID )
+	texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
 #endif
 }
 #endif

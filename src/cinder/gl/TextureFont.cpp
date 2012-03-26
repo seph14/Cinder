@@ -366,8 +366,10 @@ void TextureFont::drawGlyphs( const vector<pair<uint16_t,Vec2f> > &glyphMeasures
 	Vec2f baseline = baselineIn;
 
 	glEnableClientState( GL_VERTEX_ARRAY );
-	if( ! colors.empty() )
+	if ( ! colors.empty() )
 		glEnableClientState( GL_COLOR_ARRAY );
+	else
+		glDisableClientState( GL_COLOR_ARRAY );
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 
 	const float scale = options.getScale();
@@ -448,6 +450,8 @@ void TextureFont::drawGlyphs( const std::vector<std::pair<uint16_t,Vec2f> > &gly
 	glEnableClientState( GL_VERTEX_ARRAY );
 	if( ! colors.empty() )
 		glEnableClientState( GL_COLOR_ARRAY );
+	else
+		glDisableClientState( GL_COLOR_ARRAY );
 	glEnableClientState( GL_TEXTURE_COORD_ARRAY );
 
 	for( size_t texIdx = 0; texIdx < mTextures.size(); ++texIdx ) {
@@ -719,7 +723,11 @@ void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRec
 {
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( fitRect.getWidth(), fitRect.getHeight() ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
+#if defined( CINDER_COCOA )
 	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
+#elif defined( CINDER_ANDROID )
+	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
+#endif
 }
 #endif  // defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 
