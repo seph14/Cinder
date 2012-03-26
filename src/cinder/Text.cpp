@@ -24,6 +24,7 @@
 #include "cinder/ip/Fill.h"
 #include "cinder/ip/Premultiply.h"
 #include "cinder/Utilities.h"
+#include "cinder/CinderMath.h"
 
 #if defined( CINDER_COCOA )
 	#include "cinder/cocoa/CinderCocoa.h"
@@ -793,7 +794,11 @@ size_t TextBox::linebreak(const Font::Glyph* text, const Font::Glyph* stop, floa
 
         w += mFont.getKerning(uni, *prevText) + mFont.getAdvance(*prevText).x;
 
-        if ((!eos && w + mFont.getAdvance(uni).x > limit) || (eos && w > limit)) {
+        Font::GlyphMetrics& metrics = mFont.getGlyphMetrics(uni);
+        // float maxAdvance = metrics.mAdvance.x;
+        float maxAdvance = math<float>::max(metrics.mAdvance.x, metrics.mBounds.getWidth());
+
+        if ((!eos && w + maxAdvance > limit) || (eos && w > limit)) {
             if (currWS) {
                 // eat the rest of the whitespace
                 while (text < stop && *text == ws)

@@ -719,15 +719,7 @@ void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRec
 {
 	TextBox tbox = TextBox().font( mFont ).text( str ).size( fitRect.getWidth(), fitRect.getHeight() ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
-#if defined( CINDER_COCOA )
 	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
-#else
-	// drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
-
-	// Clipping affects italicized fonts on Android, so use baseline
-	// but have to compensate for rectangle upper border/ascent (?)
-	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset + Vec2f(0, mFont.getAscent() ), options );
-#endif
 }
 #endif  // defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 
