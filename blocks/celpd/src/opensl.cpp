@@ -2,6 +2,7 @@
 
 #include <SLES/OpenSLES.h>
 #include <SLES/OpenSLES_Android.h>
+#include "z_libpd.h"
 
 using namespace ci;
 using namespace cel;

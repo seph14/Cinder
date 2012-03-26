@@ -5,8 +5,7 @@ LOCAL_MODULE     := BasicAudio
 
 CELAUDIO_SRC = ../../../../src
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../../src $(LOCAL_PATH)/../../../../src \
-	$(LIBPD_PATH)/libpd_wrapper $(LIBPD_PATH)/pure-data/src
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../../src $(LOCAL_PATH)/../../../../src
 LOCAL_SRC_FILES := ../../src/basicAudioApp.cpp \
 	              $(CELAUDIO_SRC)/celpd.cpp $(CELAUDIO_SRC)/opensl.cpp
 
