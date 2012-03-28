@@ -38,6 +38,7 @@ CINDER_SRC   = ../../../src/cinder
 TESS_SRC     = ../../../src/libtess2
 STBIMAGE_SRC = ../../../src/stb_image
 UTF8_CPP_SRC = ../../../src/utf8-cpp/source
+JSONCPP_SRC  = ../../../src/jsoncpp
 
 LOCAL_MODULE 	 := cinder
 
@@ -86,6 +87,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/Font.cpp \
 					$(CINDER_SRC)/Frustum.cpp \
 					$(CINDER_SRC)/ImageIo.cpp \
+					$(CINDER_SRC)/Json.cpp \
 					$(CINDER_SRC)/Matrix.cpp \
 					$(CINDER_SRC)/Path2d.cpp \
 					$(CINDER_SRC)/Perlin.cpp \
@@ -116,7 +118,10 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(TESS_SRC)/mesh.c \
 					$(TESS_SRC)/priorityq.c \
 					$(TESS_SRC)/sweep.c \
-					$(TESS_SRC)/tess.c
+					$(TESS_SRC)/tess.c \
+					$(JSONCPP_SRC)/json_reader.cpp \
+					$(JSONCPP_SRC)/json_value.cpp \
+					$(JSONCPP_SRC)/json_writer.cpp
 
 ifdef USE_GLES2
 
