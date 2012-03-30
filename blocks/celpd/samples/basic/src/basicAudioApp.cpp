@@ -11,6 +11,12 @@
 #include "propipe/TextureFont.h"
 #include "propipe/Matrices.h"
 
+#if defined( CINDER_ANDROID )
+  #define LIBPD_DLL "/data/data/com.expandingbrain.celaudio/lib/libpdnative.so"
+#else
+  #define LIBPD_DLL "libpd.dll"
+#endif
+
 using namespace cel;
 using namespace cel::pd;
 using namespace ci;
@@ -51,7 +57,12 @@ void BasicAudioApp::setup()
 {
     CI_LOGD("OSL: ACTIVITY SETUP");
 
-    mPd = Pd::init(0, 2, 44100);
+    mPd = Pd::create(true, LIBPD_DLL);
+    if (!mPd) {
+        CI_LOGE("Error initializing PD");
+    }
+
+    mPd->init(0, 2, 44100);
 
     fs::path internalData = getInternalDataPath(); 
     copyResource("oggread~.pd_linux", internalData, true);

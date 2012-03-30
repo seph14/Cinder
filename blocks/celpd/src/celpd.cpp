@@ -1,8 +1,12 @@
 #include "celpd.h"
 #include "cinder/CinderMath.h"
 
-#include "z_libpd.h"
-#include "s_stuff.h"
+#if defined( LIBPD_DYNAMIC_LOAD )
+  #include "libpd_dl.h"
+  #include "m_pd.h"
+#else
+  #include "z_libpd.h"
+#endif
 
 #include <cassert>
 #include <map>
@@ -387,7 +391,28 @@ public:
 
 DispatcherRef Pd::sDispatcher;
 
-PdRef Pd::init(int inChannels, int outChannels, int sampleRate, bool autoLock)
+PdRef Pd::create(bool autoLock, const string& dllName)
+{
+    void* hDLL = NULL;
+
+#if defined( LIBPD_DYNAMIC_LOAD )
+    // int err = libpd_dll_load("libpd.dll", &hDLL);
+    // int err = libpd_dll_load("/data/data/com.expandingbrain.celaudio/lib/libpdnative.so", &hDLL);
+    CI_LOGD("Trying to load PD dll from %s", dllName.c_str());
+    int err = libpd_dll_load(dllName.c_str(), &hDLL);
+    CI_LOGD("PD dll link errors: %d", err);
+#endif
+
+    PdRef pd;
+    //  XXX one link error on Android to resolve
+    if (err == 0) {
+        pd = PdRef(new Pd(autoLock));
+        pd->mDLL = hDLL;
+    }
+    return pd;
+}
+
+void Pd::init(int inChannels, int outChannels, int sampleRate)
 {
     //  Initialize PD
     libpd_printhook   = (t_libpd_printhook)   cel_printhook;
@@ -406,7 +431,6 @@ PdRef Pd::init(int inChannels, int outChannels, int sampleRate, bool autoLock)
 	
 	libpd_midibytehook = (t_libpd_midibytehook) cel_midibyte;
 	
-    // CI_LOGD("PD: libpd_init");
     libpd_init();
     //sys_debuglevel = 4;
     //sys_verbose = 1;
@@ -415,13 +439,11 @@ PdRef Pd::init(int inChannels, int outChannels, int sampleRate, bool autoLock)
     sDispatcher = DispatcherRef(new Dispatcher());
 
     // CI_LOGD("PD: Create PD");
-    PdRef pd = PdRef(new Pd(autoLock));
     // CI_LOGD("PD: Create Audio");
-    pd->mAudio = PdAudio::create(*pd, inChannels, outChannels, sampleRate);
+    mAudio = PdAudio::create(*this, inChannels, outChannels, sampleRate);
     // CI_LOGD("PD: Set compute audio to true");
-    pd->computeAudio(true);
+    computeAudio(true);
     // CI_LOGD("PD: Return PD");
-    return pd;
 }
 
 Pd::Pd(bool autoLock)

@@ -5,6 +5,10 @@
 #include "cinder/Thread.h"
 #include "cinder/Filesystem.h"
 
+#if defined( CINDER_MSW ) || defined( CINDER_ANDROID )
+#define LIBPD_DYNAMIC_LOAD
+#endif
+
 namespace cel { namespace pd {
 
 class Pd;
@@ -168,11 +172,14 @@ class PdAudio
     static PdAudioRef create(Pd& pd, int inChannels, int outChannels, int sampleRate);
 };
 
-class Pd // : public PdClient
+class Pd 
 {
   public:
-    //!  Create and initialize the audio system
-    static PdRef init(int inChannels, int outChannels, int sampleRate, bool autoLock=true);
+    //!  Create the Pd audio system
+    static PdRef create(bool autoLock=true, const std::string& dllName = std::string());
+
+    //!  Initialize 
+    void init(int inChannels, int outChannels, int sampleRate);
 
     PdAudio*  audio();
     PdClient* client();
@@ -218,6 +225,7 @@ class Pd // : public PdClient
   protected:
     PdAudioRef  mAudio;
     PdClientRef mClient;
+    void*       mDLL;
 
     std::mutex  mPdLock;
 

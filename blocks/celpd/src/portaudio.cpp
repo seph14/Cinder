@@ -1,6 +1,12 @@
 #include "celpd.h"
 #include "portaudio.h"
-#include "z_libpd.h"
+
+#if defined( LIBPD_DYNAMIC_LOAD )
+  #include "libpd_dl.h"
+  #include "m_pd.h"
+#else
+  #include "z_libpd.h"
+#endif
 
 using namespace ci;
 using namespace cel;
