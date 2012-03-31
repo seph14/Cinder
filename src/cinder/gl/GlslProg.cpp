@@ -46,12 +46,8 @@ GlslProg::Obj::~Obj()
 
 //////////////////////////////////////////////////////////////////////////
 // GlslProg
-#if defined( CINDER_GLES )
-GlslProg::GlslProg( DataSourceRef vertexShader, DataSourceRef fragmentShader )
-#else
 GlslProg::GlslProg( DataSourceRef vertexShader, DataSourceRef fragmentShader, DataSourceRef geometryShader,
-	GLint geometryInputType, GLint geometryOutputType, GLint geometryOutputVertices)
-#endif
+	GLint geometryInputType, GLint geometryOutputType, GLint geometryOutputVertices, bool linkProg )
 	: mObj( shared_ptr<Obj>( new Obj ) )
 {
 	mObj->mHandle = glCreateProgram();
@@ -72,15 +68,12 @@ GlslProg::GlslProg( DataSourceRef vertexShader, DataSourceRef fragmentShader, Da
     }
 #endif
     
-	link();
+	if ( linkProg )
+		link();
 }
 
-#if defined( CINDER_GLES )
-GlslProg::GlslProg( const char *vertexShader, const char *fragmentShader )
-#else
 GlslProg::GlslProg( const char *vertexShader, const char *fragmentShader, const char *geometryShader,
-	GLint geometryInputType, GLint geometryOutputType, GLint geometryOutputVertices )
-#endif
+	GLint geometryInputType, GLint geometryOutputType, GLint geometryOutputVertices, bool linkProg )
 	: mObj( shared_ptr<Obj>( new Obj ) )
 {
 	mObj->mHandle = glCreateProgram();
@@ -101,7 +94,8 @@ GlslProg::GlslProg( const char *vertexShader, const char *fragmentShader, const 
     }
 #endif
     
-	link();
+	if ( linkProg )
+		link();
 }
 
 void GlslProg::loadShader( Buffer shaderSourceBuffer, GLint shaderType )
@@ -275,6 +269,10 @@ GLint GlslProg::getAttribLocation( const std::string &name )
 	return glGetAttribLocation( mObj->mHandle, name.c_str() );
 }
 
+void GlslProg::bindAttribLocation( int index, const std::string &name )
+{
+	glBindAttribLocation( mObj->mHandle, index, name.c_str() ); 
+}
 //////////////////////////////////////////////////////////////////////////
 // GlslProgCompileExc
 GlslProgCompileExc::GlslProgCompileExc( const std::string &log, GLint aShaderType ) throw()
