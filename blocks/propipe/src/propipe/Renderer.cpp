@@ -26,7 +26,8 @@ public:
 			mColorAttrib    = mShader.getAttribLocation("aColor");
 		}
 		catch (GlslProgCompileExc& ex) {
-			CI_LOGE("Error compiling: %s", ex.what());
+			throw RendererException();
+			// CI_LOGE("Error compiling: %s", ex.what());
 		}
 	}
 
