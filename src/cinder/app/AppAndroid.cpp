@@ -84,8 +84,6 @@ static void engine_draw_frame(struct engine* engine) {
         return;
     }
 
-    updateWindow(engine);
-
     // XXX startDraw not necessary?
     renderer.startDraw();
     app.privateUpdate__();
@@ -162,6 +160,7 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
     else if (eventType == AINPUT_EVENT_TYPE_KEY) {
         int32_t actionCode = AKeyEvent_getAction(event);
         int32_t keyCode = AKeyEvent_getKeyCode(event);
+#if 0
         if (actionCode == AKEY_EVENT_ACTION_DOWN && keyCode == AKEYCODE_MENU) {
             //  DEBUGGING - renew context when menu key is pressed
             CI_LOGW("XXX renew context on keypress");
@@ -170,6 +169,7 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             engine->cinderRenderer->setup(engine->cinderApp, engine->androidApp, 
                     engine->cinderApp->mWidth, engine->cinderApp->mHeight);
             engine->cinderApp->privateResume__(true);
+#endif
         }
     }
 
@@ -252,7 +252,7 @@ void log_engine_state(struct engine* engine) {
         "Stop",
         "Destroy"
     };
-    CI_LOGW("engine activity state: %s", activityStates[engine->activityState]);
+    CI_LOGD("Engine activity state: %s", activityStates[engine->activityState]);
 }
 /**
  * Process the next main command.
@@ -263,19 +263,19 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
-            CI_LOGW("XXX APP_CMD_SAVE_STATE");
+            CI_LOGD("XXX APP_CMD_SAVE_STATE");
             log_engine_state(engine);
 			cinderApp->saveState(engine->androidApp->savedState, engine->androidApp->savedStateSize);
             break;
 
         case APP_CMD_INIT_WINDOW:
-            CI_LOGW("XXX APP_CMD_INIT_WINDOW");
+            CI_LOGD("XXX APP_CMD_INIT_WINDOW");
             log_engine_state(engine);
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
                 engine->orientation = cinderApp->orientationFromConfig();
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, cinderApp->mWidth, cinderApp->mHeight);
-                cinderApp->privateResize__(ci::Vec2i(cinderApp->getWindowWidth(), cinderApp->getWindowHeight()));
+                updateWindow(engine);
                 cinderApp->privatePrepareSettings__();
                 engine->animating = 0;
 
@@ -287,7 +287,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_TERM_WINDOW:
-            CI_LOGW("XXX APP_CMD_TERM_WINDOW");
+            CI_LOGD("XXX APP_CMD_TERM_WINDOW");
             log_engine_state(engine);
             // The window is being hidden or closed, clean it up.
             engine->animating = 0;
@@ -295,7 +295,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_GAINED_FOCUS:
-            CI_LOGW("XXX APP_CMD_GAINED_FOCUS");
+            CI_LOGD("XXX APP_CMD_GAINED_FOCUS");
             log_engine_state(engine);
 
             // Start monitoring the accelerometer.
@@ -305,11 +305,11 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
             if (!engine->setupCompleted) {
                 if (engine->resumed) {
-                    CI_LOGW("XXXXXX RESUMING privateResume__ renew context %s", engine->renewContext ? "true" : "false");
+                    CI_LOGD("XXXXXX RESUMING privateResume__ renew context %s", engine->renewContext ? "true" : "false");
                     cinderApp->privateResume__(engine->renewContext);
                 }
                 else {
-                    CI_LOGW("XXXXXX SETUP privateSetup__");
+                    CI_LOGD("XXXXXX SETUP privateSetup__");
                     cinderApp->privateSetup__();
                 }
                 engine->setupCompleted = true;
@@ -323,7 +323,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_LOST_FOCUS:
-            CI_LOGW("XXX APP_CMD_LOST_FOCUS");
+            CI_LOGD("XXX APP_CMD_LOST_FOCUS");
             log_engine_state(engine);
             //  Disable accelerometer (saves power)
             engine_disable_accelerometer(engine);
@@ -332,19 +332,19 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_RESUME:
-            CI_LOGW("XXX APP_CMD_RESUME");
+            CI_LOGD("XXX APP_CMD_RESUME");
             engine->activityState = ACTIVITY_RESUME;
             log_engine_state(engine);
             break;
         
         case APP_CMD_START:
-            CI_LOGW("XXX APP_CMD_START");
+            CI_LOGD("XXX APP_CMD_START");
             engine->activityState = ACTIVITY_START;
             log_engine_state(engine);
             break;
 
         case APP_CMD_PAUSE:
-            CI_LOGW("XXX APP_CMD_PAUSE");
+            CI_LOGD("XXX APP_CMD_PAUSE");
             engine->activityState = ACTIVITY_PAUSE;
             cinderApp->privatePause__();
             engine->animating = 0;
@@ -353,14 +353,14 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_STOP:
-            CI_LOGW("XXX APP_CMD_STOP");
+            CI_LOGD("XXX APP_CMD_STOP");
             engine->activityState = ACTIVITY_STOP;
             log_engine_state(engine);
             break;
 
         case APP_CMD_DESTROY:
             //  app has been destroyed, will crash if we attempt to do anything else
-            CI_LOGW("XXX APP_CMD_DESTROY");
+            CI_LOGD("XXX APP_CMD_DESTROY");
             engine->activityState = ACTIVITY_DESTROY;
             cinderApp->privateDestroy__();
             log_engine_state(engine);
@@ -380,7 +380,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 int32_t winWidth = ANativeWindow_getWidth(window);
                 int32_t winHeight = ANativeWindow_getHeight(window);
                 engine->orientation = newOrient;
-                CI_LOGW("Config change: resizing to (%d, %d) win (%d, %d) orient %d", 
+                CI_LOGD("Config change: resizing to (%d, %d) win (%d, %d) orient %d", 
                         width, height, winWidth, winHeight, newOrient);
                 cinderApp->setWindowSize(width, height);
                 cinderApp->privateResize__(ci::Vec2i(width, height));
