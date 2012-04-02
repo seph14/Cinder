@@ -227,6 +227,10 @@ DataSourceAssetRef App::loadResource( const string &resourcePath )
 
 void App::prepareAssetLoading()
 {
+#if defined( CINDER_ANDROID )
+	//  Only use explicitly added asset paths on Android
+	mAssetDirectoriesInitialized = true;
+#else
 	if( ! mAssetDirectoriesInitialized ) {
 		fs::path appPath = getAppPath();
 
@@ -264,6 +268,7 @@ void App::prepareAssetLoading()
 				
 		mAssetDirectoriesInitialized = true;
 	}
+#endif
 }
 
 // locate the asset at 'relativePath'
@@ -295,7 +300,6 @@ fs::path App::getAssetPath( const fs::path &relativePath )
 
 void App::addAssetDirectory( const fs::path &dirPath )
 {
-	
 	mAssetDirectories.push_back( dirPath );
 }
 

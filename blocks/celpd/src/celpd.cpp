@@ -396,15 +396,10 @@ PdRef Pd::create(bool autoLock, const string& dllName)
     void* hDLL = NULL;
 
 #if defined( LIBPD_DYNAMIC_LOAD )
-    // int err = libpd_dll_load("libpd.dll", &hDLL);
-    // int err = libpd_dll_load("/data/data/com.expandingbrain.celaudio/lib/libpdnative.so", &hDLL);
-    CI_LOGD("Trying to load PD dll from %s", dllName.c_str());
     int err = libpd_dll_load(dllName.c_str(), &hDLL);
-    CI_LOGD("PD dll link errors: %d", err);
 #endif
 
     PdRef pd;
-    //  XXX one link error on Android to resolve
     if (err == 0) {
         pd = PdRef(new Pd(autoLock));
         pd->mDLL = hDLL;

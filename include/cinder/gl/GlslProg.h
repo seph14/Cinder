@@ -41,15 +41,11 @@ namespace cinder { namespace gl {
 class GlslProg {
   public: 
 	GlslProg() {}
-#if defined( CINDER_GLES )
-	GlslProg( DataSourceRef vertexShader, DataSourceRef fragmentShader = DataSourceRef() );
-	GlslProg( const char *vertexShader, const char *fragmentShader = 0 );
-#else
 	GlslProg( DataSourceRef vertexShader, DataSourceRef fragmentShader = DataSourceRef(), DataSourceRef geometryShader = DataSourceRef(), 
-        GLint geometryInputType = GL_POINTS, GLint geometryOutputType = GL_TRIANGLES, GLint geometryOutputVertices = 0);
+        GLint geometryInputType = GL_POINTS, GLint geometryOutputType = GL_TRIANGLES, GLint geometryOutputVertices = 0, bool linkProg = true );
     
-	GlslProg( const char *vertexShader, const char *fragmentShader = 0, const char *geometryShader = 0, GLint geometryInputType = GL_POINTS, GLint geometryOutputType = GL_TRIANGLES, GLint geometryOutputVertices = 0);
-#endif
+	GlslProg( const char *vertexShader, const char *fragmentShader = 0, const char *geometryShader = 0, GLint geometryInputType = GL_POINTS, GLint geometryOutputType = GL_TRIANGLES, GLint geometryOutputVertices = 0,
+			  bool linkProg = true );
 
 	void			bind() const;
 	static void		unbind();
@@ -76,13 +72,15 @@ class GlslProg {
 	GLint	getUniformLocation( const std::string &name );
 	GLint	getAttribLocation( const std::string &name );
 
+	void	bindAttribLocation( int index, const std::string &name );
 	std::string		getShaderLog( GLuint handle ) const;
+
+	void			link();
 
   protected:
 	void			loadShader( Buffer shaderSourceBuffer, GLint shaderType );
 	void			loadShader( const char *shaderSource, GLint shaderType );
 	void			attachShaders();
-	void			link();
 
 	struct Obj {
 		Obj() : mHandle( 0 ) {}

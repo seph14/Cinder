@@ -52,10 +52,12 @@ TextureFont::TextureFont( const Font &font, const string &supportedChars, const 
 {
 }
 
+#if defined( CINDER_ANDROID)
 TextureFont::TextureFont( const Font &font, const string &supportedChars, Atlas &atlas )
 	: gl::TextureFont( font, supportedChars, atlas )
 {
 }
+#endif
 
 void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const vector<ColorA8u> &colors )
 {
@@ -229,10 +231,12 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 	renderer.unbindTexture();
 }
 
+#if defined( CINDER_ANDROID)
 TextureFontRef TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )
 {
 	return TextureFontRef( new TextureFont( font, supportedChars, atlas ) ); 
 }
+#endif
 
 TextureFontRef TextureFont::create( const Font &font, const Format &format, const std::string &supportedChars )
 {

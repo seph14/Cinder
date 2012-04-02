@@ -18,13 +18,16 @@ public:
 		mPositionDim(3), mPositionArray(0), mTexCoordArray(0), mColorArray(0), mNormalArray(0)
 	{
 		try {
-			mShader  = gl::GlslProg(vert, frag);
+			mShader  = gl::GlslProg(vert, frag, 0, 0, 0, 0, false);
+			mShader.bindAttribLocation(0, "aPosition");
+			mShader.link();
 			mPositionAttrib = mShader.getAttribLocation("aPosition");
 			mTexCoordAttrib = mShader.getAttribLocation("aTexCoord");
-			mColorAttrib	= mShader.getAttribLocation("aColor");
+			mColorAttrib    = mShader.getAttribLocation("aColor");
 		}
 		catch (GlslProgCompileExc& ex) {
-			CI_LOGE("Error compiling: %s", ex.what());
+			throw RendererException();
+			// CI_LOGE("Error compiling: %s", ex.what());
 		}
 	}
 
