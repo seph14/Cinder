@@ -62,6 +62,18 @@ struct engine {
     bool resumed;
 };
 
+static void updateWindow(struct engine* engine)
+{
+    if (engine->androidApp->window) {
+        int32_t winWidth = ANativeWindow_getWidth(engine->androidApp->window);
+        int32_t winHeight = ANativeWindow_getHeight(engine->androidApp->window);
+        if ( winWidth != engine->cinderApp->mWidth || winHeight != engine->cinderApp->mHeight ) {
+            engine->cinderApp->setWindowSize(winWidth, winHeight);
+            engine->cinderApp->privateResize__(ci::Vec2i(winWidth, winHeight));
+        }
+    }
+}
+ 
 static void engine_draw_frame(struct engine* engine) {
     ci::app::AppAndroid& app      = *(engine->cinderApp);
     ci::app::Renderer&   renderer = *(engine->cinderRenderer);
@@ -71,6 +83,8 @@ static void engine_draw_frame(struct engine* engine) {
         // No display.
         return;
     }
+
+    updateWindow(engine);
 
     // XXX startDraw not necessary?
     renderer.startDraw();
