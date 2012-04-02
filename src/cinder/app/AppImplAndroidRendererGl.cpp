@@ -50,7 +50,7 @@ AppImplAndroidRendererGl::AppImplAndroidRendererGl( App *aApp, struct android_ap
 {
 }
 
-void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
+void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
 {
     //  Create GL context and surface
     const EGLint attribs[] = {
@@ -103,7 +103,7 @@ void AppImplAndroidRendererGl::initialize( int32_t& width, int32_t& height )
     eglQuerySurface(mDisplay, mSurface, EGL_WIDTH, &w);
     eglQuerySurface(mDisplay, mSurface, EGL_HEIGHT, &h);
 
-    width = w; height = h;
+    *width = w; *height = h;
 
     // Initialize GL state
     glDisable(GL_DITHER);

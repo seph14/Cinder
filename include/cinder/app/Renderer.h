@@ -91,7 +91,7 @@ class Renderer {
 	virtual HWND				getHwnd() = 0;
 	virtual HDC					getDc() { throw; } // the default behavior is failure
 #elif defined( CINDER_ANDROID )
-	virtual void setup( class App *aApp, struct android_app *androidApp, int32_t& width, int32_t& height ) = 0;
+	virtual void setup( class App *aApp, struct android_app *androidApp, int32_t* width, int32_t* height ) = 0;
     virtual void teardown() {}
     virtual bool isValidDisplay() = 0;
 #endif
@@ -130,7 +130,7 @@ class RendererGl : public Renderer {
 	virtual void	prepareToggleFullScreen();
 	virtual void	finishToggleFullScreen();
 #elif defined( CINDER_ANDROID )
-    virtual void    setup( App *aApp, struct android_app *androidApp, int32_t& width, int32_t& height );
+    virtual void    setup( App *aApp, struct android_app *androidApp, int32_t* width, int32_t* height );
     virtual void    teardown();
     virtual bool    isValidDisplay();
 #endif

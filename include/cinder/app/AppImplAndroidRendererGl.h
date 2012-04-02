@@ -17,7 +17,7 @@ class AppImplAndroidRendererGl
  public:
 	AppImplAndroidRendererGl( App *aApp, struct android_app *androidApp );
 
-    void initialize( int32_t& width, int32_t& height );
+    void initialize( int32_t* width, int32_t* height );
     void makeCurrentContext();
     void swapBuffers();
     void defaultResize();

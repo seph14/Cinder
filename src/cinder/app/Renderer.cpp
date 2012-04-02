@@ -251,16 +251,16 @@ RendererGl::~RendererGl()
     mImpl = 0;
 }
 
-void RendererGl::setup( App *aApp, struct android_app *androidApp, int32_t& width, int32_t& height )
+void RendererGl::setup( App *aApp, struct android_app *androidApp, int32_t* width, int32_t* height )
 {
     CI_LOGW("RendererGl::setup()");
-	mApp = aApp;
+    mApp = aApp;
 
     if ( ! mImpl )
         mImpl = new AppImplAndroidRendererGl(mApp, androidApp);
 
     CI_LOGW("Initializing with ANativeWindow %p", androidApp->window);
-	mImpl->initialize( width, height );
+    mImpl->initialize( width, height );
 }
 
 void RendererGl::teardown()

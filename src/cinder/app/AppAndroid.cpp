@@ -169,8 +169,8 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             engine->cinderRenderer->setup(engine->cinderApp, engine->androidApp, 
                     engine->cinderApp->mWidth, engine->cinderApp->mHeight);
             engine->cinderApp->privateResume__(true);
-#endif
         }
+#endif
     }
 
     return 0;
@@ -274,7 +274,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
                 engine->orientation = cinderApp->orientationFromConfig();
-                engine->cinderRenderer->setup(cinderApp, engine->androidApp, cinderApp->mWidth, cinderApp->mHeight);
+                engine->cinderRenderer->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
                 updateWindow(engine);
                 cinderApp->privatePrepareSettings__();
                 engine->animating = 0;
