@@ -62,7 +62,7 @@ struct engine {
     bool resumed;
 };
 
-static void updateWindow(struct engine* engine)
+static void updateWindowSize(struct engine* engine)
 {
     if (engine->androidApp->window) {
         int32_t winWidth = ANativeWindow_getWidth(engine->androidApp->window);
@@ -83,6 +83,9 @@ static void engine_draw_frame(struct engine* engine) {
         // No display.
         return;
     }
+
+    //  XXX handles delayed window size updates from orientation changes
+    updateWindowSize(engine);
 
     // XXX startDraw not necessary?
     renderer.startDraw();
@@ -275,7 +278,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             if (engine->androidApp->window != NULL) {
                 engine->orientation = cinderApp->orientationFromConfig();
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
-                updateWindow(engine);
+                updateWindowSize(engine);
                 cinderApp->privatePrepareSettings__();
                 engine->animating = 0;
 
@@ -367,24 +370,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_CONFIG_CHANGED:
-            Orientation_t newOrient = cinderApp->orientationFromConfig();
-
-            //  Trigger resize event
-            //  XXX incorrect results when switching from landscape->portrait while the
-            //      application is paused
-            if (newOrient != engine->orientation) {
-                ANativeWindow* window = engine->androidApp->window;
-                int32_t width  = cinderApp->getWindowWidth();
-                int32_t height = cinderApp->getWindowHeight();
-                std::swap(width, height);
-                int32_t winWidth = ANativeWindow_getWidth(window);
-                int32_t winHeight = ANativeWindow_getHeight(window);
-                engine->orientation = newOrient;
-                CI_LOGD("Config change: resizing to (%d, %d) win (%d, %d) orient %d", 
-                        width, height, winWidth, winHeight, newOrient);
-                cinderApp->setWindowSize(width, height);
-                cinderApp->privateResize__(ci::Vec2i(width, height));
-            }
+            engine->orientation = cinderApp->orientationFromConfig();
             break;
 
     }
