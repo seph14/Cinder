@@ -38,6 +38,7 @@
     #endif
 #endif
 
+#include "cinder/Exception.h"
 #include "cinder/Quaternion.h"
 #include "cinder/Matrix.h"
 #include "cinder/Vector.h"
@@ -394,6 +395,12 @@ struct SaveFramebufferBinding {
 //! Initializes the GLee library. This is generally called automatically by the application and is only necessary if you need to use GLee before your app's setup() method is called.
 void initializeGlee();
 #endif
+
+class Exception : public cinder::Exception {
+};
+
+class ExceptionUnknownTarget : public Exception {
+};
 
 } } // namespace cinder::gl 
 
