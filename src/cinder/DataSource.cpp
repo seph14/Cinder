@@ -92,7 +92,7 @@ DataSourceRef loadFile( const fs::path &path )
 #if defined( CINDER_ANDROID ) && defined( CINDER_AASSET )
 /////////////////////////////////////////////////////////////////////////////
 // DataSourceAsset
-DataSourceAssetRef DataSourceAsset::createRef( AAssetManager *mgr, const std::string &path )
+DataSourceAssetRef DataSourceAsset::create( AAssetManager *mgr, const std::string &path )
 {
 	return DataSourceAssetRef( new DataSourceAsset( mgr, path ) );
 }
@@ -118,7 +118,7 @@ IStreamRef DataSourceAsset::createStream()
 
 DataSourceAssetRef loadAsset( AAssetManager *mgr, const std::string &path )
 {
-	return DataSourceAsset::createRef( mgr, path );
+	return DataSourceAsset::create( mgr, path );
 }
 #endif
 

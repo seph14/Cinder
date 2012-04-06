@@ -95,7 +95,7 @@ typedef std::shared_ptr<class DataSourceAsset>	DataSourceAssetRef;
 
 class DataSourceAsset : public DataSource {
   public:
-	static DataSourceAssetRef	createRef( AAssetManager *mgr, const std::string &path );
+	static DataSourceAssetRef	create( AAssetManager *mgr, const std::string &path );
 
 	virtual bool	isFilePath() { return true; }
 	virtual bool	isUrl() { return false; }

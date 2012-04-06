@@ -63,11 +63,6 @@ class AppAndroid : public App {
 	//! Returns Android SDK version
 	int32_t  getSdkVersion();
 
-	//! Copy an Android resource (asset) to a writable path
-	void copyResource(const fs::path& assetPath, const fs::path& destDir, bool overwrite=false);
-	//! Copy an entire Android resource (asset) dir to a writable path
-	void copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite=false);
-    
 	//! Override to respond to the beginning of a multitouch sequence
 	virtual void		touchesBegan( TouchEvent event ) {}
 	//! Override to respond to movement (drags) during a multitouch sequence
@@ -210,6 +205,13 @@ class AppAndroid : public App {
 
   public:
 	static DataSourceAssetRef loadResource(const std::string &resourcePath);
+
+	//! Return true if a given resource is found
+	static bool hasResource(const fs::path& assetPath);
+	//! Copy an Android resource (asset) to a writable path
+	static void copyResource(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
+	//! Copy an entire Android resource (asset) dir to a writable path
+	static void copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
 };
 
 } } // namespace cinder::app

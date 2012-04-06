@@ -533,66 +533,6 @@ int32_t AppAndroid::getSdkVersion()
 		mAndroidApp->activity->sdkVersion : -1;
 }
 
-void AppAndroid::copyResource(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
-{
-	if (assetPath.empty() || destDir.empty()) {
-		CI_LOGE("copyResource: Missing assetPath or destination dir");
-		return;
-	}
-
-	// CI_LOGD("Copying resource %s to %s", assetPath.string().c_str(), destDir.string().c_str());
-	AAssetManager* mgr = mAndroidApp->activity->assetManager;
-	fs::path outPath = destDir / assetPath.filename();
-
-	if (fs::exists(outPath) && !overwrite)
-		return;
-
-	{
-		// XXX fix createParentDirs in writeFileStream
-		OStreamFileRef os = writeFileStream(outPath);
-		if (!os) {
-			return;
-		}
-		AAsset* asset = AAssetManager_open(mgr, assetPath.string().c_str(), AASSET_MODE_STREAMING);
-
-		const int BUFSIZE = 8192;
-		unsigned char buf[BUFSIZE];
-		int readSize;
-
-		while (true) {
-			readSize = AAsset_read(asset, (void *) buf, BUFSIZE);
-			if (readSize > 0) {
-				os->writeData(buf, readSize);
-			}
-			else {
-				break;
-			}
-		}
-		AAsset_close(asset);
-	}
-}
-
-void AppAndroid::copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
-{
-	// XXX Untested
-	AAssetManager* mgr = mAndroidApp->activity->assetManager;
-
-	AAssetDir* dir = AAssetManager_openDir(mgr, assetPath.string().c_str());
-	fs::path outDir = destDir / assetPath.filename();
-	if (!fs::exists(outDir)) {
-		fs::create_directory(outDir);
-	}
-
-	char* filename = NULL;
-	while (true) {
-		const char* filename = AAssetDir_getNextFileName(dir);
-		if (filename == NULL) {
-			break;
-		}
-		copyResource(filename, outDir, overwrite);
-	}
-}
-
 void AppAndroid::setAndroidImpl( struct android_app* androidApp )
 {
     mAndroidApp = androidApp;
@@ -788,6 +728,7 @@ Orientation_t AppAndroid::orientationFromConfig()
 
 
 #if defined( CINDER_AASSET )
+
 //  static loadResource method, loads from assets/
 DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
 {
@@ -796,12 +737,87 @@ DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
     if (cinderApp) {
         CI_LOGW("loading via manager");
         AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
-        return DataSourceAsset::createRef(mgr, resourcePath);
+        return DataSourceAsset::create(mgr, resourcePath);
     }
     else {
         throw ResourceLoadExc( resourcePath );
     }
 }
+
+bool AppAndroid::hasResource(const fs::path& assetPath)
+{
+    AppAndroid* cinderApp = AppAndroid::get();
+    AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
+    AAsset* asset = AAssetManager_open(mgr, assetPath.string().c_str(), AASSET_MODE_STREAMING);
+    bool hasResource = bool(asset);
+    AAsset_close(asset);
+    return hasResource;
+}
+
+void AppAndroid::copyResource(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
+{
+    AppAndroid* cinderApp = AppAndroid::get();
+    AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
+
+	if (assetPath.empty() || destDir.empty()) {
+		CI_LOGE("copyResource: Missing assetPath or destination dir");
+		return;
+	}
+
+	// CI_LOGD("Copying resource %s to %s", assetPath.string().c_str(), destDir.string().c_str());
+	fs::path outPath = destDir / assetPath.filename();
+
+	if (fs::exists(outPath) && !overwrite)
+		return;
+
+	{
+		// XXX fix createParentDirs in writeFileStream
+		OStreamFileRef os = writeFileStream(outPath);
+		if (!os) {
+			return;
+		}
+		AAsset* asset = AAssetManager_open(mgr, assetPath.string().c_str(), AASSET_MODE_STREAMING);
+
+		const int BUFSIZE = 8192;
+		unsigned char buf[BUFSIZE];
+		int readSize;
+
+		while (true) {
+			readSize = AAsset_read(asset, (void *) buf, BUFSIZE);
+			if (readSize > 0) {
+				os->writeData(buf, readSize);
+			}
+			else {
+				break;
+			}
+		}
+		AAsset_close(asset);
+	}
+}
+
+void AppAndroid::copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
+{
+    AppAndroid* cinderApp = AppAndroid::get();
+    AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
+
+	// XXX Untested
+	AAssetDir* dir = AAssetManager_openDir(mgr, assetPath.string().c_str());
+	fs::path outDir = destDir / assetPath.filename();
+	if (!fs::exists(outDir)) {
+		fs::create_directory(outDir);
+	}
+
+	char* filename = NULL;
+	while (true) {
+		const char* filename = AAssetDir_getNextFileName(dir);
+		if (filename == NULL) {
+			break;
+		}
+		copyResource(filename, outDir, overwrite);
+	}
+    AAssetDir_close(dir);
+}
+
 #endif
 
 } } // namespace cinder::app
