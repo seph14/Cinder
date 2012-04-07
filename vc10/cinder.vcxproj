@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug DLL|Win32">
@@ -178,6 +178,7 @@
     <ClCompile Include="..\src\cinder\AxisAlignedBox.cpp" />
     <ClCompile Include="..\src\cinder\BandedMatrix.cpp" />
     <ClCompile Include="..\src\cinder\Base64.cpp" />
+    <ClCompile Include="..\src\cinder\BinPack.cpp" />
     <ClCompile Include="..\src\cinder\BSpline.cpp" />
     <ClCompile Include="..\src\cinder\BSplineFit.cpp" />
     <ClCompile Include="..\src\cinder\Buffer.cpp" />
