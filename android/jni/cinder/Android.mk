@@ -18,7 +18,7 @@ include $(CLEAR_VARS)
 CINDER_SRC   = ../../../src/cinder
 TESS_SRC     = ../../../src/libtess2
 STBIMAGE_SRC = ../../../src/stb_image
-UTF8_CPP_SRC = ../../../src/utf8-cpp/source
+UTF8_CPP_SRC = ../../../include/utf8-cpp
 JSONCPP_SRC  = ../../../src/jsoncpp
 
 LOCAL_MODULE 	 := cinder
