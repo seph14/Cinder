@@ -198,7 +198,7 @@ CFURLRef createCfUrl( const Url &url )
 	return result;
 }
 
-CFAttributedStringRef createCfAttributedString( const std::string &str, const Font &font, const ColorA &color )
+CFAttributedStringRef createCfAttributedString( const std::string &str, const FontCoreText &font, const ColorA &color )
 {
 	CGColorRef cgColor = createCgColor( color );
 	const CFStringRef keys[] = {
@@ -218,6 +218,10 @@ CFAttributedStringRef createCfAttributedString( const std::string &str, const Fo
 	
 	// Create the attributed string
 	CFStringRef strRef = CFStringCreateWithCString( kCFAllocatorDefault, str.c_str(), kCFStringEncodingUTF8 );
+	if( ! strRef ) { // failure
+		::CFRelease( attributes );
+		return NULL;
+	}
 	CFAttributedStringRef attrString = ::CFAttributedStringCreate( kCFAllocatorDefault, strRef, attributes );
 	
 	CFRelease( strRef );
@@ -226,7 +230,7 @@ CFAttributedStringRef createCfAttributedString( const std::string &str, const Fo
 	return attrString;
 }
 
-CFAttributedStringRef createCfAttributedString( const std::string &str, const Font &font, const ColorA &color, bool ligate )
+CFAttributedStringRef createCfAttributedString( const std::string &str, const FontCoreText &font, const ColorA &color, bool ligate )
 {
 	CGColorRef cgColor = createCgColor( color );
 	const int ligatures = ( ligate ) ? 1 : 0;
@@ -249,12 +253,17 @@ CFAttributedStringRef createCfAttributedString( const std::string &str, const Fo
 	CGColorRelease( cgColor );
 	
 	// Create the attributed string
-	CFStringRef strRef = CFStringCreateWithCString( kCFAllocatorDefault, str.c_str(), kCFStringEncodingUTF8 );
+	CFStringRef strRef = ::CFStringCreateWithCString( kCFAllocatorDefault, str.c_str(), kCFStringEncodingUTF8 );
+	if( ! strRef ) { // failure
+		::CFRelease( attributes );
+		::CFRelease( ligaturesRef );
+		return NULL;
+	}
 	CFAttributedStringRef attrString = ::CFAttributedStringCreate( kCFAllocatorDefault, strRef, attributes );
 	
-	CFRelease( strRef );
-	CFRelease( attributes );
-	CFRelease( ligaturesRef );
+	::CFRelease( strRef );
+	::CFRelease( attributes );
+	::CFRelease( ligaturesRef );
 	
 	return attrString;
 }

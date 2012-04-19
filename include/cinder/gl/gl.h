@@ -338,11 +338,11 @@ void draw( const Texture &texture, const Rectf &rect );
 void draw( const Texture &texture, const Area &srcArea, const Rectf &destRect );
 
 //! Draws a string \a str with its lower left corner located at \a pos. Optional \a font and \a color affect the style.
-void drawString( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), Font font = Font() );
+void drawString( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), FontRef font = FontRef() );
 //! Draws a string \a str with the horizontal center of its baseline located at \a pos. Optional \a font and \a color affect the style
-void drawStringCentered( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), Font font = Font() );
+void drawStringCentered( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), FontRef font = FontRef() );
 //! Draws a right-justified string \a str with the center of its  located at \a pos. Optional \a font and \a color affect the style
-void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), Font font = Font() );
+void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), FontRef font = FontRef() );
 
 #endif // ! defined( CINDER_GLES2 )
 
@@ -427,5 +427,4 @@ inline void glRotatef( const cinder::Quatf &quat ) { cinder::Vec3f axis; float a
 inline void glMultMatrixf( const cinder::Matrix44f &m ) { glMultMatrixf( m.m ); }
 inline void glLoadMatrixf( const cinder::Matrix44f &m ) { glLoadMatrixf( m.m ); }
 #endif // ! defined( CINDER_GLES )
-
 //@}
