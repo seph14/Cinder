@@ -59,6 +59,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/gl/Fbo.cpp \
 					$(CINDER_SRC)/gl/Texture.cpp \
 					$(CINDER_SRC)/gl/TextureFont.cpp \
+					$(CINDER_SRC)/gl/TextureFontAtlas.cpp \
 					$(CINDER_SRC)/ip/Blend.cpp \
 					$(CINDER_SRC)/ip/EdgeDetect.cpp \
 					$(CINDER_SRC)/ip/Fill.cpp \
@@ -102,6 +103,8 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/Surface.cpp \
 					$(CINDER_SRC)/System.cpp \
 					$(CINDER_SRC)/Text.cpp \
+					$(CINDER_SRC)/TextEngine.cpp \
+					$(CINDER_SRC)/TextEngineFreeType.cpp \
 					$(CINDER_SRC)/Timeline.cpp \
 					$(CINDER_SRC)/TimelineItem.cpp \
 					$(CINDER_SRC)/Timer.cpp \

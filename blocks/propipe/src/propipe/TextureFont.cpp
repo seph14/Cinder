@@ -1,6 +1,7 @@
 #include "TextureFont.h"
 #include "Renderer.h"
 #include "cinder/Text.h"
+#include "cinder/gl/TextureFontAtlas.h"
 
 using namespace std;
 
@@ -34,30 +35,18 @@ void TextureFontDraw::drawString( TextureFont& texFont, const string &str, const
 	texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
 }
 
-#if defined( CINDER_COCOA ) || defined ( CINDER_ANDROID )
 void TextureFontDraw::drawStringWrapped( TextureFont& texFont, const string &str, const Rectf &fitRect, const Vec2f &offset, const TextureFont::DrawOptions &options )
 {
 	TextBox tbox = TextBox().font( texFont.getFont() ).text( str ).size( fitRect.getWidth(), fitRect.getHeight() ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
-#if defined( CINDER_COCOA )
 	texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect.getUpperLeft() + offset, options );
-#elif defined( CINDER_ANDROID )
-	texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
-#endif
-}
-#endif
-
-TextureFont::TextureFont( const Font &font, const string &supportedChars, const Format &format )
-	: gl::TextureFont( font, supportedChars, format )
-{
+	// texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
 }
 
-#if defined( CINDER_ANDROID)
-TextureFont::TextureFont( const Font &font, const string &supportedChars, Atlas &atlas )
+TextureFont::TextureFont( const FontRef font, const string &supportedChars, gl::TextureFontAtlasRef atlas )
 	: gl::TextureFont( font, supportedChars, atlas )
 {
 }
-#endif
 
 void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const vector<ColorA8u> &colors )
 {
@@ -96,7 +85,7 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 			destRect.scale( scale );
 			destRect += glyphIt->second * scale;
 			destRect += Vec2f( floor( glyphInfo.mOriginOffset.x + 0.5f ), floor( glyphInfo.mOriginOffset.y ) ) * scale;
-			destRect += Vec2f( baseline.x, baseline.y - mFont.getAscent() * scale );
+			destRect += Vec2f( baseline.x, baseline.y - mFont->getAscent() * scale );
 			if( options.getPixelSnap() )
 				destRect -= Vec2f( destRect.x1 - floor( destRect.x1 ), destRect.y1 - floor( destRect.y1 ) );				
 			
@@ -232,15 +221,15 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 }
 
 #if defined( CINDER_ANDROID)
-TextureFontRef TextureFont::create( const Font &font, Atlas &atlas, const std::string &supportedChars )
+TextureFontRef TextureFont::create( const FontRef font, gl::TextureFontAtlasRef atlas, const std::string &supportedChars )
 {
 	return TextureFontRef( new TextureFont( font, supportedChars, atlas ) ); 
 }
 #endif
 
-TextureFontRef TextureFont::create( const Font &font, const Format &format, const std::string &supportedChars )
+TextureFontRef TextureFont::create( const FontRef font, const Format &format, const std::string &supportedChars )
 {
-	return TextureFontRef( new TextureFont( font, supportedChars, format ) ); 
+	return TextureFontRef( new TextureFont( font, supportedChars, gl::TextureFontAtlas::create( format ) ) ); 
 }
 
 } }  // namespace cinder::pp

@@ -16,10 +16,7 @@ class Renderer;
 class TextureFont : public gl::TextureFont
 {
   protected:
-	TextureFont( const Font &font, const std::string &supportedChars, const Format &format );
-#if defined( CINDER_ANDROID )
-	TextureFont( const Font &font, const std::string &supportedChars, Atlas &atlas );
-#endif
+	TextureFont( const FontRef font, const std::string &supportedChars, gl::TextureFontAtlasRef atlas );
 
   public:
 	//! Draws the glyphs in \a glyphMeasures at baseline \a baseline with DrawOptions \a options. \a glyphMeasures is a vector of pairs of glyph indices and offsets for the glyph baselines
@@ -28,10 +25,10 @@ class TextureFont : public gl::TextureFont
 	void drawGlyphs( Renderer& renderer, const std::vector<std::pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
 
 #if defined( CINDER_ANDROID )
-	static TextureFontRef create( const Font &font, Atlas &atlas, const std::string &supportedChars = TextureFont::defaultChars() );
+	static TextureFontRef create( const FontRef font, gl::TextureFontAtlasRef atlas, const std::string &supportedChars = TextureFont::defaultChars() );
 #endif
 	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and format \a format
-	static TextureFontRef create( const Font &font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() );
+	static TextureFontRef create( const FontRef font, const Format &format = Format(), const std::string &supportedChars = TextureFont::defaultChars() );
 };
 
 typedef std::shared_ptr<class TextureFontDraw> TextureFontDrawRef;

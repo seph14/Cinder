@@ -29,7 +29,7 @@ class TextureFontApp : public AppNative {
 
 	pp::Matrices mMatrices;
 
-	Font                   mFont;
+	FontRef                mFont;
 	pp::TextureFontRef     mTextureFont;
 
 	pp::RendererRef        mRenderer;
@@ -40,14 +40,13 @@ class TextureFontApp : public AppNative {
 void TextureFontApp::setup()
 {
 #if defined( CINDER_COCOA_TOUCH )
-	mFont = Font( "Cochin-Italic", 24 );
+	mFont = Font::create( "Cochin-Italic", 24 );
 #elif defined( CINDER_COCOA )
-	mFont = Font( "BigCaslon-Medium", 24 );
+	mFont = Font::create( "BigCaslon-Medium", 24 );
 #elif defined( CINDER_ANDROID )
-	// mFont = Font( loadFile("/system/fonts/DroidSans.ttf"), 24 );
-	mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 24 );
+	mFont = Font::getDefault();
 #else
-	mFont = Font( "Times New Roman", 24 );
+	mFont = Font::create( "Times New Roman", 24 );
 #endif
 
 	mTextureFont = pp::TextureFont::create( mFont );
@@ -90,11 +89,11 @@ void TextureFontApp::keyDown( KeyEvent event )
 	switch( event.getChar() ) {
 		case '=':
 		case '+':
-			mFont = Font( mFont.getName(), mFont.getSize() + 1 );
+			mFont = Font::create( mFont->getName(), mFont->getSize() + 1 );
 			mTextureFont = pp::TextureFont::create( mFont );
 		break;
 		case '-':
-			mFont = Font( mFont.getName(), mFont.getSize() - 1 );
+			mFont = Font::create( mFont->getName(), mFont->getSize() - 1 );
 			mTextureFont = pp::TextureFont::create( mFont );
 		break;
 	}
@@ -103,9 +102,9 @@ void TextureFontApp::keyDown( KeyEvent event )
 void TextureFontApp::mouseDown( MouseEvent event )
 {
 #if ! defined( CINDER_ANDROID )
-	mFont = Font( Font::getNames()[Rand::randInt() % Font::getNames().size()], mFont.getSize() );
+	mFont = Font::create( Font::getNames()[Rand::randInt() % Font::getNames().size()], mFont.getSize() );
 #endif
-	console() << mFont.getName() << std::endl;
+	console() << mFont->getName() << std::endl;
 	mTextureFont = pp::TextureFont::create( mFont );
 }
 
