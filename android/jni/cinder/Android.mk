@@ -13,25 +13,6 @@ ifdef USE_FREETYPE
 include $(TOP_PATH)/freetype-2.4.5/Android.mk
 endif  # USE_FREETYPE
 
-# Propipe block
-PROPIPE_SRC  = ../../../blocks/propipe/src/propipe
-# ifdef USE_GLES2
-# include $(CLEAR_VARS)
-# 
-# LOCAL_MODULE 	 := propipe
-# LOCAL_CFLAGS     := -D_GLIBCPP_USE_WCHAR_T -D__LITTLE_ENDIAN__ -DCINDER_GLES2
-# LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
-# 					$(LOCAL_PATH)/../../../boost
-# LOCAL_SRC_FILES  := $(PROPIPE_SRC)/Draw.cpp \
-#                     $(PROPIPE_SRC)/Matrices.cpp \
-#                     $(PROPIPE_SRC)/Renderer.cpp \
-#                     $(PROPIPE_SRC)/TextureFont.cpp
-# LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../blocks/propipe/src
-# LOCAL_EXPORT_LDLIBS := -lcinder -lGLESv2
-# 
-# include $(BUILD_STATIC_LIBRARY)
-# endif
-
 include $(CLEAR_VARS)
 
 CINDER_SRC   = ../../../src/cinder
@@ -70,6 +51,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/ip/Resize.cpp \
 					$(CINDER_SRC)/ip/Threshold.cpp \
 					$(CINDER_SRC)/ip/Trim.cpp \
+					$(CINDER_SRC)/svg/Svg.cpp \
 					$(CINDER_SRC)/Area.cpp \
 					$(CINDER_SRC)/AxisAlignedBox.cpp \
 					$(CINDER_SRC)/BandedMatrix.cpp \
@@ -128,6 +110,8 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 
 ifdef USE_GLES2
 
+# Propipe block
+PROPIPE_SRC  = ../../../blocks/propipe/src/propipe
 # Built-in propipe block
 LOCAL_SRC_FILES  += $(PROPIPE_SRC)/Draw.cpp \
                     $(PROPIPE_SRC)/Matrices.cpp \
