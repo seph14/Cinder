@@ -125,9 +125,21 @@ LOCAL_SRC_FILES  += $(CINDER_SRC)/gl/GlslProg.cpp \
 LOCAL_CFLAGS += -DCINDER_GLES2
 GLES_LDLIB = -lGLESv2
 else
+
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(TWEAKBAR_SRC)
 LOCAL_SRC_FILES += $(CINDER_SRC)/gl/Light.cpp \
                    $(CINDER_SRC)/gl/Material.cpp \
                    $(CINDER_SRC)/gl/TileRender.cpp
+
+# TWEAKBAR_SRC   = ../../../src/AntTweakBar
+# LOCAL_SRC_FILES += \
+#				   $(CINDER_SRC)/params/Params.cpp \
+#				   $(TWEAKBAR_SRC)/TwBar.cpp \
+#				   $(TWEAKBAR_SRC)/TwColors.cpp \
+#				   $(TWEAKBAR_SRC)/TwFonts.cpp \
+#				   $(TWEAKBAR_SRC)/TwMgr.cpp \
+#				   $(TWEAKBAR_SRC)/TwOpenGL.cpp
+
 LOCAL_CFLAGS += -DCINDER_GLES1
 GLES_LDLIB = -lGLESv1_CM
 endif
