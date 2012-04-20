@@ -16,31 +16,33 @@ include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := boost_date_time
-LOCAL_SRC_FILES := $(TARGET_ARCH)/lib/libboost_date_time.a
+LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_date_time.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := boost_filesystem
-LOCAL_SRC_FILES := $(TARGET_ARCH)/lib/libboost_filesystem.a
+LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_filesystem.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := boost_system
-LOCAL_SRC_FILES := $(TARGET_ARCH)/lib/libboost_system.a
+LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_system.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := boost_thread
-LOCAL_SRC_FILES := $(TARGET_ARCH)/lib/libboost_thread.a
+LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_thread.a
 include $(PREBUILT_STATIC_LIBRARY)
 
-# ifdef USE_GLES2
-# include $(CLEAR_VARS)
-# LOCAL_MODULE := propipe
-# LOCAL_SRC_FILES := ../../obj/local/$(TARGET_ARCH_ABI)/libpropipe.a
-# LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../blocks/propipe/src
-# include $(PREBUILT_STATIC_LIBRARY)
-# endif
+include $(CLEAR_VARS)
+LOCAL_MODULE := cairo
+LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libcairo.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := pixman
+LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libpixman.a
+include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 

@@ -35,18 +35,18 @@ function unpack_freetype {
 }
 
 function unpack_boost {
-    local PREBUILT_BOOST=boost-android-arm-prebuilt-1_48_0.tar.bz2
-    if [ ! -e setup/boost/$PREBUILT_BOOST ]; then
-        echo "Downloading prebuilt Boost libraries"
-        curl -O http://expandingbrain.com/cinder/$PREBUILT_BOOST
-        mkdir -p setup/boost
-        mv $PREBUILT_BOOST setup/boost
-    fi
-    echo "Setup prebuilt Boost libraries..."
-    rm -rf prebuilt/cinder/arm
-    mkdir -p prebuilt/cinder/arm
-    tar jxf setup/boost/$PREBUILT_BOOST -C prebuilt/cinder/arm
-    chmod -R a+rwX prebuilt/cinder/arm
+    # local PREBUILT_BOOST=boost-android-arm-prebuilt-1_48_0.tar.bz2
+    # if [ ! -e setup/boost/$PREBUILT_BOOST ]; then
+    #     echo "Downloading prebuilt Boost libraries"
+    #     curl -O http://expandingbrain.com/cinder/$PREBUILT_BOOST
+    #     mkdir -p setup/boost
+    #     mv $PREBUILT_BOOST setup/boost
+    # fi
+    # echo "Setup prebuilt Boost libraries..."
+    # rm -rf prebuilt/cinder/arm
+    # mkdir -p prebuilt/cinder/arm
+    # tar jxf setup/boost/$PREBUILT_BOOST -C prebuilt/cinder/arm
+    # chmod -R a+rwX prebuilt/cinder/arm
 
     local SRC_BOOST=boost_1_48_0.tar.bz2
     if [ ! -e ../boost -a ! -e setup/boost/$SRC_BOOST ]; then
