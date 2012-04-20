@@ -4,7 +4,7 @@
 #include <Windows.h>
 #else
 #include <dlfcn.h>
-#include <android/log.h>
+// #include <android/log.h>
 #endif
 
 PFN_LIBPD_INIT DL_libpd_init;

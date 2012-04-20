@@ -43,7 +43,7 @@ class BasicAudioApp : public AppNative, public pd::Receiver {
 
     pp::Matrices mMatrices;
 
-    Font                   mFont;
+    FontRef                mFont;
     pp::TextureFontRef     mTextureFont;
 
     pp::RendererRef        mRenderer;
@@ -79,7 +79,7 @@ void BasicAudioApp::setup()
     mPd->sendBang("open");
     mPd->sendBang("start");
 
-    mFont = Font( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
+    mFont = Font::create( loadFile("/system/fonts/DroidSerif-Italic.ttf"), 40 );
 
     mTextureFont = pp::TextureFont::create( mFont );
 
@@ -140,7 +140,6 @@ void BasicAudioApp::keyDown( KeyEvent event )
 
 void BasicAudioApp::mouseDown( MouseEvent event )
 {
-    console() << mFont.getName() << std::endl;
 }
 
 void BasicAudioApp::setupMatrices()
