@@ -207,11 +207,11 @@ class AppAndroid : public App {
 	static DataSourceAssetRef loadResource(const std::string &resourcePath);
 
 	//! Return true if a given resource is found
-	static bool hasResource(const fs::path& assetPath);
+	static bool hasResource(const fs::path& resourcePath);
 	//! Copy an Android resource (asset) to a writable path
-	static void copyResource(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
+	static void copyResource(const fs::path& resourcePath, const fs::path& destDir, bool overwrite=true);
 	//! Copy an entire Android resource (asset) dir to a writable path
-	static void copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite=true);
+	static void copyResourceDir(const fs::path& resourcePath, const fs::path& destDir, bool overwrite=true);
 };
 
 } } // namespace cinder::app
