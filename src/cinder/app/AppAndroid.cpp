@@ -38,7 +38,7 @@ struct TouchState {
 
 struct engine {
     struct android_app* androidApp;
-	void* savedState;
+    void* savedState;
 
     ASensorManager*    sensorManager;
     const ASensor*     accelerometerSensor;
@@ -266,13 +266,11 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
-            CI_LOGD("XXX APP_CMD_SAVE_STATE");
             log_engine_state(engine);
-			cinderApp->saveState(engine->androidApp->savedState, engine->androidApp->savedStateSize);
+            cinderApp->saveState(engine->androidApp->savedState, engine->androidApp->savedStateSize);
             break;
 
         case APP_CMD_INIT_WINDOW:
-            CI_LOGD("XXX APP_CMD_INIT_WINDOW");
             log_engine_state(engine);
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
@@ -290,7 +288,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_TERM_WINDOW:
-            CI_LOGD("XXX APP_CMD_TERM_WINDOW");
             log_engine_state(engine);
             // The window is being hidden or closed, clean it up.
             engine->animating = 0;
@@ -298,7 +295,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_GAINED_FOCUS:
-            CI_LOGD("XXX APP_CMD_GAINED_FOCUS");
             log_engine_state(engine);
 
             // Start monitoring the accelerometer.
@@ -326,7 +322,6 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_LOST_FOCUS:
-            CI_LOGD("XXX APP_CMD_LOST_FOCUS");
             log_engine_state(engine);
             //  Disable accelerometer (saves power)
             engine_disable_accelerometer(engine);
@@ -335,19 +330,16 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_RESUME:
-            CI_LOGD("XXX APP_CMD_RESUME");
             engine->activityState = ACTIVITY_RESUME;
             log_engine_state(engine);
             break;
         
         case APP_CMD_START:
-            CI_LOGD("XXX APP_CMD_START");
             engine->activityState = ACTIVITY_START;
             log_engine_state(engine);
             break;
 
         case APP_CMD_PAUSE:
-            CI_LOGD("XXX APP_CMD_PAUSE");
             engine->activityState = ACTIVITY_PAUSE;
             cinderApp->privatePause__();
             engine->animating = 0;
@@ -356,14 +348,12 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             break;
 
         case APP_CMD_STOP:
-            CI_LOGD("XXX APP_CMD_STOP");
             engine->activityState = ACTIVITY_STOP;
             log_engine_state(engine);
             break;
 
         case APP_CMD_DESTROY:
             //  app has been destroyed, will crash if we attempt to do anything else
-            CI_LOGD("XXX APP_CMD_DESTROY");
             engine->activityState = ACTIVITY_DESTROY;
             cinderApp->privateDestroy__();
             log_engine_state(engine);
@@ -475,9 +465,9 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
 namespace cinder { namespace app {
 
 AppAndroid::AppAndroid()
-	: App()
+    : App()
 {
-	mLastAccel = mLastRawAccel = Vec3f::zero();
+    mLastAccel = mLastRawAccel = Vec3f::zero();
 }
 
 AppAndroid::~AppAndroid()
@@ -504,33 +494,33 @@ void AppAndroid::destroy()
 
 void AppAndroid::saveState(void*& state, size_t& size)
 {
-	state = NULL;
-	size = 0;
+    state = NULL;
+    size = 0;
 }
 
 void* AppAndroid::getSavedState()
 {
-	return mEngine->savedState;
+    return mEngine->savedState;
 }
 
 fs::path AppAndroid::getInternalDataPath()
 {
-	const char* path = (mAndroidApp && mAndroidApp->activity) ? 
-		mAndroidApp->activity->internalDataPath : NULL;
-	return path ? fs::path(path) : fs::path();
+    const char* path = (mAndroidApp && mAndroidApp->activity) ? 
+        mAndroidApp->activity->internalDataPath : NULL;
+    return path ? fs::path(path) : fs::path();
 }
 
 fs::path AppAndroid::getExternalDataPath()
 {
-	const char* path = (mAndroidApp && mAndroidApp->activity) ? 
-		mAndroidApp->activity->externalDataPath : NULL;
-	return path ? fs::path(path) : fs::path();
+    const char* path = (mAndroidApp && mAndroidApp->activity) ? 
+        mAndroidApp->activity->externalDataPath : NULL;
+    return path ? fs::path(path) : fs::path();
 }
 
 int32_t AppAndroid::getSdkVersion()
 {
-	return (mAndroidApp && mAndroidApp->activity) ?
-		mAndroidApp->activity->sdkVersion : -1;
+    return (mAndroidApp && mAndroidApp->activity) ?
+        mAndroidApp->activity->sdkVersion : -1;
 }
 
 void AppAndroid::setAndroidImpl( struct android_app* androidApp )
@@ -540,7 +530,7 @@ void AppAndroid::setAndroidImpl( struct android_app* androidApp )
 
 void AppAndroid::launch( const char *title, int argc, char * const argv[] )
 {
-	clock_gettime(CLOCK_MONOTONIC, &mStartTime);
+    clock_gettime(CLOCK_MONOTONIC, &mStartTime);
     android_run(this, mAndroidApp);
 }
 
@@ -574,10 +564,10 @@ void AppAndroid::setWindowSize( int windowWidth, int windowHeight )
 void AppAndroid::enableAccelerometer( float updateFrequency, float filterFactor )
 {
     if ( mEngine->accelerometerSensor != NULL ) {
-	    mAccelFilterFactor = filterFactor;
-	    
-	    if( updateFrequency <= 0 )
-	    	updateFrequency = 30.0f;
+        mAccelFilterFactor = filterFactor;
+
+        if( updateFrequency <= 0 )
+            updateFrequency = 30.0f;
 
         mEngine->accelUpdateFrequency = updateFrequency;
 
@@ -598,7 +588,7 @@ void AppAndroid::disableAccelerometer() {
 //! Returns the maximum frame-rate the App will attempt to maintain.
 float AppAndroid::getFrameRate() const
 {
-	return 0;
+    return 0;
 }
 
 //! Sets the maximum frame-rate the App will attempt to maintain.
@@ -609,7 +599,7 @@ void AppAndroid::setFrameRate( float aFrameRate )
 //! Returns whether the App is in full-screen mode or not.
 bool AppAndroid::isFullScreen() const
 {
-	return true;
+    return true;
 }
 
 //! Sets whether the active App is in full-screen mode based on \a fullScreen
@@ -619,21 +609,21 @@ void AppAndroid::setFullScreen( bool aFullScreen )
 
 double AppAndroid::getElapsedSeconds() const
 {
-	struct timespec currentTime;
-	clock_gettime(CLOCK_MONOTONIC, &currentTime);
-	return ( (currentTime.tv_sec + currentTime.tv_nsec / 1e9) 
-			- (mStartTime.tv_sec + mStartTime.tv_nsec / 1e9) );
+    struct timespec currentTime;
+    clock_gettime(CLOCK_MONOTONIC, &currentTime);
+    return ( (currentTime.tv_sec + currentTime.tv_nsec / 1e9) 
+            - (mStartTime.tv_sec + mStartTime.tv_nsec / 1e9) );
 }
 
 fs::path AppAndroid::getAppPath()
 { 
-	// XXX TODO
-	return fs::path();
+    // XXX TODO
+    return fs::path();
 }
 
 void AppAndroid::quit()
 {
-	return;
+    return;
 }
 
 Orientation_t AppAndroid::orientation()
@@ -643,7 +633,7 @@ Orientation_t AppAndroid::orientation()
 
 void AppAndroid::privatePrepareSettings__()
 {
-	prepareSettings( &mSettings );
+    prepareSettings( &mSettings );
 }
 
 void AppAndroid::privatePause__()
@@ -663,45 +653,45 @@ void AppAndroid::privateDestroy__()
 
 void AppAndroid::privateTouchesBegan__( const TouchEvent &event )
 {
-	bool handled = false;
-	for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesBegan.begin(); ( cbIter != mCallbacksTouchesBegan.end() ) && ( ! handled ); ++cbIter )
-		handled = (cbIter->second)( event );		
-	if( ! handled )	
-		touchesBegan( event );
+    bool handled = false;
+    for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesBegan.begin(); ( cbIter != mCallbacksTouchesBegan.end() ) && ( ! handled ); ++cbIter )
+        handled = (cbIter->second)( event );		
+    if( ! handled )	
+        touchesBegan( event );
 }
 
 void AppAndroid::privateTouchesMoved__( const TouchEvent &event )
 {	
-	bool handled = false;
-	for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesMoved.begin(); ( cbIter != mCallbacksTouchesMoved.end() ) && ( ! handled ); ++cbIter )
-		handled = (cbIter->second)( event );		
-	if( ! handled )	
-		touchesMoved( event );
+    bool handled = false;
+    for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesMoved.begin(); ( cbIter != mCallbacksTouchesMoved.end() ) && ( ! handled ); ++cbIter )
+        handled = (cbIter->second)( event );		
+    if( ! handled )	
+        touchesMoved( event );
 }
 
 void AppAndroid::privateTouchesEnded__( const TouchEvent &event )
 {	
-	bool handled = false;
-	for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesEnded.begin(); ( cbIter != mCallbacksTouchesEnded.end() ) && ( ! handled ); ++cbIter )
-		handled = (cbIter->second)( event );		
-	if( ! handled )	
-		touchesEnded( event );
+    bool handled = false;
+    for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesEnded.begin(); ( cbIter != mCallbacksTouchesEnded.end() ) && ( ! handled ); ++cbIter )
+        handled = (cbIter->second)( event );		
+    if( ! handled )	
+        touchesEnded( event );
 }
 
 void AppAndroid::privateAccelerated__( const Vec3f &direction )
 {
-	Vec3f filtered = mLastAccel * (1.0f - mAccelFilterFactor) + direction * mAccelFilterFactor;
+    Vec3f filtered = mLastAccel * (1.0f - mAccelFilterFactor) + direction * mAccelFilterFactor;
 
-	AccelEvent event( filtered, direction, mLastAccel, mLastRawAccel );
-	
-	bool handled = false;
-	for( CallbackMgr<bool (AccelEvent)>::iterator cbIter = mCallbacksAccelerated.begin(); ( cbIter != mCallbacksAccelerated.end() ) && ( ! handled ); ++cbIter )
-		handled = (cbIter->second)( event );		
-	if( ! handled )	
-		accelerated( event );
+    AccelEvent event( filtered, direction, mLastAccel, mLastRawAccel );
 
-	mLastAccel = filtered;
-	mLastRawAccel = direction;
+    bool handled = false;
+    for( CallbackMgr<bool (AccelEvent)>::iterator cbIter = mCallbacksAccelerated.begin(); ( cbIter != mCallbacksAccelerated.end() ) && ( ! handled ); ++cbIter )
+        handled = (cbIter->second)( event );		
+    if( ! handled )	
+        accelerated( event );
+
+    mLastAccel = filtered;
+    mLastRawAccel = direction;
 }
 
 Orientation_t AppAndroid::orientationFromConfig()
@@ -710,17 +700,17 @@ Orientation_t AppAndroid::orientationFromConfig()
     int orient = AConfiguration_getOrientation(mAndroidApp->config);
 
     switch (orient) {
-    case ACONFIGURATION_ORIENTATION_PORT:
-        ret = ORIENTATION_PORTRAIT;
-        break;
-    case ACONFIGURATION_ORIENTATION_LAND:
-        ret = ORIENTATION_LANDSCAPE;
-        break;
-    case ACONFIGURATION_ORIENTATION_SQUARE:
-        ret = ORIENTATION_SQUARE;
-        break;
-    default:
-        break;
+        case ACONFIGURATION_ORIENTATION_PORT:
+            ret = ORIENTATION_PORTRAIT;
+            break;
+        case ACONFIGURATION_ORIENTATION_LAND:
+            ret = ORIENTATION_LANDSCAPE;
+            break;
+        case ACONFIGURATION_ORIENTATION_SQUARE:
+            ret = ORIENTATION_SQUARE;
+            break;
+        default:
+            break;
     }
 
     return ret;
@@ -759,40 +749,40 @@ void AppAndroid::copyResource(const fs::path& assetPath, const fs::path& destDir
     AppAndroid* cinderApp = AppAndroid::get();
     AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
 
-	if (assetPath.empty() || destDir.empty()) {
-		CI_LOGE("copyResource: Missing assetPath or destination dir");
-		return;
-	}
+    if (assetPath.empty() || destDir.empty()) {
+        CI_LOGE("copyResource: Missing assetPath or destination dir");
+        return;
+    }
 
-	// CI_LOGD("Copying resource %s to %s", assetPath.string().c_str(), destDir.string().c_str());
-	fs::path outPath = destDir / assetPath.filename();
+    // CI_LOGD("Copying resource %s to %s", assetPath.string().c_str(), destDir.string().c_str());
+    fs::path outPath = destDir / assetPath.filename();
 
-	if (fs::exists(outPath) && !overwrite)
-		return;
+    if (fs::exists(outPath) && !overwrite)
+        return;
 
-	{
-		// XXX fix createParentDirs in writeFileStream
-		OStreamFileRef os = writeFileStream(outPath);
-		if (!os) {
-			return;
-		}
-		AAsset* asset = AAssetManager_open(mgr, assetPath.string().c_str(), AASSET_MODE_STREAMING);
+    {
+        // XXX fix createParentDirs in writeFileStream
+        OStreamFileRef os = writeFileStream(outPath);
+        if (!os) {
+            return;
+        }
+        AAsset* asset = AAssetManager_open(mgr, assetPath.string().c_str(), AASSET_MODE_STREAMING);
 
-		const int BUFSIZE = 8192;
-		unsigned char buf[BUFSIZE];
-		int readSize;
+        const int BUFSIZE = 8192;
+        unsigned char buf[BUFSIZE];
+        int readSize;
 
-		while (true) {
-			readSize = AAsset_read(asset, (void *) buf, BUFSIZE);
-			if (readSize > 0) {
-				os->writeData(buf, readSize);
-			}
-			else {
-				break;
-			}
-		}
-		AAsset_close(asset);
-	}
+        while (true) {
+            readSize = AAsset_read(asset, (void *) buf, BUFSIZE);
+            if (readSize > 0) {
+                os->writeData(buf, readSize);
+            }
+            else {
+                break;
+            }
+        }
+        AAsset_close(asset);
+    }
 }
 
 void AppAndroid::copyResourceDir(const fs::path& assetPath, const fs::path& destDir, bool overwrite)
@@ -800,21 +790,21 @@ void AppAndroid::copyResourceDir(const fs::path& assetPath, const fs::path& dest
     AppAndroid* cinderApp = AppAndroid::get();
     AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
 
-	// XXX Untested
-	AAssetDir* dir = AAssetManager_openDir(mgr, assetPath.string().c_str());
-	fs::path outDir = destDir / assetPath.filename();
-	if (!fs::exists(outDir)) {
-		fs::create_directory(outDir);
-	}
+    // XXX Untested
+    AAssetDir* dir = AAssetManager_openDir(mgr, assetPath.string().c_str());
+    fs::path outDir = destDir / assetPath.filename();
+    if (!fs::exists(outDir)) {
+        fs::create_directory(outDir);
+    }
 
-	char* filename = NULL;
-	while (true) {
-		const char* filename = AAssetDir_getNextFileName(dir);
-		if (filename == NULL) {
-			break;
-		}
-		copyResource(filename, outDir, overwrite);
-	}
+    char* filename = NULL;
+    while (true) {
+        const char* filename = AAssetDir_getNextFileName(dir);
+        if (filename == NULL) {
+            break;
+        }
+        copyResource(filename, outDir, overwrite);
+    }
     AAssetDir_close(dir);
 }
 
