@@ -49,6 +49,10 @@ class Style;
 typedef std::function<bool(const Node&, Style *)> RenderVisitor;
 } } // namespace cinder::svg
 
+#if defined( ANDROID )
+//  Different version of Cairo, skip forward declarations
+#include <cairo.h>
+#else
 // Forward declarations used by our cairo wrappers 
 struct _cairo_surface;
 typedef struct _cairo_surface cairo_surface_t;
@@ -90,6 +94,7 @@ typedef struct _cairo_text_extents cairo_text_extents_t;
 
 struct _cairo_font_extents;
 typedef struct _cairo_font_extents cairo_font_extents_t;
+#endif
 
 namespace cinder { namespace cairo {
 /////////////////////////////////////////////////////////////////////////////

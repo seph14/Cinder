@@ -30,12 +30,14 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
 					$(LOCAL_PATH)/../../../boost \
 					$(LOCAL_PATH)/$(TESS_SRC) \
 					$(LOCAL_PATH)/$(UTF8_CPP_SRC) \
-					$(LOCAL_PATH)/../freetype-2.4.5/include
+					$(LOCAL_PATH)/../freetype-2.4.5/include \
+					$(LOCAL_PATH)/../../../include/android/cairo
 
 LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/AppAndroid.cpp \
 					$(CINDER_SRC)/app/Renderer.cpp \
 					$(CINDER_SRC)/app/AppImplAndroidRendererGl.cpp \
+					$(CINDER_SRC)/cairo/Cairo.cpp \
 					$(CINDER_SRC)/gl/gl.cpp \
 					$(CINDER_SRC)/gl/Fbo.cpp \
 					$(CINDER_SRC)/gl/Texture.cpp \

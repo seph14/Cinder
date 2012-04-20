@@ -38,6 +38,11 @@
 #elif defined( CINDER_MSW )
 	#include "cinder/app/App.h"
 	#include <cairo-win32.h>
+#elif defined( CINDER_ANDROID )
+    #include <cairo-ft.h>
+    /*  Used with cairo_bool_t */
+    #define TRUE 1
+    #define FALSE 0
 #endif
 
 #include "cinder/TextEngine.h"
@@ -1744,6 +1749,11 @@ void Context::setFont( const cinder::FontRef font )
 	if ( textEngine->getEngineType() == TextEngine::GDIPLUS ) {
 		FontGdiPlusRef gdiFont = std::dynamic_pointer_cast<FontGdiPlus>( font ); 
 		cairoFont = cairo_win32_font_face_create_for_logfontw( &gdiFont->getLogfont() );
+	}
+#elif defined( CINDER_ANDROID )
+	if ( textEngine->getEngineType() == TextEngine::FREETYPE ) {
+		FontFreeTypeRef ftFont = std::dynamic_pointer_cast<FontFreeType>( font );
+		cairoFont = cairo_ft_font_face_create_for_ft_face( ftFont->getFTFace(), FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT );
 	}
 #endif
 	cairo_set_font_face( mCairo, cairoFont );
