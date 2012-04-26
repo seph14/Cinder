@@ -153,6 +153,8 @@ class SurfaceImage : public SurfaceBase {
 	cinder::Surface		mCinderSurface;
 };
 
+//  SurfaceSvg disabled on Android, requires linking to libpng
+#if ! defined( CINDER_ANDROID )
 /////////////////////////////////////////////////////////////////////////////
 // SurfaceSvg
 class SurfaceSvg : public SurfaceBase {
@@ -161,6 +163,7 @@ class SurfaceSvg : public SurfaceBase {
 	SurfaceSvg( const fs::path &filePath, uint32_t aWidth, uint32_t aHeight );
 	SurfaceSvg( const SurfaceSvg &other );
 };
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // SurfacePdf

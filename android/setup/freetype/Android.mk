@@ -18,6 +18,7 @@ LOCAL_SRC_FILES := \
 	$(FREETYPE_SRC)/base/ftbitmap.c \
 	$(FREETYPE_SRC)/base/ftglyph.c \
 	$(FREETYPE_SRC)/base/ftstroke.c \
+	$(FREETYPE_SRC)/base/fttype1.c \
 	$(FREETYPE_SRC)/base/ftxf86.c \
 	$(FREETYPE_SRC)/base/ftbase.c \
 	$(FREETYPE_SRC)/base/ftsystem.c \

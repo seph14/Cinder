@@ -278,6 +278,7 @@ void SurfaceImage::initCinderSurface( bool alpha, cairo_surface_t *cairoSurface 
 	cairo_surface_reference( cairoSurface ); // decremented by the mCinderSurface deallocator
 }
 
+#if ! defined( CINDER_ANDROID )
 /////////////////////////////////////////////////////////////////////////////
 // SurfaceSvg
 SurfaceSvg::SurfaceSvg( const fs::path &filePath, uint32_t width, uint32_t height )
@@ -290,6 +291,7 @@ SurfaceSvg::SurfaceSvg( const SurfaceSvg &other )
 	: SurfaceBase( other )
 {
 }
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // SurfacePdf
