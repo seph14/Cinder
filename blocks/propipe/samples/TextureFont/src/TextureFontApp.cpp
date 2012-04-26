@@ -132,7 +132,6 @@ void TextureFontApp::draw()
 
 	mRenderer->setColor( ColorA( 0.17f, 0.72f, 0.88f, 1.0f ) );
     mTextureFont->drawGlyphs(*mRenderer, mTextBox.measureGlyphs(), mTextBounds.getUpperLeft());
-	// mFontDraw->drawStringWrapped( *mTextureFont, str, boundsRect );
 
 	// Draw FPS
 	mRenderer->setColor( Color::white() );
