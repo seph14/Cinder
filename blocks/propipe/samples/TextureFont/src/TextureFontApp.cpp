@@ -25,7 +25,7 @@ class TextureFontApp : public AppNative {
 	void resume( bool renewContext );
 #endif
 
-	void setupMatrices();
+	void setupView();
 
 	pp::Matrices mMatrices;
 
@@ -35,6 +35,9 @@ class TextureFontApp : public AppNative {
 	pp::RendererRef        mRenderer;
 	pp::DrawRef            mDraw;
 	pp::TextureFontDrawRef mFontDraw;
+
+    TextBox                mTextBox;
+    Rectf                  mTextBounds;
 };
 
 void TextureFontApp::setup()
@@ -55,13 +58,13 @@ void TextureFontApp::setup()
 	mFontDraw = pp::TextureFontDraw::create( mRenderer );
 	mDraw = pp::Draw::create( mRenderer );
 
-	setupMatrices();
+	setupView();
 }
 
 void TextureFontApp::resize( ResizeEvent event )
 {
 	//  Resize or orientation change
-	setupMatrices();
+	setupView();
 }
 
 #if defined( CINDER_ANDROID )
@@ -80,6 +83,7 @@ void TextureFontApp::resume(bool renewContext)
 		mRenderer = pp::Renderer::create();
 		mDraw = pp::Draw::create(mRenderer);
 		mFontDraw = pp::TextureFontDraw::create( mRenderer );
+        std::string str( "Granted, then, that certain transformations do happen, it is essential that we should regard them in the philosophic manner of fairy tales, not in the unphilosophic manner of science and the \"Laws of Nature.\" When we are asked why eggs turn into birds or fruits fall in autumn, we must answer exactly as the fairy godmother would answer if Cinderella asked her why mice turned into horses or her clothes fell from her at twelve o'clock. We must answer that it is MAGIC. It is not a \"law,\" for we do not understand its general formula." );
 	}
 }
 #endif
@@ -103,15 +107,18 @@ void TextureFontApp::mouseDown( MouseEvent event )
 {
 #if ! defined( CINDER_ANDROID )
 	mFont = Font::create( Font::getNames()[Rand::randInt() % Font::getNames().size()], mFont.getSize() );
-#endif
-	console() << mFont->getName() << std::endl;
 	mTextureFont = pp::TextureFont::create( mFont );
+#endif
 }
 
-void TextureFontApp::setupMatrices()
+void TextureFontApp::setupView()
 {
 	Vec2i windowSize = getWindowSize();
 	mMatrices.setMatricesWindow(windowSize.x, windowSize.y);
+
+	std::string str( "Granted, then, that certain transformations do happen, it is essential that we should regard them in the philosophic manner of fairy tales, not in the unphilosophic manner of science and the \"Laws of Nature.\" When we are asked why eggs turn into birds or fruits fall in autumn, we must answer exactly as the fairy godmother would answer if Cinderella asked her why mice turned into horses or her clothes fell from her at twelve o'clock. We must answer that it is MAGIC. It is not a \"law,\" for we do not understand its general formula." );
+	mTextBounds = Rectf( 40, mTextureFont->getAscent() + 40, getWindowWidth() - 40, getWindowHeight() - 40 );
+    mTextBox = TextBox().font( mFont ).text( str ).size( mTextBounds.getWidth(), mTextBounds.getHeight() );
 }
 
 void TextureFontApp::draw()
@@ -119,18 +126,16 @@ void TextureFontApp::draw()
 	gl::enableAlphaBlending();
 	gl::clear( Color( 0, 0, 0 ) );
 
-	std::string str( "Granted, then, that certain transformations do happen, it is essential that we should regard them in the philosophic manner of fairy tales, not in the unphilosophic manner of science and the \"Laws of Nature.\" When we are asked why eggs turn into birds or fruits fall in autumn, we must answer exactly as the fairy godmother would answer if Cinderella asked her why mice turned into horses or her clothes fell from her at twelve o'clock. We must answer that it is MAGIC. It is not a \"law,\" for we do not understand its general formula." );
-	Rectf boundsRect( 40, mTextureFont->getAscent() + 40, getWindowWidth() - 40, getWindowHeight() - 40 );
-
 	mRenderer->bindProg();
 	mRenderer->setModelView( mMatrices.getModelView() );
 	mRenderer->setProjection( mMatrices.getProjection() );
 
-	mFontDraw->setColor( ColorA( 0.17f, 0.72f, 0.88f, 1.0f ) );
-	mFontDraw->drawStringWrapped( *mTextureFont, str, boundsRect );
+	mRenderer->setColor( ColorA( 0.17f, 0.72f, 0.88f, 1.0f ) );
+    mTextureFont->drawGlyphs(*mRenderer, mTextBox.measureGlyphs(), mTextBounds.getUpperLeft());
+	// mFontDraw->drawStringWrapped( *mTextureFont, str, boundsRect );
 
 	// Draw FPS
-	mFontDraw->setColor( Color::white() );
+	mRenderer->setColor( Color::white() );
 	mFontDraw->drawString( *mTextureFont, toString( floor(getAverageFps()) ) + " FPS", Vec2f( 10, getWindowHeight() - mTextureFont->getDescent() ) );
 
 	// Draw Font Name
@@ -138,10 +143,11 @@ void TextureFontApp::draw()
 	mFontDraw->drawString( *mTextureFont, mTextureFont->getName(), Vec2f( getWindowWidth() - fontNameWidth - 10, getWindowHeight() - mTextureFont->getDescent() ) );
 
 	//  mDraw shares its renderer with mFontDraw, so not required to bind prog and set up matrices again
-	mDraw->setColor( ColorA::white() );
-	mDraw->drawStrokedRect( boundsRect );
+	mRenderer->setColor( ColorA::white() );
+	mDraw->drawStrokedRect( mTextBounds );
 
 	mRenderer->unbindProg();
 }
 
 CINDER_APP_NATIVE( TextureFontApp, RendererGl(0) )
+
