@@ -14,7 +14,7 @@ namespace cinder { namespace pp {
 class DefaultDrawShader : public DrawShader
 {
 public:
-	DefaultDrawShader() : mBound(false), mBoundTextures(0),
+	DefaultDrawShader(ContextRef context) : mContext(context), mBound(false), mBoundTextures(0),
 		mPositionDim(3), mPositionArray(0), mTexCoordArray(0), mColorArray(0), mNormalArray(0)
 	{
 		try {
@@ -80,6 +80,7 @@ public:
 	virtual void bindProg()
 	{
 		if (!mBound) {
+			mContext->bindProg(*this);
 			mShader.bind();
 			mBound = true;
 		}
@@ -160,6 +161,7 @@ public:
 	static const char* frag;
 
 protected:
+	ContextRef mContext;
 	bool     mBound;
 	uint32_t mBoundTextures;
 	map<int, GLenum> mTextureTargets;
@@ -231,9 +233,9 @@ const char* DefaultDrawShader::frag =
 		"  }\n"
 		"}\n";
 
-DrawShaderRef DrawShader::create(DrawShaderType rendererType)
+DrawShaderRef DrawShader::create(DrawShaderType rendererType, ContextRef context)
 {
-	return DrawShaderRef(new DefaultDrawShader());
+	return DrawShaderRef(new DefaultDrawShader(context));
 }
 
 } }

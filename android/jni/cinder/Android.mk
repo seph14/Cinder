@@ -113,12 +113,14 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 ifdef USE_GLES2
 
 # Propipe block
-PROPIPE_SRC  = ../../../blocks/propipe/src/propipe
+PROPIPE_SRC  = ../../../blocks/propipe/src
 # Built-in propipe block
-LOCAL_SRC_FILES  += $(PROPIPE_SRC)/Draw.cpp \
-                    $(PROPIPE_SRC)/DrawShader.cpp \
-                    $(PROPIPE_SRC)/Matrices.cpp \
-                    $(PROPIPE_SRC)/TextureFont.cpp
+LOCAL_SRC_FILES  += $(PROPIPE_SRC)/propipe/Context.cpp \
+                    $(PROPIPE_SRC)/propipe/Draw.cpp \
+                    $(PROPIPE_SRC)/propipe/DrawShader.cpp \
+                    $(PROPIPE_SRC)/propipe/Matrices.cpp \
+                    $(PROPIPE_SRC)/propipe/TextureFont.cpp
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(PROPIPE_SRC)
 
 LOCAL_SRC_FILES  += $(CINDER_SRC)/gl/GlslProg.cpp \
                     $(CINDER_SRC)/gl/Vbo.cpp

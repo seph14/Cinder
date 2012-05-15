@@ -5,6 +5,8 @@
 #include "cinder/Exception.h"
 #include "cinder/Matrix.h"
 
+#include "propipe/Context.h"
+
 namespace cinder { namespace pp {
 
 typedef std::shared_ptr<class DrawShader> DrawShaderRef;
@@ -48,7 +50,7 @@ class DrawShader
 	virtual void bindTexture(const gl::Texture& tex, GLuint textureUnit = 0) = 0;
 	virtual void unbindTexture(GLuint textureUnit = 0) = 0;
 
-	static DrawShaderRef create(DrawShaderType rendererType = DEFAULT);
+	static DrawShaderRef create(DrawShaderType rendererType = DEFAULT, ContextRef context = Context::create());
 };
 
 class DrawShaderException : public Exception {

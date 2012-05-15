@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DrawShader.h"
+#include "propipe/DrawShader.h"
 
 #include "cinder/Cinder.h"
 
