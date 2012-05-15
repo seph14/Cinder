@@ -7,12 +7,12 @@
 
 namespace cinder { namespace pp {
 
-typedef std::shared_ptr<class Renderer> RendererRef;
+typedef std::shared_ptr<class DrawShader> DrawShaderRef;
 
-class Renderer 
+class DrawShader 
 {
   public:
-	enum RendererType {
+	enum DrawShaderType {
 		DEFAULT = 0,
 	};
 
@@ -48,10 +48,10 @@ class Renderer
 	virtual void bindTexture(const gl::Texture& tex, GLuint textureUnit = 0) = 0;
 	virtual void unbindTexture(GLuint textureUnit = 0) = 0;
 
-	static RendererRef create(RendererType rendererType = DEFAULT);
+	static DrawShaderRef create(DrawShaderType rendererType = DEFAULT);
 };
 
-class RendererException : public Exception {
+class DrawShaderException : public Exception {
 };
 
 

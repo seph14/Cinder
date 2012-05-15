@@ -1,5 +1,5 @@
 #include "Draw.h"
-#include "Renderer.h"
+#include "DrawShader.h"
 
 #include "cinder/gl/GlslProg.h"
 #include "cinder/Triangulate.h"
@@ -8,87 +8,7 @@ using namespace cinder::gl;
 
 namespace cinder { namespace pp {
 
-void DrawBase::setModelView(const Matrix44f& mvp)
-{
-	mRenderer->setModelView(mvp);
-}
-
-void DrawBase::setProjection(const Matrix44f& proj)
-{
-	mRenderer->setProjection(proj);
-}
-
-void DrawBase::setColor(const ColorA& color)
-{
-	mRenderer->setColor(color);
-}
-
-void DrawBase::setPositionArray(GLfloat* pos, int dim)
-{
-	mRenderer->setPositionArray(pos, dim);
-}
-
-void DrawBase::setTexCoordArray(GLfloat* texCoord)
-{
-	mRenderer->setTexCoordArray(texCoord);
-}
-
-void DrawBase::setColorArray(const GLvoid* colors, int colorType, int dim)
-{
-	mRenderer->setColorArray(colors, colorType, dim);
-}
-
-void DrawBase::setNormalArray(GLfloat* normals)
-{
-	mRenderer->setNormalArray(normals);
-}
-
-void DrawBase::resetArrays()
-{
-	mRenderer->resetArrays();
-}
-
-void DrawBase::enableClientState(uint32_t clientState)
-{
-	mRenderer->enableClientState(clientState);
-}
-
-void DrawBase::disableClientState()
-{
-	mRenderer->disableClientState();
-}
-
-void DrawBase::bindProg()
-{
-	mRenderer->bindProg();
-}
-
-void DrawBase::unbindProg()
-{
-	mRenderer->unbindProg();
-}
-
-void DrawBase::bindTexture(const gl::Texture& tex, GLuint textureUnit)
-{
-	mRenderer->bindTexture(tex, textureUnit);
-}
-
-void DrawBase::unbindTexture(GLuint textureUnit)
-{
-	mRenderer->unbindTexture(textureUnit);
-}
-
-DrawBase::DrawBase(RendererRef renderer)
-	: mRenderer(renderer)
-{
-}
-
-DrawBase::~DrawBase()
-{
-	mRenderer.reset();
-}
-
-Draw::Draw(RendererRef renderer) : DrawBase(renderer)
+Draw::Draw(DrawShaderRef shader) : mShader(shader)
 {
 }
 
@@ -104,18 +24,18 @@ void Draw::drawLine( const Vec2f &start, const Vec2f &end )
 void Draw::drawLine( const Vec3f &start, const Vec3f &end )
 {
 	float lineVerts[3*2];
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(lineVerts, 3);
+	mShader->resetArrays();
+	mShader->setPositionArray(lineVerts, 3);
 	lineVerts[0] = start.x; lineVerts[1] = start.y; lineVerts[2] = start.z;
 	lineVerts[3] = end.x; lineVerts[4] = end.y; lineVerts[5] = end.z; 
-	mRenderer->enableClientState();
+	mShader->enableClientState();
 	glDrawArrays( GL_LINES, 0, 2 );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 namespace {
 
-void drawCubeImpl( Renderer& render, const Vec3f &c, const Vec3f &size, bool drawColors )
+void drawCubeImpl( DrawShader& render, const Vec3f &c, const Vec3f &size, bool drawColors )
 {
 	GLfloat sx = size.x * 0.5f;
 	GLfloat sy = size.y * 0.5f;
@@ -175,12 +95,12 @@ void drawCubeImpl( Renderer& render, const Vec3f &c, const Vec3f &size, bool dra
 
 void Draw::drawCube( const Vec3f &center, const Vec3f &size )
 {
-	drawCubeImpl( *mRenderer, center, size, false );
+	drawCubeImpl( *mShader, center, size, false );
 }
 
 void Draw::drawColorCube( const Vec3f &center, const Vec3f &size )
 {
-	drawCubeImpl( *mRenderer, center, size, true );
+	drawCubeImpl( *mShader, center, size, true );
 }
 
 void Draw::drawStrokedCube( const Vec3f &center, const Vec3f &size )
@@ -213,12 +133,12 @@ void Draw::drawSphere( const Vec3f &center, float radius, int segments )
 	GLfloat *normals   = new GLfloat[(segments+1)*2*3];
 	GLfloat *texCoords = new GLfloat[(segments+1)*2*2];
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray( verts, 3 );
-	mRenderer->setTexCoordArray( texCoords );
-	mRenderer->setNormalArray( normals );
+	mShader->resetArrays();
+	mShader->setPositionArray( verts, 3 );
+	mShader->setTexCoordArray( texCoords );
+	mShader->setNormalArray( normals );
 
-	mRenderer->enableClientState();
+	mShader->enableClientState();
 
 	for( int j = 0; j < segments / 2; j++ ) {
 		float theta1 = j * 2 * 3.14159f / segments - ( 3.14159f / 2.0f );
@@ -247,7 +167,7 @@ void Draw::drawSphere( const Vec3f &center, float radius, int segments )
 		glDrawArrays( GL_TRIANGLE_STRIP, 0, (segments + 1)*2 );
 	}
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 	
 	delete [] verts;
 	delete [] normals;
@@ -277,11 +197,11 @@ void Draw::drawSolidCircle( const Vec2f &center, float radius, int numSegments )
 		verts[(s+1)*2+1] = center.y + math<float>::sin( t ) * radius;
 	}
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray( verts, 2 );
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray( verts, 2 );
+	mShader->enableClientState();
 	glDrawArrays( GL_TRIANGLE_FAN, 0, numSegments + 2 );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 	delete [] verts;
 }
 
@@ -300,11 +220,11 @@ void Draw::drawStrokedCircle( const Vec2f &center, float radius, int numSegments
 		verts[s*2+1] = center.y + math<float>::sin( t ) * radius;
 	}
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray( verts, 2 );
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray( verts, 2 );
+	mShader->enableClientState();
 	glDrawArrays( GL_LINE_LOOP, 0, numSegments );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 	delete [] verts;
 }
 
@@ -324,11 +244,11 @@ void Draw::drawSolidEllipse( const Vec2f &center, float radiusX, float radiusY, 
 		verts[(s+1)*2+0] = center.x + math<float>::cos( t ) * radiusX;
 		verts[(s+1)*2+1] = center.y + math<float>::sin( t ) * radiusY;
 	}
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(verts, 2);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray(verts, 2);
+	mShader->enableClientState();
 	glDrawArrays( GL_TRIANGLE_FAN, 0, numSegments + 2 );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 	delete [] verts;
 }
 
@@ -346,11 +266,11 @@ void Draw::drawStrokedEllipse( const Vec2f &center, float radiusX, float radiusY
 		verts[s*2+0] = center.x + math<float>::cos( t ) * radiusX;
 		verts[s*2+1] = center.y + math<float>::sin( t ) * radiusY;
 	}
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(verts, 2);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray(verts, 2);
+	mShader->enableClientState();
 	glDrawArrays( GL_LINE_LOOP, 0, numSegments );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 	delete [] verts;
 }
 
@@ -368,12 +288,12 @@ void Draw::drawSolidRect( const Rectf &rect, bool textureRectangle )
 	verts[3*2+0] = rect.getX1(); texCoords[3*2+0] = ( textureRectangle ) ? rect.getX1() : 0;
 	verts[3*2+1] = rect.getY2(); texCoords[3*2+1] = ( textureRectangle ) ? rect.getY2() : 1;
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(verts, 2);
-	mRenderer->setTexCoordArray(texCoords);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray(verts, 2);
+	mShader->setTexCoordArray(texCoords);
+	mShader->enableClientState();
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::drawStrokedRect( const Rectf &rect )
@@ -384,20 +304,20 @@ void Draw::drawStrokedRect( const Rectf &rect )
 	verts[4] = rect.getX2();	verts[5] = rect.getY2();
 	verts[6] = rect.getX1();	verts[7] = rect.getY2();
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray( verts, 2 );
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray( verts, 2 );
+	mShader->enableClientState();
 	glDrawArrays( GL_LINE_LOOP, 0, 4 );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::drawCoordinateFrame( float axisLength, float headLength, float headRadius )
 {
-	mRenderer->setColor(ColorA8u(255, 0, 0, 255));
+	mShader->setColor(ColorA8u(255, 0, 0, 255));
 	drawVector( Vec3f::zero(), Vec3f::xAxis() * axisLength, headLength, headRadius );
-	mRenderer->setColor(ColorA8u(0, 255, 0, 255));
+	mShader->setColor(ColorA8u(0, 255, 0, 255));
 	drawVector( Vec3f::zero(), Vec3f::yAxis() * axisLength, headLength, headRadius );
-	mRenderer->setColor(ColorA8u(0, 0, 255, 255));
+	mShader->setColor(ColorA8u(0, 0, 255, 255));
 	drawVector( Vec3f::zero(), Vec3f::zAxis() * axisLength, headLength, headRadius );
 }
 
@@ -407,9 +327,9 @@ void Draw::drawVector( const Vec3f &start, const Vec3f &end, float headLength, f
 	float lineVerts[3*2];
 	Vec3f coneVerts[NUM_SEGMENTS+2];
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(lineVerts, 3);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray(lineVerts, 3);
+	mShader->enableClientState();
 
 	lineVerts[0] = start.x; lineVerts[1] = start.y; lineVerts[2] = start.z;
 	lineVerts[3] = end.x; lineVerts[4] = end.y; lineVerts[5] = end.z;	
@@ -421,7 +341,7 @@ void Draw::drawVector( const Vec3f &start, const Vec3f &end, float headLength, f
 	Vec3f left = axis.cross( temp ).normalized();
 	Vec3f up = axis.cross( left ).normalized();
 
-	mRenderer->setPositionArray(&coneVerts[0].x, 3);
+	mShader->setPositionArray(&coneVerts[0].x, 3);
 	coneVerts[0] = Vec3f( end + axis * headLength );
 	for( int s = 0; s <= NUM_SEGMENTS; ++s ) {
 		float t = s / (float)NUM_SEGMENTS;
@@ -431,7 +351,7 @@ void Draw::drawVector( const Vec3f &start, const Vec3f &end, float headLength, f
 	glDrawArrays( GL_TRIANGLE_FAN, 0, NUM_SEGMENTS+2 );
 
 	// draw the cap
-	mRenderer->setPositionArray(&coneVerts[0].x, 3);
+	mShader->setPositionArray(&coneVerts[0].x, 3);
 	coneVerts[0] = end;
 	for( int s = 0; s <= NUM_SEGMENTS; ++s ) {
 		float t = s / (float)NUM_SEGMENTS;
@@ -440,7 +360,7 @@ void Draw::drawVector( const Vec3f &start, const Vec3f &end, float headLength, f
 	}
 	glDrawArrays( GL_TRIANGLE_FAN, 0, NUM_SEGMENTS+2 );
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::drawFrustum( const Camera &cam )
@@ -452,9 +372,9 @@ void Draw::drawFrustum( const Camera &cam )
 	Vec3f farTopLeft, farTopRight, farBottomLeft, farBottomRight;
 	cam.getFarClipCoordinates( &farTopLeft, &farTopRight, &farBottomLeft, &farBottomRight );
 	
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(&vertex[0].x, 3);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray(&vertex[0].x, 3);
+	mShader->enableClientState();
 	
 	vertex[0] = cam.getEyePoint();
 	vertex[1] = nearTopLeft;
@@ -491,7 +411,7 @@ void Draw::drawFrustum( const Camera &cam )
 
 	glLineWidth( 1.0f );
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::drawTorus( float outterRadius, float innerRadius, int longitudeSegments, int latitudeSegments )
@@ -506,11 +426,11 @@ void Draw::drawTorus( float outterRadius, float innerRadius, int longitudeSegmen
 	GLushort *indices = new GLushort[latitudeSegments * 2];
 	float ct, st, cp, sp;
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(vertex, 3);
-	mRenderer->setTexCoordArray(tex);
-	mRenderer->setNormalArray(normal);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray(vertex, 3);
+	mShader->setTexCoordArray(tex);
+	mShader->setNormalArray(normal);
+	mShader->enableClientState();
 
 	for( i = 0; i < longitudeSegments; i++ ) {
 		ct = cos(2.0f * (float)M_PI * (float)i / (float)(longitudeSegments - 1));
@@ -541,7 +461,7 @@ void Draw::drawTorus( float outterRadius, float innerRadius, int longitudeSegmen
 		glDrawElements( GL_TRIANGLE_STRIP, (latitudeSegments)*2, GL_UNSIGNED_SHORT, indices );
 	}
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 	
 	delete [] normal;
 	delete [] tex;
@@ -560,11 +480,11 @@ void Draw::drawCylinder( float baseRadius, float topRadius, float height, int sl
 	GLfloat *tex = new GLfloat[stacks * slices * 2];
 	GLushort *indices = new GLushort[slices * 2];
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(vertex, 3);
-	mRenderer->setTexCoordArray(tex);
-	mRenderer->setNormalArray(normal);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray(vertex, 3);
+	mShader->setTexCoordArray(tex);
+	mShader->setNormalArray(normal);
+	mShader->enableClientState();
 
 	for(i=0;i<slices;i++) {
 		float u = (float)i / (float)(slices - 1);
@@ -598,7 +518,7 @@ void Draw::drawCylinder( float baseRadius, float topRadius, float height, int sl
 		glDrawElements( GL_TRIANGLE_STRIP, (slices)*2, GL_UNSIGNED_SHORT, indices );
 	}
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 
 	delete [] normal;
 	delete [] tex;
@@ -608,22 +528,22 @@ void Draw::drawCylinder( float baseRadius, float topRadius, float height, int sl
 
 void Draw::draw( const PolyLine<Vec2f> &polyLine )
 {
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray((GLfloat*) &(polyLine.getPoints()[0]), 2);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray((GLfloat*) &(polyLine.getPoints()[0]), 2);
+	mShader->enableClientState();
 	glDrawArrays( ( polyLine.isClosed() ) ? GL_LINE_LOOP : GL_LINE_STRIP, 0, polyLine.size() );
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::draw( const class PolyLine<Vec3f> &polyLine )
 {
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray((GLfloat*) &(polyLine.getPoints()[0]), 3);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray((GLfloat*) &(polyLine.getPoints()[0]), 3);
+	mShader->enableClientState();
 	glDrawArrays( ( polyLine.isClosed() ) ? GL_LINE_LOOP : GL_LINE_STRIP, 0, polyLine.size() );
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::draw( const class Path2d &path2d, float approximationScale )
@@ -632,26 +552,26 @@ void Draw::draw( const class Path2d &path2d, float approximationScale )
 		return;
 	std::vector<Vec2f> points = path2d.subdivide( approximationScale );
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray((GLfloat*) &(points[0]), 2);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray((GLfloat*) &(points[0]), 2);
+	mShader->enableClientState();
 	glDrawArrays( GL_LINE_STRIP, 0, points.size() );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::draw( const class Shape2d &shape2d, float approximationScale )
 {
-	mRenderer->enableClientState( Renderer::ENABLE_ATTRIBS | Renderer::UPDATE_UNIFORMS );
+	mShader->enableClientState( DrawShader::ENABLE_ATTRIBS | DrawShader::UPDATE_UNIFORMS );
 
 	for( std::vector<Path2d>::const_iterator contourIt = shape2d.getContours().begin(); contourIt != shape2d.getContours().end(); ++contourIt ) {
 		if( contourIt->getNumSegments() == 0 )
 			continue;
 		std::vector<Vec2f> points = contourIt->subdivide( approximationScale );
-		setPositionArray((GLfloat *) &(points[0]), 2);
-		mRenderer->enableClientState( Renderer::UPLOAD_ATTRIBS );
+		mShader->setPositionArray((GLfloat *) &(points[0]), 2);
+		mShader->enableClientState( DrawShader::UPLOAD_ATTRIBS );
 		glDrawArrays( GL_LINE_STRIP, 0, points.size() );
 	}
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::drawSolid( const class Path2d &path2d, float approximationScale )
@@ -675,46 +595,46 @@ void Draw::draw( const TriMesh2d &mesh )
 	if( mesh.getNumVertices() <= 0 )
 		return;
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray((GLfloat*)&(mesh.getVertices()[0]), 2);
+	mShader->resetArrays();
+	mShader->setPositionArray((GLfloat*)&(mesh.getVertices()[0]), 2);
 	if( mesh.hasColorsRgb() ) {
-		mRenderer->setColorArray(&(mesh.getColorsRGB()[0]), GL_FLOAT, 3);
+		mShader->setColorArray(&(mesh.getColorsRGB()[0]), GL_FLOAT, 3);
 	}
 	else if( mesh.hasColorsRgba() ) {
-		mRenderer->setColorArray(&(mesh.getColorsRGBA()[0]), GL_FLOAT, 4);
+		mShader->setColorArray(&(mesh.getColorsRGBA()[0]), GL_FLOAT, 4);
 	}
 
 	if( mesh.hasTexCoords() ) {
-		mRenderer->setTexCoordArray((GLfloat*) &(mesh.getTexCoords()[0]));
+		mShader->setTexCoordArray((GLfloat*) &(mesh.getTexCoords()[0]));
 	}
 
-	mRenderer->enableClientState();
+	mShader->enableClientState();
 	glDrawElements( GL_TRIANGLES, mesh.getNumIndices(), GL_UNSIGNED_INT, &(mesh.getIndices()[0]) );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 
 void Draw::draw( const TriMesh &mesh )
 {
-	mRenderer->resetArrays();
+	mShader->resetArrays();
 	if( mesh.hasNormals() ) {
-		mRenderer->setNormalArray((GLfloat*)&(mesh.getNormals()[0]));
+		mShader->setNormalArray((GLfloat*)&(mesh.getNormals()[0]));
 	}
 	
 	if( mesh.hasColorsRGB() ) {
-		mRenderer->setColorArray(&(mesh.getColorsRGB()[0]), GL_FLOAT, 3);
+		mShader->setColorArray(&(mesh.getColorsRGB()[0]), GL_FLOAT, 3);
 	}
 	else if( mesh.hasColorsRGBA() ) {
-		mRenderer->setColorArray(&(mesh.getColorsRGBA()[0]), GL_FLOAT, 4);
+		mShader->setColorArray(&(mesh.getColorsRGBA()[0]), GL_FLOAT, 4);
 	}
 
 	if( mesh.hasTexCoords() ) {
-		mRenderer->setTexCoordArray((GLfloat*)&(mesh.getTexCoords()[0]));
+		mShader->setTexCoordArray((GLfloat*)&(mesh.getTexCoords()[0]));
 	}
 
-	mRenderer->enableClientState();
+	mShader->enableClientState();
 	glDrawElements( GL_TRIANGLES, mesh.getNumIndices(), GL_UNSIGNED_INT, &(mesh.getIndices()[0]) );
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::draw( const VboMesh &vbo )
@@ -734,14 +654,14 @@ void Draw::drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDe
 	verts[2] = pos + bbRight * ( 0.5f * scale.x * cosA - 0.5f * sinA * scale.y ) + bbUp * ( 0.5f * scale.x * sinA + 0.5f * cosA * scale.y );
 	verts[3] = pos + bbRight * ( 0.5f * scale.x * cosA - -0.5f * sinA * scale.y ) + bbUp * ( 0.5f * scale.x * sinA + -0.5f * cosA * scale.y );
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray((GLfloat *) verts, 3);
-	mRenderer->setTexCoordArray(texCoords);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray((GLfloat *) verts, 3);
+	mShader->setTexCoordArray(texCoords);
+	mShader->enableClientState();
 
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
 void Draw::draw( const Texture &texture )
@@ -766,10 +686,10 @@ void Draw::draw( const Texture &texture, const Area &srcArea, const Rectf &destR
 	GLfloat verts[8];
 	GLfloat texCoords[8];
 
-	mRenderer->resetArrays();
-	mRenderer->setPositionArray(verts, 2);
-	mRenderer->setTexCoordArray(texCoords);
-	mRenderer->enableClientState();
+	mShader->resetArrays();
+	mShader->setPositionArray(verts, 2);
+	mShader->setTexCoordArray(texCoords);
+	mShader->enableClientState();
 
 	verts[0*2+0] = destRect.getX2(); verts[0*2+1] = destRect.getY1(); 
 	verts[1*2+0] = destRect.getX1(); verts[1*2+1] = destRect.getY1(); 
@@ -784,12 +704,12 @@ void Draw::draw( const Texture &texture, const Area &srcArea, const Rectf &destR
 
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 
-	mRenderer->disableClientState();
+	mShader->disableClientState();
 }
 
-DrawRef Draw::create(RendererRef renderer)
+DrawRef Draw::create(DrawShaderRef shader)
 {
-	return DrawRef(new Draw(renderer));
+	return DrawRef(new Draw(shader));
 }
 
 } }

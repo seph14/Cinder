@@ -1,4 +1,4 @@
-#include "Renderer.h"
+#include "DrawShader.h"
 #include "cinder/gl/GlslProg.h"
 #include "cinder/gl/Texture.h"
 
@@ -10,11 +10,11 @@ using namespace cinder::gl;
 
 namespace cinder { namespace pp {
 
-/** Default renderer implementation */
-class PPRenderer : public Renderer
+/** Default shader implementation */
+class DefaultDrawShader : public DrawShader
 {
 public:
-	PPRenderer() : mBound(false), mBoundTextures(0),
+	DefaultDrawShader() : mBound(false), mBoundTextures(0),
 		mPositionDim(3), mPositionArray(0), mTexCoordArray(0), mColorArray(0), mNormalArray(0)
 	{
 		try {
@@ -26,7 +26,7 @@ public:
 			mColorAttrib    = mShader.getAttribLocation("aColor");
 		}
 		catch (GlslProgCompileExc& ex) {
-			throw RendererException();
+			throw DrawShaderException();
 			// CI_LOGE("Error compiling: %s", ex.what());
 		}
 	}
@@ -185,7 +185,7 @@ protected:
 	GLfloat* mNormalArray;
 };
 
-const char* PPRenderer::vert =
+const char* DefaultDrawShader::vert =
 		"attribute vec4 aPosition;\n"
 		"attribute vec2 aTexCoord;\n"
 		"attribute vec4 aColor;\n"
@@ -212,7 +212,7 @@ const char* PPRenderer::vert =
 		"  gl_Position = uMVP * aPosition;\n"
 		"}\n";
 
-const char* PPRenderer::frag =
+const char* DefaultDrawShader::frag =
 		"precision mediump float;\n"
 
 		"uniform sampler2D sTexture;\n"
@@ -231,9 +231,9 @@ const char* PPRenderer::frag =
 		"  }\n"
 		"}\n";
 
-RendererRef Renderer::create(RendererType rendererType)
+DrawShaderRef DrawShader::create(DrawShaderType rendererType)
 {
-	return RendererRef(new PPRenderer());
+	return DrawShaderRef(new DefaultDrawShader());
 }
 
 } }

@@ -194,8 +194,8 @@ const vector<std::string>& TextEngineFreeType::getFontNames( bool forceRefresh )
 FontRef TextEngineFreeType::getDefaultFont()
 {
 #if defined( CINDER_ANDROID )
-		if( ! mDefaultFont )
-			mDefaultFont = createFont(loadFile("/system/fonts/DroidSans.ttf"), 12);
+		if ( !mDefaultFont )
+			mDefaultFont = createFont( loadFile("/system/fonts/DroidSans.ttf"), 24 );
 		return mDefaultFont;
 #else
         return FontRef();

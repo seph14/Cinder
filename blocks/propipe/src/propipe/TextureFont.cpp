@@ -1,5 +1,5 @@
 #include "TextureFont.h"
-#include "Renderer.h"
+#include "DrawShader.h"
 #include "cinder/Text.h"
 #include "cinder/gl/TextureFontAtlas.h"
 
@@ -7,13 +7,13 @@ using namespace std;
 
 namespace cinder { namespace pp {
 
-TextureFontDrawRef TextureFontDraw::create(RendererRef renderer)
+TextureFontDrawRef TextureFontDraw::create(DrawShaderRef shader)
 {
-	return TextureFontDrawRef(new TextureFontDraw(renderer));
+	return TextureFontDrawRef(new TextureFontDraw(shader));
 }
 
-TextureFontDraw::TextureFontDraw(RendererRef renderer)
-	: DrawBase(renderer)
+TextureFontDraw::TextureFontDraw(DrawShaderRef shader)
+	: mShader(shader)
 {
 }
 
@@ -25,22 +25,22 @@ void TextureFontDraw::drawString( TextureFont& texFont, const string &str, const
 {
 	TextBox tbox = TextBox().font( texFont.getFont() ).text( str ).size( TextBox::GROW, TextBox::GROW ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
-	texFont.drawGlyphs( *mRenderer, glyphMeasures, baseline, options );
+	texFont.drawGlyphs( *mShader, glyphMeasures, baseline, options );
 }
 
 void TextureFontDraw::drawString( TextureFont& texFont, const string &str, const Rectf &fitRect, const Vec2f &offset, const TextureFont::DrawOptions &options )
 {
 	TextBox tbox = TextBox().font( texFont.getFont() ).text( str ).size( TextBox::GROW, fitRect.getHeight() ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
-	texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
+	texFont.drawGlyphs( *mShader, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
 }
 
 void TextureFontDraw::drawStringWrapped( TextureFont& texFont, const string &str, const Rectf &fitRect, const Vec2f &offset, const TextureFont::DrawOptions &options )
 {
 	TextBox tbox = TextBox().font( texFont.getFont() ).text( str ).size( fitRect.getWidth(), fitRect.getHeight() ).ligate( options.getLigate() );
 	vector<pair<uint16_t,Vec2f> > glyphMeasures = tbox.measureGlyphs();
-	texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect.getUpperLeft() + offset, options );
-	// texFont.drawGlyphs( *mRenderer, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
+	texFont.drawGlyphs( *mShader, glyphMeasures, fitRect.getUpperLeft() + offset, options );
+	// texFont.drawGlyphs( *mShader, glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
 }
 
 TextureFont::TextureFont( const FontRef font, const string &supportedChars, gl::TextureFontAtlasRef atlas )
@@ -48,7 +48,7 @@ TextureFont::TextureFont( const FontRef font, const string &supportedChars, gl::
 {
 }
 
-void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const vector<ColorA8u> &colors )
+void TextureFont::drawGlyphs( DrawShader& shader, const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Vec2f &baselineIn, const DrawOptions &options, const vector<ColorA8u> &colors )
 {
 	if( mTextures.empty() )
 		return;
@@ -112,20 +112,20 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 		if( curIdx == 0 )
 			continue;
 		
-		renderer.bindTexture(curTex);
+		shader.bindTexture(curTex);
 
-		renderer.setPositionArray(&verts[0], 2);
-		renderer.setTexCoordArray(&texCoords[0]);
-		renderer.setColorArray(colors.empty() ? NULL : (GLubyte*) &vertColors[0]);
+		shader.setPositionArray(&verts[0], 2);
+		shader.setTexCoordArray(&texCoords[0]);
+		shader.setColorArray(colors.empty() ? NULL : (GLubyte*) &vertColors[0]);
 
-		renderer.enableClientState(texIdx == 0 ? Renderer::STATE_ALL : Renderer::UPLOAD_ATTRIBS);
+		shader.enableClientState(texIdx == 0 ? DrawShader::STATE_ALL : DrawShader::UPLOAD_ATTRIBS);
 		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
-		renderer.disableClientState();
+		shader.disableClientState();
 	}
-	renderer.unbindTexture();
+	shader.unbindTexture();
 }
 
-void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options, const vector<ColorA8u> &colors )
+void TextureFont::drawGlyphs( DrawShader& shader, const vector<pair<uint16_t,Vec2f> > &glyphMeasures, const Rectf &clip, Vec2f offset, const DrawOptions &options, const vector<ColorA8u> &colors )
 {
 	if( mTextures.empty() )
 		return;
@@ -207,17 +207,17 @@ void TextureFont::drawGlyphs( Renderer& renderer, const vector<pair<uint16_t,Vec
 		if( curIdx == 0 )
 			continue;
 		
-		renderer.bindTexture(curTex);
+		shader.bindTexture(curTex);
 
-		renderer.setPositionArray(&verts[0], 2);
-		renderer.setTexCoordArray(&texCoords[0]);
-		renderer.setColorArray(colors.empty() ? NULL : (GLubyte*) &vertColors[0]);
+		shader.setPositionArray(&verts[0], 2);
+		shader.setTexCoordArray(&texCoords[0]);
+		shader.setColorArray(colors.empty() ? NULL : (GLubyte*) &vertColors[0]);
 
-		renderer.enableClientState(texIdx == 0 ? Renderer::STATE_ALL : Renderer::UPLOAD_ATTRIBS);
+		shader.enableClientState(texIdx == 0 ? DrawShader::STATE_ALL : DrawShader::UPLOAD_ATTRIBS);
 		glDrawElements( GL_TRIANGLES, indices.size(), CINDER_GL_INDEX_TYPE, &indices[0] );
 	}
-	renderer.disableClientState();
-	renderer.unbindTexture();
+	shader.disableClientState();
+	shader.unbindTexture();
 }
 
 #if defined( CINDER_ANDROID)

@@ -116,8 +116,8 @@ ifdef USE_GLES2
 PROPIPE_SRC  = ../../../blocks/propipe/src/propipe
 # Built-in propipe block
 LOCAL_SRC_FILES  += $(PROPIPE_SRC)/Draw.cpp \
+                    $(PROPIPE_SRC)/DrawShader.cpp \
                     $(PROPIPE_SRC)/Matrices.cpp \
-                    $(PROPIPE_SRC)/Renderer.cpp \
                     $(PROPIPE_SRC)/TextureFont.cpp
 
 LOCAL_SRC_FILES  += $(CINDER_SRC)/gl/GlslProg.cpp \

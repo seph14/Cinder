@@ -46,7 +46,7 @@ class BasicAudioApp : public AppNative, public pd::Receiver {
     FontRef                mFont;
     pp::TextureFontRef     mTextureFont;
 
-    pp::RendererRef        mRenderer;
+    pp::DrawShaderRef      mShader;
     pp::DrawRef            mDraw;
     pp::TextureFontDrawRef mFontDraw;
 
@@ -83,9 +83,9 @@ void BasicAudioApp::setup()
 
     mTextureFont = pp::TextureFont::create( mFont );
 
-    mRenderer = pp::Renderer::create();
-    mFontDraw = pp::TextureFontDraw::create( mRenderer );
-    mDraw = pp::Draw::create( mRenderer );
+    mShader = pp::DrawShader::create();
+    mFontDraw = pp::TextureFontDraw::create( mShader );
+    mDraw = pp::Draw::create( mShader );
 
     setupMatrices();
 }
@@ -107,13 +107,13 @@ void BasicAudioApp::resume(bool renewContext)
         mTextureFont.reset();
         mDraw.reset();
         mFontDraw.reset();
-        mRenderer.reset();
+        mShader.reset();
 
         //  Recreate GL resources
         mTextureFont = pp::TextureFont::create( mFont );
-        mRenderer    = pp::Renderer::create();
-        mDraw        = pp::Draw::create(mRenderer);
-        mFontDraw    = pp::TextureFontDraw::create( mRenderer );
+        mShader      = pp::DrawShader::create();
+        mDraw        = pp::Draw::create(mShader);
+        mFontDraw    = pp::TextureFontDraw::create( mShader );
     }
 
     mPd->play();
@@ -156,19 +156,19 @@ void BasicAudioApp::draw()
     std::string str( "Basic Audio" );
     Rectf boundsRect( 40, mTextureFont->getAscent() + 40, getWindowWidth() - 40, getWindowHeight() - 40 );
 
-    mRenderer->bindProg();
-    mRenderer->setModelView( mMatrices.getModelView() );
-    mRenderer->setProjection( mMatrices.getProjection() );
+    mShader->bindProg();
+    mShader->setModelView( mMatrices.getModelView() );
+    mShader->setProjection( mMatrices.getProjection() );
 
-    mFontDraw->setColor( ColorA( 0.17f, 0.72f, 0.88f, 1.0f ) );
+    mShader->setColor( ColorA( 0.17f, 0.72f, 0.88f, 1.0f ) );
     mFontDraw->drawStringWrapped( *mTextureFont, str, boundsRect );
 
     // Draw FPS
-    mFontDraw->setColor( Color::white() );
+    mShader->setColor( Color::white() );
     mFontDraw->drawString( *mTextureFont, toString( floor(getAverageFps()) ) + " FPS", 
             Vec2f( 10, getWindowHeight() - mTextureFont->getDescent() ) );
 
-    mRenderer->unbindProg();
+    mShader->unbindProg();
 }
 
 void BasicAudioApp::onFloat(const std::string& dest, float value)
