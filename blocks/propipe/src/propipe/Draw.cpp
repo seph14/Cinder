@@ -35,7 +35,7 @@ void Draw::drawLine( const Vec3f &start, const Vec3f &end )
 
 namespace {
 
-void drawCubeImpl( DrawShader& render, const Vec3f &c, const Vec3f &size, bool drawColors )
+void drawCubeImpl( DrawShader& shader, const Vec3f &c, const Vec3f &size, bool drawColors )
 {
 	GLfloat sx = size.x * 0.5f;
 	GLfloat sy = size.y * 0.5f;
@@ -76,19 +76,19 @@ void drawCubeImpl( DrawShader& render, const Vec3f &c, const Vec3f &size, bool d
 									16,17,18,16,18,19,
 									20,21,22,20,22,23 };
 
-	render.resetArrays();
+	shader.resetArrays();
 
-	render.setNormalArray( normals );
-	render.setTexCoordArray( texs );
+	shader.setNormalArray( normals );
+	shader.setTexCoordArray( texs );
 
 	if ( drawColors ) {
-		render.setColorArray( colors );
+		shader.setColorArray( colors );
 	}
-	render.setPositionArray( vertices, 3 );
+	shader.setPositionArray( vertices, 3 );
 
-	render.enableClientState();
+	shader.enableClientState();
 	glDrawElements( GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, elements );
-	render.disableClientState();
+	shader.disableClientState();
 }
 } // anonymous namespace
 
@@ -562,6 +562,7 @@ void Draw::draw( const class Path2d &path2d, float approximationScale )
 void Draw::draw( const class Shape2d &shape2d, float approximationScale )
 {
 	mShader->enableClientState( DrawShader::ENABLE_ATTRIBS | DrawShader::UPDATE_UNIFORMS );
+	mShader->resetArrays();
 
 	for( std::vector<Path2d>::const_iterator contourIt = shape2d.getContours().begin(); contourIt != shape2d.getContours().end(); ++contourIt ) {
 		if( contourIt->getNumSegments() == 0 )
@@ -681,7 +682,7 @@ void Draw::draw( const Texture &texture, const Rectf &rect )
 
 void Draw::draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
 {
-	texture.bind();
+	mShader->bindTexture(texture);
 
 	GLfloat verts[8];
 	GLfloat texCoords[8];
@@ -705,6 +706,7 @@ void Draw::draw( const Texture &texture, const Area &srcArea, const Rectf &destR
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 
 	mShader->disableClientState();
+	mShader->unbindTexture();
 }
 
 DrawRef Draw::create(DrawShaderRef shader)

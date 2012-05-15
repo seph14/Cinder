@@ -198,7 +198,7 @@ FontRef TextEngineFreeType::getDefaultFont()
 			mDefaultFont = createFont( loadFile("/system/fonts/DroidSans.ttf"), 24 );
 		return mDefaultFont;
 #else
-        return FontRef();
+		return FontRef();
 #endif
 }
 
