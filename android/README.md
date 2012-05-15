@@ -15,7 +15,7 @@ Quickstart
 
 * Install prerequisites:
 
-  - Android SDK and Android NDK R5c or later (tested with R7b)
+  - Android SDK and Android NDK R8
   - Boost is required as usual in the top Cinder directory.  The setup-android script will
     automatically install this if there is no "boost" directory under Cinder.
   - Cygwin on Windows
@@ -44,7 +44,7 @@ Quickstart
 ```
 
 * Build one of the sample programs (EaseGallery, FBOBasic, iPhoneAccelerometer,
-  MultiTouchBasic, TextureFont or shaderTestES2)
+  MultiTouchBasic or TextureFont)
 
 ```
     % cd cinder/samples/<SAMPLE>/android
