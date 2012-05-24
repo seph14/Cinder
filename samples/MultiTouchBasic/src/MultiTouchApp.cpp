@@ -106,6 +106,7 @@ void MultiTouchApp::mouseDrag( MouseEvent event )
 
 void MultiTouchApp::draw()
 {
+    gl::setMatricesWindow( getWindowSize() );
 	gl::enableAlphaBlending();
 	gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
 
@@ -123,8 +124,10 @@ void MultiTouchApp::draw()
 	
 	// draw yellow circles at the active touch points
 	gl::color( Color( 1, 1, 0 ) );
-	for( vector<TouchEvent::Touch>::const_iterator touchIt = getActiveTouches().begin(); touchIt != getActiveTouches().end(); ++touchIt )
+    CI_LOGD("GET ACTIVE TOUCHES");
+	for( vector<TouchEvent::Touch>::const_iterator touchIt = getActiveTouches().begin(); touchIt != getActiveTouches().end(); ++touchIt ) {
 		gl::drawStrokedCircle( touchIt->getPos(), 20.0f );
+    }
 }
 
 CINDER_APP_NATIVE( MultiTouchApp, RendererGl )

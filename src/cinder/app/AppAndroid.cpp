@@ -28,12 +28,13 @@ enum ActivityState {
  * Shared state for our app.
  */
 
+typedef map<int32_t, TouchEvent::Touch> ActiveTouchMap;
 struct TouchState {
     vector<TouchEvent::Touch> touchesBegan;
     vector<TouchEvent::Touch> touchesMoved;
     vector<TouchEvent::Touch> touchesEnded;
 
-    map<int32_t, TouchEvent::Touch> activeTouches;
+    ActiveTouchMap activeTouches;
 };
 
 struct engine {
@@ -194,6 +195,14 @@ static void engine_update_touches(ci::app::AppAndroid& app, TouchState* touchSta
             app.privateTouchesEnded__( ci::app::TouchEvent( touchState->touchesEnded ) );
             touchState->touchesEnded.clear();
         }
+
+        //  set active touches
+        vector<ci::app::TouchEvent::Touch> activeList;
+        ActiveTouchMap& activeMap = touchState->activeTouches;
+        for (ActiveTouchMap::iterator it = activeMap.begin(); it != activeMap.end(); ++it) {
+           activeList.push_back(it->second);
+        }
+        app.privateSetActiveTouches__(activeList);
     }
     else {
         const float contentScale = 1.0f;
