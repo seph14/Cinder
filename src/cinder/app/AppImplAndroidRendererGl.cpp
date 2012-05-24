@@ -134,7 +134,7 @@ void AppImplAndroidRendererGl::defaultResize()
     int width  = mApp->getWindowWidth();
     int height = mApp->getWindowHeight();
     CI_LOGD("Setting viewport to %d x %d", width, height); 
-	glViewport( 0, 0, width, height );
+    glViewport( 0, 0, width, height );
 
 #if ! defined( CINDER_GLES2 )
     gl::setMatricesWindow(width, height);

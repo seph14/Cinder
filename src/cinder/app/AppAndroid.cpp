@@ -89,7 +89,7 @@ static void engine_draw_frame(struct engine* engine) {
     updateWindowSize(engine);
 
     // XXX startDraw not necessary?
-    renderer.startDraw();
+    // renderer.startDraw();
     app.privateUpdate__();
     app.privateDraw__();
     renderer.finishDraw();
@@ -286,6 +286,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                 engine->orientation = cinderApp->orientationFromConfig();
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
                 updateWindowSize(engine);
+                engine->cinderRenderer->defaultResize();
                 cinderApp->privatePrepareSettings__();
                 engine->animating = 0;
 
