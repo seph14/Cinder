@@ -5,6 +5,7 @@
 #include "cinder/app/AccelEvent.h"
 #include "cinder/Filesystem.h"
 
+#include <jni.h>
 #include <time.h>
 
 struct android_app;
@@ -175,6 +176,18 @@ class AppAndroid : public App {
 	//
 
   public:
+	//  JNI helpers for calling Java methods
+	JavaVM* getJavaVM();
+	JNIEnv* getJNIEnv();
+
+	jclass  findClass(const char* className);
+
+  protected:
+	void initJNI();
+	jobject   mClassLoader;
+	jmethodID mFindClassMID;
+    
+  public:
     //  XXX not really public - shared with internal engine static methods
 
 	//  Android Native Activity state
@@ -184,9 +197,9 @@ class AppAndroid : public App {
     int32_t mWidth;
     int32_t mHeight;
 
-    struct engine* mEngine;
+	struct engine* mEngine;
 	
-    Orientation_t orientationFromConfig();
+	Orientation_t orientationFromConfig();
 
   private:
 	

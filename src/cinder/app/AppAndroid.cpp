@@ -1,7 +1,6 @@
 #include "cinder/app/AppAndroid.h"
 #include "cinder/Stream.h"
 
-#include <jni.h>
 #include <errno.h>
 
 #include <android/asset_manager.h>
@@ -61,6 +60,9 @@ struct engine {
     bool renewContext;
     bool setupCompleted;
     bool resumed;
+
+    //  JNI access helpers
+    JavaVM* vm;
 };
 
 static void updateWindowSize(struct engine* engine)
@@ -390,6 +392,10 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
     engine.cinderRenderer = cinderApp->getRenderer();
     engine.touchState     = new TouchState;
     engine.accelEnabled   = false;
+    engine.vm             = androidApp->activity->vm;
+
+    JNIEnv* env;
+    engine.vm->AttachCurrentThread(&env, NULL);
 
     //  Activity state tracking
     engine.savedState     = NULL;
@@ -483,6 +489,8 @@ AppAndroid::AppAndroid()
 AppAndroid::~AppAndroid()
 {
     CI_LOGW("~AppAndroid()");
+    JNIEnv* env = getJNIEnv();
+    env->DeleteGlobalRef(mClassLoader);
 }
 
 void AppAndroid::pause()
@@ -816,6 +824,54 @@ void AppAndroid::copyResourceDir(const fs::path& assetPath, const fs::path& dest
         copyResource(filename, outDir, overwrite);
     }
     AAssetDir_close(dir);
+}
+
+JavaVM* AppAndroid::getJavaVM()
+{
+    return mEngine->vm;
+}
+
+JNIEnv* AppAndroid::getJNIEnv()
+{
+    JNIEnv* env = 0;
+    int err = mEngine->vm->GetEnv((void**) &env, JNI_VERSION_1_4);
+    if (err == JNI_EDETACHED) {
+        CI_LOGE("getJNIEnv error: current thread not attached to Java VM");
+    }
+    else if (err == JNI_EVERSION) {
+        CI_LOGE("getJNIEnv error: VM doesn't support requested JNI version");
+    }
+    return env;
+}
+
+#define MAX_LOCAL_REFS 20
+void AppAndroid::initJNI()
+{
+    JNIEnv* env = getJNIEnv();
+    env->PushLocalFrame(MAX_LOCAL_REFS);
+    jclass activityClass     = env->FindClass("android/app/NativeActivity");
+    jmethodID getClassLoader = env->GetMethodID(activityClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
+    jclass loader            = env->FindClass("java/lang/ClassLoader");
+
+    mClassLoader             = env->NewGlobalRef(env->CallObjectMethod(mAndroidApp->activity->clazz, getClassLoader));
+    mFindClassMID            = env->GetMethodID(loader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+
+    env->PopLocalFrame(NULL);
+
+}
+
+jclass AppAndroid::findClass(const char* className)
+{
+    JNIEnv* env = getJNIEnv();
+    jstring strClassName  = env->NewStringUTF(className);
+    jclass theClass = static_cast<jclass>(env->CallObjectMethod(mClassLoader, mFindClassMID, strClassName));
+    env->DeleteLocalRef(strClassName);
+
+    //  Returns a local class reference, that will have to be deleted by the caller
+    return theClass;
+
+    // jmethodID kEnable3D = env->GetStaticMethodID(findClass("org.libcinder.MyClass"), "enable3D", "()V");
+    // env->CallStaticVoidMethod(android3dClass, kEnable3D);
 }
 
 #endif
