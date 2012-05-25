@@ -238,7 +238,7 @@ extern "C" {                                                                \
     cinder::app::Renderer *ren = new RENDERER;                              \
     cinder::app::AppAndroid::executeLaunch( app, ren, #APP, state );        \
     cinder::app::AppAndroid::cleanupLaunch();                               \
-    exit(0);                                                                \
+    /* exit(0); */                                                          \
   }                                                                         \
 }
 

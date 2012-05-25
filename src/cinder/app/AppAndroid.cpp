@@ -378,6 +378,15 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
     }
 }
 
+static void android_ended(void* ptr)
+{
+    if (ptr) {
+        // CI_LOGD("XXX Detach native thread");
+        JavaVM* vm = (JavaVM*) ptr;
+        vm->DetachCurrentThread();
+    }
+}
+
 static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* androidApp) 
 {
     // Make sure glue isn't stripped.
@@ -396,6 +405,10 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
 
     JNIEnv* env;
     engine.vm->AttachCurrentThread(&env, NULL);
+
+    pthread_key_t key;
+    pthread_key_create(&key, android_ended);
+    pthread_setspecific(key, engine.vm);
 
     //  Activity state tracking
     engine.savedState     = NULL;
