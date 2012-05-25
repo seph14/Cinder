@@ -181,6 +181,7 @@ class AppAndroid : public App {
 	JNIEnv* getJNIEnv();
 
 	jclass  findClass(const char* className);
+	jobject getActivity();
 
   protected:
 	void initJNI();

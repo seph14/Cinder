@@ -870,8 +870,13 @@ jclass AppAndroid::findClass(const char* className)
     //  Returns a local class reference, that will have to be deleted by the caller
     return theClass;
 
-    // jmethodID kEnable3D = env->GetStaticMethodID(findClass("org.libcinder.MyClass"), "enable3D", "()V");
+    // jmethodID kEnable3D = env->GetStaticMethodID(findClass("org/libcinder/MyClass"), "enable3D", "()V");
     // env->CallStaticVoidMethod(android3dClass, kEnable3D);
+}
+
+jobject AppAndroid::getActivity()
+{
+    return mAndroidApp->activity->clazz;
 }
 
 #endif
