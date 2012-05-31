@@ -71,8 +71,9 @@ NDK_MODULE_PATH.
 Orientation
 -----------
 
-Regardless of whether you use fixed or switchable orientation, always add
-"orientation" to the android:configChanges tag in AndroidManifest.xml.
+Always add "orientation|screenSize" to the android:configChanges tag in
+AndroidManifest.xml, regardless of whether you use fixed or switchable
+orientation.
 
 A change in orientation will trigger onResize() with the new viewport
 dimensions.  The actual orientation can be checked by calling
