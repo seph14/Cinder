@@ -23,10 +23,6 @@ enum ActivityState {
     ACTIVITY_DESTROY
 };
 
-/**
- * Shared state for our app.
- */
-
 typedef map<int32_t, TouchEvent::Touch> ActiveTouchMap;
 struct TouchState {
     vector<TouchEvent::Touch> touchesBegan;
@@ -36,6 +32,9 @@ struct TouchState {
     ActiveTouchMap activeTouches;
 };
 
+/**
+ * Shared state for our app.
+ */
 struct engine {
     struct android_app* androidApp;
     void* savedState;
@@ -166,17 +165,6 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
     else if (eventType == AINPUT_EVENT_TYPE_KEY) {
         int32_t actionCode = AKeyEvent_getAction(event);
         int32_t keyCode = AKeyEvent_getKeyCode(event);
-#if 0
-        if (actionCode == AKEY_EVENT_ACTION_DOWN && keyCode == AKEYCODE_MENU) {
-            //  DEBUGGING - renew context when menu key is pressed
-            CI_LOGW("XXX renew context on keypress");
-            // glUseProgram(0);
-            engine->cinderRenderer->teardown();
-            engine->cinderRenderer->setup(engine->cinderApp, engine->androidApp, 
-                    engine->cinderApp->mWidth, engine->cinderApp->mHeight);
-            engine->cinderApp->privateResume__(true);
-        }
-#endif
     }
 
     return 0;
@@ -277,37 +265,35 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
     switch (cmd) {
         case APP_CMD_SAVE_STATE:
-            log_engine_state(engine);
-            cinderApp->saveState(engine->androidApp->savedState, engine->androidApp->savedStateSize);
+            // log_engine_state(engine);
+            cinderApp->setSavedState(&(engine->androidApp->savedState), &(engine->androidApp->savedStateSize));
             break;
 
         case APP_CMD_INIT_WINDOW:
-            log_engine_state(engine);
+            // log_engine_state(engine);
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
                 engine->orientation = cinderApp->orientationFromConfig();
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
                 updateWindowSize(engine);
-                engine->cinderRenderer->defaultResize();
                 cinderApp->privatePrepareSettings__();
                 engine->animating = 0;
 
                 //  New GL context, trigger app initialization
-                engine->resumed = engine->setupCompleted;
                 engine->setupCompleted = false;
                 engine->renewContext = true;
             }
             break;
 
         case APP_CMD_TERM_WINDOW:
-            log_engine_state(engine);
+            // log_engine_state(engine);
             // The window is being hidden or closed, clean it up.
             engine->animating = 0;
             engine->cinderRenderer->teardown();
             break;
 
         case APP_CMD_GAINED_FOCUS:
-            log_engine_state(engine);
+            // log_engine_state(engine);
 
             // Start monitoring the accelerometer.
             if (engine->accelerometerSensor != NULL && engine->accelEnabled) {
@@ -323,18 +309,19 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                     CI_LOGD("XXXXXX SETUP privateSetup__");
                     cinderApp->privateSetup__();
                 }
+                engine->cinderApp->privateResize__(ci::Vec2i( cinderApp->mWidth, cinderApp->mHeight ));
                 engine->setupCompleted = true;
                 engine->renewContext   = false;
+                engine->resumed        = false;
 
                 engine_draw_frame(engine);
             }
 
             engine->animating = 1;
-
             break;
 
         case APP_CMD_LOST_FOCUS:
-            log_engine_state(engine);
+            // log_engine_state(engine);
             //  Disable accelerometer (saves power)
             engine_disable_accelerometer(engine);
             engine->animating = 0;
@@ -343,32 +330,33 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
 
         case APP_CMD_RESUME:
             engine->activityState = ACTIVITY_RESUME;
-            log_engine_state(engine);
+            // log_engine_state(engine);
             break;
         
         case APP_CMD_START:
             engine->activityState = ACTIVITY_START;
-            log_engine_state(engine);
+            // log_engine_state(engine);
             break;
 
         case APP_CMD_PAUSE:
             engine->activityState = ACTIVITY_PAUSE;
             cinderApp->privatePause__();
             engine->animating = 0;
+            engine->resumed = true;
             engine_draw_frame(engine);
-            log_engine_state(engine);
+            // log_engine_state(engine);
             break;
 
         case APP_CMD_STOP:
             engine->activityState = ACTIVITY_STOP;
-            log_engine_state(engine);
+            // log_engine_state(engine);
             break;
 
         case APP_CMD_DESTROY:
             //  app has been destroyed, will crash if we attempt to do anything else
             engine->activityState = ACTIVITY_DESTROY;
             cinderApp->privateDestroy__();
-            log_engine_state(engine);
+            // log_engine_state(engine);
             break;
 
         case APP_CMD_CONFIG_CHANGED:
@@ -436,9 +424,8 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
         // We are starting with a previous saved state; restore from it.
         CI_LOGW("XXX android_run RESTORING SAVED STATE");
         engine.savedState = androidApp->savedState;
-        engine.resumed = true;
-    }
-    else {
+        // XXX currently restores via setup(), possibly better to use resume()?
+        // engine.resumed = true;
     }
 
     //  Event loop
@@ -514,7 +501,7 @@ void AppAndroid::pause()
 void AppAndroid::resume( bool renewContext )
 {
     //  Override this to handle lost/recreated GL context
-    //  You should recreate your GL context in this method
+    //  You should recreate your GL context assets (textures/shaders) in this method
     if (renewContext) {
         setup();
     }
@@ -871,7 +858,6 @@ void AppAndroid::initJNI()
     mFindClassMID            = env->GetMethodID(loader, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
 
     env->PopLocalFrame(NULL);
-
 }
 
 jclass AppAndroid::findClass(const char* className)
@@ -883,9 +869,6 @@ jclass AppAndroid::findClass(const char* className)
 
     //  Returns a local class reference, that will have to be deleted by the caller
     return theClass;
-
-    // jmethodID kEnable3D = env->GetStaticMethodID(findClass("org/libcinder/MyClass"), "enable3D", "()V");
-    // env->CallStaticVoidMethod(android3dClass, kEnable3D);
 }
 
 jobject AppAndroid::getActivity()

@@ -53,7 +53,7 @@ class AppAndroid : public App {
 	//! Called before an activity is destroyed
 	virtual void        destroy();
 	//! Called before an activity is paused, to save current state for resumption
-	virtual void        saveState(void*& state, size_t& size);
+	virtual void        setSavedState(void** savedState, size_t* size);
 	//! Returns a pointer to previously saved state, or NULL if none exists
 	virtual void*       getSavedState();
 
