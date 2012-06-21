@@ -465,10 +465,10 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
                     ASensorEvent event;
                     while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
                             &event, 1) > 0) {
-                        const float kGravity = 1.0f / 9.81f;
-                        cinderApp->privateAccelerated__(ci::Vec3f(event.acceleration.x * kGravity, 
-                                                                  event.acceleration.y * kGravity, 
-                                                                  event.acceleration.z * kGravity));
+                        const float kGravity = 1.0f / 9.80665f;
+                        cinderApp->privateAccelerated__(ci::Vec3f(-event.acceleration.x * kGravity, 
+                                                                   event.acceleration.y * kGravity, 
+                                                                   event.acceleration.z * kGravity));
                     }
                 }
             }
