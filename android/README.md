@@ -16,10 +16,12 @@ Quickstart
 * Install prerequisites:
 
   - Android SDK and Android NDK R8
-  - Boost is required as usual in the top Cinder directory.  The setup-android script will
-    automatically install this if there is no "boost" directory under Cinder.
+  - Boost is required as usual in the top Cinder directory.  The setup-android
+    script will automatically install this if there is no "boost" directory
+    under Cinder.
   - Cygwin on Windows
-  - bash, curl, unzip, tar and bzip2 command-line tools (required by setup-android)
+  - bash, curl, unzip, tar and bzip2 command-line tools (required by
+    setup-android)
 
 * Run setup-android
 
@@ -57,9 +59,7 @@ Linking against Cinder
 ----------------------
 
 The android/setup-android script will suggest settings for linking against
-prebuilt static libraries, or you can set NDK_MODULE_PATH to
-$CINDER_PATH/android/jni to build a new copy of Cinder against each importing
-project.
+prebuilt static libraries.
 
 Each sample has a setup-android script fragment that will automatically set
 NDK_MODULE_PATH if it is not already defined.
@@ -84,25 +84,49 @@ the activity tag.
 
 Note that a fixed orientation app may be paused/restarted multiple times on
 resumption.  It is important that you handle resume() correctly and quickly.
-It is advisable to defer any heavy resource loading until the app starts its
+It's a good idea to defer any heavy resource loading until the app starts its
 update/draw cycle.
 
 
 Activity lifecycle
 ------------------
 
-OnStart  -> AppAndroid::setup()
-OnResume -> AppAndroid::resume(bool renewContext)
+onStart  -> AppAndroid::setup()
+onResume -> AppAndroid::resume(bool renewContext)
+onPause  -> AppAndroid::pause()
+onSaveInstanceState -> AppAndroid::setSavedState(void** state, size_t size)
 
 If renewContext is true then the GL context has been renewed and all GL
 resources (textures, shaders) will need to be released and recreated.
 
-It is not sufficient to assign a stale shared pointer to a new value - you
-must first assign the stale reference to an empty reference.  See the
-samples for examples of this.
+It is not sufficient to assign a new value to a stale shared pointer holder -
+you must first reset the holder and then assign the new value. e.g.
+
+```
+   Texture mTexture;
+
+   void resume(bool renewContext) {
+       if (renewContext) {
+           // Context recreated, must reload textures
+
+           // WON'T WORK
+           mTexture = loadTexture(); 
+
+           // WORKS
+           mTexture.reset();
+           mTexture = loadTexture();
+       }
+   }
+```
 
 The default implementation of resume() just calls setup() if renewContext
 is true.  This is unsuitable for non-trivial apps.
+
+AppAndroid::getSavedState() can be called from inside setup() to retrieve
+state saved by AppAndroid::setSavedState().
+
+Note that, unlike the Android activity lifecycle, AppAndroid::resume() 
+will not be automatically called after AppAndroid::setup() completes.
 
 
 Status
@@ -119,14 +143,16 @@ Status
 * Android save/restore state callbacks
 * Propipe block (programmable pipeline), supporting most gl namespace draw
   methods in ES2
-* CelPD block (libpd audio interface)
+* CelPD block (libpd audio interface using OpenSL ES)
+
 
 TODO
 ----
 
 * Cinder Audio support (using OpenSL ES)
-* URL implementation (currently stubbed out)
-* Camera capture (may require JNI)
+* URL/Http implementation (currently stubbed out)
+* Camera capture 
+* Video playback
 
 
 Credits
@@ -145,5 +171,5 @@ Parts of the font rendering code are based on freetype-gl (http://code.google.co
 Copyright 2011 Nicolas P. Rougier. All rights reserved
 
 
-safetydank 20120323
+safetydank 20120621
 
