@@ -511,10 +511,10 @@ void AppAndroid::destroy()
 {
 }
 
-void AppAndroid::saveState(void*& state, size_t& size)
+void AppAndroid::setSavedState(void** state, size_t* size)
 {
-    state = NULL;
-    size = 0;
+    *state = NULL;
+    *size = 0;
 }
 
 void* AppAndroid::getSavedState()
