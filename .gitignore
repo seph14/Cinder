@@ -12,6 +12,8 @@ build/
 lib/libcinder*.a
 lib/cinder*.lib
 
+lib/android
+android/jni/cinder/Configure.mk
 android/jni/FreeImage/
 android/jni/freetype-2.4.5/
 android/jni/boost
@@ -25,10 +27,13 @@ samples/*/android/assets
 samples/*/android/bin
 samples/*/android/libs
 samples/*/android/obj
+
 boost
 build.xml
 local.properties
+project.properties
 proguard.cfg
+proguard-project.txt
 
 # Windows cruft
 *.suo
