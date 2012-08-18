@@ -164,6 +164,8 @@ ifdef USE_ASSET_MANAGER
 LOCAL_CFLAGS    += -DCINDER_AASSET
 endif
 
+LOCAL_CFLAGS += -Wno-psabi -Wno-overflow
+
 LOCAL_STATIC_LIBRARIES	:= android_native_app_glue 
 
 # Module exports
