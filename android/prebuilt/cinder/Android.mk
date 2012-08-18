@@ -20,6 +20,11 @@ LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_date_time.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
+LOCAL_MODULE := boost_exception
+LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_exception.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
 LOCAL_MODULE := boost_filesystem
 LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_filesystem.a
 include $(PREBUILT_STATIC_LIBRARY)

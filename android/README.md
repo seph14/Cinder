@@ -16,7 +16,7 @@ Quickstart
 * Install prerequisites:
 
   - Android SDK and Android NDK R8
-  - Boost is required as usual in the top Cinder directory.  The setup-android
+  - Boost v1.50 is required in the top Cinder directory.  The setup-android
     script will automatically install this if there is no "boost" directory
     under Cinder.
   - Cygwin on Windows
