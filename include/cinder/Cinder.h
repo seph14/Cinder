@@ -45,6 +45,9 @@ using boost::uint64_t;
 	#define CINDER_MSW
 #elif defined(linux) || defined(__linux) || defined(__linux__)
 	#define CINDER_LINUX
+	#if defined(ANDROID)
+		#define CINDER_ANDROID
+	#endif
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
 	#define CINDER_COCOA
 	#include "TargetConditionals.h"
@@ -105,3 +108,15 @@ using boost::checked_array_deleter;
 #if ! defined( CINDER_NO_NS_ALIAS )
 	namespace ci = cinder;
 #endif // ! defined( CINDER_NO_NS_ALIAS )
+
+#if defined( CINDER_ANDROID )
+#include <android/log.h>
+#define CI_LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, "cinder", __VA_ARGS__))
+#define CI_LOGW(...) ((void)__android_log_print(ANDROID_LOG_WARN, "cinder", __VA_ARGS__))
+#define CI_LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, "cinder", __VA_ARGS__))
+#define CI_LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, "cinder", __VA_ARGS__))
+#define CI_LOGV(...) ((void)__android_log_print(ANDROID_LOG_VERBOSE, "cinder", __VA_ARGS__))
+
+//  wstring compatibility
+#include "cinder/android/wtypes.h"
+#endif

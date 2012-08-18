@@ -1,8 +1,12 @@
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
 #include "cinder/Easing.h"
 #include "cinder/Text.h"
+
+#if defined( CINDER_ANDROID )
+#include "cinder/gl/TextureFont.h"
+#endif
 
 using namespace ci;
 using namespace ci::app;
@@ -15,11 +19,17 @@ struct EaseBox {
 	EaseBox( std::function<float (float)> fn, string name )
 		: mFn( fn )
 	{
+#if ! defined( CINDER_ANDROID )
 		// create label
 		TextLayout text; text.clear( Color::white() ); text.setColor( Color(0.5f, 0.5f, 0.5f) );
-		try { text.setFont( Font( "Futura-CondensedMedium", 18 ) ); } catch( ... ) { text.setFont( Font( "Arial", 18 ) ); }
+		try { text.setFont( Font::create( "Futura-CondensedMedium", 18 ) ); } catch( ... ) { text.setFont( Font::create( "Arial", 18 ) ); }
 		text.addLine( name );
 		mLabelTex = gl::Texture( text.render( true ) );
+#else
+        if (!sTexFont)
+            sTexFont = gl::TextureFont::create( Font( loadFile("/system/fonts/DroidSans.ttf"), 18 ) );
+        mName = name;
+#endif
 	}
 	
 	void draw( float t ) const
@@ -30,9 +40,20 @@ struct EaseBox {
 		gl::color( Color( 0.4f, 0.4f, 0.4f ) );
 		gl::drawStrokedRect( mDrawRect );
 		gl::color( Color::white() );
+#if ! defined( CINDER_ANDROID )
 		gl::draw( mLabelTex, mDrawRect.getCenter() - mLabelTex.getSize() / 2 );
+#else
+        gl::color( Color::black() );
+        Vec2f labelSize = sTexFont->measureString( mName );
+        Vec2f baseline;
+        baseline.x = (mDrawRect.getWidth() - labelSize.x) / 2.0f + mDrawRect.x1;
+        float ascent = sTexFont->getFont().getAscent();
+        baseline.y = mDrawRect.y1 + (mDrawRect.y2 - mDrawRect.y1 - ascent) / 2.0f + ascent;
+        sTexFont->drawString( mName, baseline );
+#endif
 				
 		// draw graph
+#if ! defined( CINDER_ANDROID )
 		gl::color( ColorA( 0.25f, 0.5f, 1.0f, 0.5f ) );
 		glBegin( GL_LINE_STRIP );
 		for( float x = 0; x < mDrawRect.getWidth(); x += 0.25f ) {
@@ -40,6 +61,7 @@ struct EaseBox {
 			gl::vertex( Vec2f( x, y * mDrawRect.getHeight() ) + mDrawRect.getUpperLeft() );
 		}
 		glEnd();
+#endif
 		
 		// draw animating circle
 		gl::color( Color( 1, 0.5f, 0.25f ) );
@@ -49,9 +71,17 @@ struct EaseBox {
 	std::function<float (float)>	mFn;
 	Rectf							mDrawRect;
 	gl::Texture						mLabelTex;
+#if defined( CINDER_ANDROID )
+    static gl::TextureFontRef  sTexFont;
+    string mName;
+#endif
 };
 
-class EaseGalleryApp : public AppBasic {
+#if defined( CINDER_ANDROID )
+gl::TextureFontRef EaseBox::sTexFont;
+#endif
+
+class EaseGalleryApp : public AppNative {
   public:
 	void setup();
 	void draw();
@@ -63,7 +93,9 @@ class EaseGalleryApp : public AppBasic {
 
 void EaseGalleryApp::setup()
 {
-	setWindowSize( 950, 800 );
+	// setWindowSize( 950, 800 );
+    EaseBox::sTexFont = gl::TextureFontRef();
+    gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
 
 	mEaseBoxes.push_back( EaseBox( EaseInQuad(), "EaseInQuad" ) );
 	mEaseBoxes.push_back( EaseBox( EaseOutQuad(), "EaseOutQuad" ) );
@@ -155,4 +187,4 @@ void EaseGalleryApp::draw()
 }
 
 
-CINDER_APP_BASIC( EaseGalleryApp, RendererGl(3) )
+CINDER_APP_NATIVE( EaseGalleryApp, RendererGl(3) )

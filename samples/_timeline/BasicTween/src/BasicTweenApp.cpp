@@ -1,21 +1,29 @@
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
+
 #include "cinder/Timeline.h"
 
 using namespace std;
 using namespace ci;
 using namespace ci::app;
 
-class BasicTweenApp : public AppBasic {
+class BasicTweenApp : public AppNative {
   public:
+    void prepareSettings(Settings *settings);
 	void setup();
 	void mouseDown( MouseEvent event );
 	void draw();
   
-	Anim<Vec2f>		mBlackPos, mWhitePos;
+	Anim<Vec2f> mBlackPos, mWhitePos;
 };
+
+void BasicTweenApp::prepareSettings(Settings *settings)
+{	
+    settings->enableMultiTouch(false);
+}
 
 void BasicTweenApp::setup()
 {	
+    gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
 	mBlackPos = mWhitePos = getWindowCenter();
 }
 
@@ -39,4 +47,5 @@ void BasicTweenApp::draw()
 }
 
 // This line tells Cinder to actually create the application
-CINDER_APP_BASIC( BasicTweenApp, RendererGl )
+CINDER_APP_NATIVE( BasicTweenApp, RendererGl )
+

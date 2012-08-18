@@ -1,10 +1,10 @@
-#include "cinder/app/AppCocoaTouch.h"
+#include "cinder/app/AppNative.h"
 #include "cinder/Camera.h"
 
 using namespace ci;
 using namespace ci::app;
 
-class iPhoneAccelerometerApp : public AppCocoaTouch {
+class iPhoneAccelerometerApp : public AppNative {
   public:
 	virtual void	setup();
 	virtual void	accelerated( AccelEvent event );
@@ -19,6 +19,7 @@ void iPhoneAccelerometerApp::setup()
 	enableAccelerometer();
 	mCam.setPerspective( 60, getWindowAspectRatio(), 1, 1000 );
 	mCam.lookAt( Vec3f( 0, 0, 3 ), Vec3f::zero() );	
+	glEnable(GL_CULL_FACE);
 }
 
 void iPhoneAccelerometerApp::accelerated( AccelEvent event )
@@ -38,4 +39,4 @@ void iPhoneAccelerometerApp::draw()
 	gl::drawColorCube( Vec3f::zero(), Vec3f( 1, 1, 1 ) );
 }
 
-CINDER_APP_COCOA_TOUCH( iPhoneAccelerometerApp, RendererGl )
+CINDER_APP_NATIVE( iPhoneAccelerometerApp, RendererGl )

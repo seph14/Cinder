@@ -35,6 +35,10 @@
 #elif defined( CINDER_MSW )
 	#include "cinder/msw/OutputDebugStringStream.h"
 	#include "cinder/app/AppImplMsw.h"
+#elif defined( CINDER_ANDROID )
+	#include "cinder/android/LogStream.h"
+	#include "cinder/app/AppAndroid.h"
+	#include <android_native_app_glue.h>
 #endif
 
 using namespace std;
@@ -58,6 +62,9 @@ App::App()
 
 App::~App()
 {
+#if defined( CINDER_ANDROID )
+    CI_LOGW("XXXX ~App XXXX");
+#endif
 }
 
 // Pseudo-private event handlers
@@ -180,9 +187,9 @@ void App::privateShutdown__()
 	
 DataSourceRef App::loadResource( const string &macPath, int mswID, const string &mswType )
 {
-#if defined( CINDER_COCOA )
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
 	return loadResource( macPath );
-#else
+#elif defined( CINDER_MSW )
 	return DataSourceBuffer::create( AppImplMsw::loadResource( mswID, mswType ), macPath );
 #endif
 }
@@ -196,11 +203,23 @@ DataSourceRef App::loadResource( const string &macPath )
 	else
 		return DataSourcePath::create( resourcePath );
 }
-#else
+#elif defined( CINDER_MSW )
 
 DataSourceRef App::loadResource( int mswID, const string &mswType )
 {
 	return DataSourceBuffer::create( AppImplMsw::loadResource( mswID, mswType ) );
+}
+
+#elif defined( CINDER_ANDROID )
+
+DataSourceAssetRef App::loadResource( const string &resourcePath )
+{
+#if defined( CINDER_AASSET )
+    return AppAndroid::loadResource(resourcePath);
+#else
+    // TODO: provide an alternative resource loading method
+    return DataSourceAssetRef();
+#endif
 }
 
 #endif
@@ -208,6 +227,10 @@ DataSourceRef App::loadResource( int mswID, const string &mswType )
 
 void App::prepareAssetLoading()
 {
+#if defined( CINDER_ANDROID )
+	//  Only use explicitly added asset paths on Android
+	mAssetDirectoriesInitialized = true;
+#else
 	if( ! mAssetDirectoriesInitialized ) {
 		fs::path appPath = getAppPath();
 
@@ -245,6 +268,7 @@ void App::prepareAssetLoading()
 				
 		mAssetDirectoriesInitialized = true;
 	}
+#endif
 }
 
 // locate the asset at 'relativePath'
@@ -276,7 +300,6 @@ fs::path App::getAssetPath( const fs::path &relativePath )
 
 void App::addAssetDirectory( const fs::path &dirPath )
 {
-	
 	mAssetDirectories.push_back( dirPath );
 }
 
@@ -433,9 +456,13 @@ std::ostream& App::console()
 {
 #if defined( CINDER_COCOA )
 	return std::cout;
-#else
+#elif defined( CINDER_MSW )
 	if( ! mOutputStream )
 		mOutputStream = shared_ptr<cinder::msw::dostream>( new cinder::msw::dostream );
+	return *mOutputStream;
+#elif defined( CINDER_ANDROID )
+	if( ! mOutputStream )
+		mOutputStream = shared_ptr<cinder::android::dostream>( new cinder::android::dostream );
 	return *mOutputStream;
 #endif
 }
@@ -521,10 +548,10 @@ void App::Settings::enablePowerManagement( bool aPowerManagement )
 	mPowerManagement = aPowerManagement;
 }
 
-#if defined( CINDER_COCOA )
-ResourceLoadExc::ResourceLoadExc( const string &macPath )
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
+ResourceLoadExc::ResourceLoadExc( const string &path )
 {
-	sprintf( mMessage, "Failed to load resource: %s", macPath.c_str() );
+	sprintf( mMessage, "Failed to load resource: %s", path.c_str() );
 }
 
 #elif defined( CINDER_MSW )
@@ -546,3 +573,4 @@ AssetLoadExc::AssetLoadExc( const fs::path &relativePath )
 }
 
 } } // namespace cinder::app
+

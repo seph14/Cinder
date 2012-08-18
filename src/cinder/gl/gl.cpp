@@ -253,6 +253,8 @@ bool isVerticalSyncEnabled()
 #endif
 }
 
+#if ! defined( CINDER_GLES2 )
+
 void setModelView( const Camera &cam )
 {
 	glMatrixMode( GL_MODELVIEW );
@@ -359,7 +361,7 @@ void setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft 
 {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
-#if defined( CINDER_GLES )
+#if defined( CINDER_GLES1 )
 	if( originUpperLeft )
 		glOrthof( 0, screenWidth, screenHeight, 0, -1.0f, 1.0f );
 	else
@@ -374,6 +376,7 @@ void setMatricesWindow( int screenWidth, int screenHeight, bool originUpperLeft 
 	glLoadIdentity();
 	glViewport( 0, 0, screenWidth, screenHeight );
 }
+#endif // ! defined( CINDER_GLES2 )
 
 Area getViewport()
 {
@@ -388,6 +391,7 @@ void setViewport( const Area &area )
 	glViewport( area.x1, area.y1, ( area.x2 - area.x1 ), ( area.y2 - area.y1 ) );
 }
 
+#if ! defined( CINDER_GLES2 )
 void translate( const Vec2f &pos )
 {
 	glTranslatef( pos.x, pos.y, 0 );
@@ -419,6 +423,8 @@ void rotate( const Quatf &quat )
 		glRotatef( toDegrees( angle ), axis.x, axis.y, axis.z );
 }
 
+#endif // ! defined( CINDER_GLES2 )
+
 void enableAlphaBlending( bool premultiplied )
 {
 	glEnable( GL_BLEND );
@@ -439,6 +445,8 @@ void enableAdditiveBlending()
 	glBlendFunc( GL_SRC_ALPHA, GL_ONE );	
 }
 
+#if ! defined( CINDER_GLES2 )
+
 void enableAlphaTest( float value, int func )
 {
 	glEnable( GL_ALPHA_TEST );
@@ -450,7 +458,7 @@ void disableAlphaTest()
 	glDisable( GL_ALPHA_TEST );
 }
 
-#if ! defined( CINDER_GLES )
+#if ! defined( CINDER_GLES1 )
 void enableWireframe()
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -460,6 +468,8 @@ void disableWireframe()
 {
 	glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 }
+#endif
+
 #endif
 
 void disableDepthRead()
@@ -485,6 +495,7 @@ void disableDepthWrite()
 	glDepthMask( GL_FALSE );
 }
 
+#if ! defined( CINDER_GLES2 )
 void drawLine( const Vec2f &start, const Vec2f &end )
 {
 	float lineVerts[2*2];
@@ -1121,7 +1132,6 @@ void draw( const Shape2d &shape2d, float approximationScale )
 	glDisableClientState( GL_VERTEX_ARRAY );	
 }
 
-
 void drawSolid( const Path2d &path2d, float approximationScale )
 {
 	draw( Triangulator( path2d ).calcMesh() );
@@ -1363,7 +1373,6 @@ void drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
 }
 #endif
 
-
 void drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
 {
 	glEnableClientState( GL_VERTEX_ARRAY );
@@ -1431,8 +1440,10 @@ void draw( const Texture &texture, const Area &srcArea, const Rectf &destRect )
 	glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 }
 
+// XXX TODO on Android
+#if ! defined( CINDER_ANDROID )
 namespace {
-void drawStringHelper( const std::string &str, const Vec2f &pos, const ColorA &color, Font font, int justification )
+void drawStringHelper( const std::string &str, const Vec2f &pos, const ColorA &color, FontRef font, int justification )
 {
 	if( str.empty() )
 		return;
@@ -1440,9 +1451,8 @@ void drawStringHelper( const std::string &str, const Vec2f &pos, const ColorA &c
 	// justification: { left = -1, center = 0, right = 1 }
 	SaveColorState colorState;
 
-	static Font defaultFont = Font::getDefault();
 	if( ! font )
-		font = defaultFont;
+        font = Font::getDefault();
 
 	float baselineOffset;
 #if defined( CINDER_COCOA_TOUCH )
@@ -1465,20 +1475,23 @@ void drawStringHelper( const std::string &str, const Vec2f &pos, const ColorA &c
 }
 } // anonymous namespace
 
-void drawString( const std::string &str, const Vec2f &pos, const ColorA &color, Font font )
+void drawString( const std::string &str, const Vec2f &pos, const ColorA &color, FontRef font )
 {
 	drawStringHelper( str, pos, color, font, -1 );
 }
 
-void drawStringCentered( const std::string &str, const Vec2f &pos, const ColorA &color, Font font )
+void drawStringCentered( const std::string &str, const Vec2f &pos, const ColorA &color, FontRef font )
 {
 	drawStringHelper( str, pos, color, font, 0 );
 }
 
-void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &color, Font font )
+void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &color, FontRef font )
 {
 	drawStringHelper( str, pos, color, font, 1 );
 }
+#endif // ! defined( CINDER_ANDROID )
+
+#endif // ! defined( CINDER_GLES2 )
 
 ///////////////////////////////////////////////////////////////////////////////
 // SaveTextureBindState
@@ -1503,6 +1516,7 @@ SaveTextureBindState::~SaveTextureBindState()
 	glBindTexture( mTarget, mOldID );
 }
 
+#if ! defined( CINDER_GLES2 )
 ///////////////////////////////////////////////////////////////////////////////
 // BoolState
 BoolState::BoolState( GLint target )
@@ -1524,11 +1538,7 @@ BoolState::~BoolState()
 ClientBoolState::ClientBoolState( GLint target )
 	: mTarget( target )
 {
-#if defined( CINDER_GLES )
-    mOldValue = glIsEnabled( target );
-#else  
-    glGetBooleanv( target, &mOldValue );
-#endif
+	glGetBooleanv( target, &mOldValue );
 }
 
 ClientBoolState::~ClientBoolState()
@@ -1538,9 +1548,11 @@ ClientBoolState::~ClientBoolState()
 	else
 		glDisableClientState( mTarget );
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // SaveColorState
+#if ! defined( CINDER_GLES2 )
 SaveColorState::SaveColorState()
 {
 	glGetFloatv( GL_CURRENT_COLOR, mOldValues );
@@ -1551,13 +1563,16 @@ SaveColorState::~SaveColorState()
 	// GLES doesn't have glColor4fv
 	glColor4f( mOldValues[0], mOldValues[1], mOldValues[2], mOldValues[3] );
 }
+#endif // ! defined( CINDER_GLES )
 
 ///////////////////////////////////////////////////////////////////////////////
 // SaveFramebufferBinding
 SaveFramebufferBinding::SaveFramebufferBinding()
 {
-#if defined( CINDER_GLES )
+#if defined( CINDER_GLES1 )
 	glGetIntegerv( GL_FRAMEBUFFER_BINDING_OES, &mOldValue );
+#elif defined( CINDER_GLES2 )
+	glGetIntegerv( GL_FRAMEBUFFER_BINDING, &mOldValue );
 #else	
 	glGetIntegerv( GL_FRAMEBUFFER_BINDING_EXT, &mOldValue );
 #endif
@@ -1565,8 +1580,10 @@ SaveFramebufferBinding::SaveFramebufferBinding()
 
 SaveFramebufferBinding::~SaveFramebufferBinding()
 {
-#if defined( CINDER_GLES )
+#if defined( CINDER_GLES1 )
 	glBindFramebufferOES( GL_FRAMEBUFFER_OES, mOldValue );
+#elif defined( CINDER_GLES2 )
+	glBindFramebuffer( GL_FRAMEBUFFER, mOldValue );
 #else
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, mOldValue );
 #endif

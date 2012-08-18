@@ -40,7 +40,13 @@
 	#include "cinder/app/AppImplMsw.h"
 	#include "cinder/app/AppImplMswRendererGl.h"
 	#include "cinder/app/AppImplMswRendererGdi.h"
+
+#elif defined( CINDER_ANDROID )
+	#include "cinder/app/AppImplAndroidRendererGl.h"
+    #include <android/native_window.h>
+    #include <android_native_app_glue.h>
 #endif
+
 #include "cinder/ip/Flip.h"
 
 
@@ -234,6 +240,69 @@ Surface	RendererGl::copyWindowSurface( const Area &area )
 	glReadPixels( area.x1, mApp->getWindowHeight() - area.y2, area.getWidth(), area.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, s.getData() );
 	glPixelStorei( GL_PACK_ALIGNMENT, oldPackAlignment );	
 	ip::flipVertical( &s );
+	return s;
+}
+
+#elif defined( CINDER_ANDROID )
+RendererGl::~RendererGl()
+{
+    CI_LOGW("~RendererGl()");
+    delete mImpl;
+    mImpl = 0;
+}
+
+void RendererGl::setup( App *aApp, struct android_app *androidApp, int32_t* width, int32_t* height )
+{
+    CI_LOGW("RendererGl::setup()");
+    mApp = aApp;
+
+    if ( ! mImpl )
+        mImpl = new AppImplAndroidRendererGl(mApp, androidApp);
+
+    CI_LOGW("Initializing with ANativeWindow %p", androidApp->window);
+    mImpl->initialize( width, height );
+}
+
+void RendererGl::teardown()
+{
+    CI_LOGW("RendererGl::teardown()");
+    if (!mImpl)
+        CI_LOGW("XXX RendererGl INVALID mImpl when teardown() was called");
+    else
+        mImpl->teardown();
+}
+
+bool RendererGl::isValidDisplay()
+{
+    return mImpl->isValidDisplay();
+}
+
+void RendererGl::startDraw()
+{
+    mImpl->makeCurrentContext();
+}
+
+void RendererGl::finishDraw()
+{
+	mImpl->swapBuffers();
+}
+
+void RendererGl::defaultResize()
+{
+	mImpl->defaultResize();
+}
+
+Surface	RendererGl::copyWindowSurface( const Area &area )
+{
+	Surface s( area.getWidth(), area.getHeight(), true );
+	glFlush(); // there is some disagreement about whether this is necessary, but ideally performance-conscious users will use FBOs anyway
+	GLint oldPackAlignment;
+	glGetIntegerv( GL_PACK_ALIGNMENT, &oldPackAlignment ); 
+	glPixelStorei( GL_PACK_ALIGNMENT, 1 );
+	glReadPixels( area.x1, mApp->getWindowHeight() - area.y2, area.getWidth(), area.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, s.getData() );
+	glPixelStorei( GL_PACK_ALIGNMENT, oldPackAlignment );	
+	ip::flipVertical( &s );
+
 	return s;
 }
 

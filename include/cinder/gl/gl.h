@@ -30,8 +30,12 @@
 #elif defined( CINDER_MSW )
 	#include "cinder/gl/GLee.h"
 #else
+    //  Android and iOS
 	#define CINDER_GLES
-	#define CINDER_GLES1
+    #if ! defined( CINDER_GLES1 ) && ! defined( CINDER_GLES2 )
+        //  Use CINDER_GLES1 by default
+        #define CINDER_GLES1
+    #endif
 #endif
 
 #include "cinder/Exception.h"
@@ -50,10 +54,26 @@
 	#undef max
 	#include <gl/gl.h>
 #elif defined( CINDER_COCOA_TOUCH )
-	#include <OpenGLES/ES1/gl.h>
-	#include <OpenGLES/ES1/glext.h>
+	#if defined( CINDER_GLES1 )
+		#include <OpenGLES/ES1/gl.h>
+		#include <OpenGLES/ES1/glext.h>
+	#elif defined( CINDER_GLES2 )
+		#include <OpenGLES/ES2/gl.h>
+		#include <OpenGLES/ES2/glext.h>
+	#endif
 #elif defined( CINDER_MAC )
 	#include <OpenGL/gl.h>
+#elif defined( CINDER_ANDROID )
+	#define GL_GLEXT_PROTOTYPES
+	#if defined( CINDER_GLES1 )
+		#include <GLES/gl.h>
+		#include <GLES/glext.h>
+	#elif defined( CINDER_GLES2 )
+		#include <GLES2/gl2.h>
+		#include <GLES2/gl2ext.h>
+	#else
+		#error "No CINDER_GLES version selected!"
+	#endif
 #endif
 
 // forward declarations
@@ -65,6 +85,14 @@ namespace cinder {
 } // namespace cinder
 
 namespace cinder { namespace gl {
+
+#if defined( CINDER_MSW ) || defined( CINDER_MAC ) || defined( CINDER_NACL )
+	typedef uint32_t index_t;
+	#define CINDER_GL_INDEX_TYPE GL_UNSIGNED_INT
+#elif defined( CINDER_COCOA_TOUCH ) || defined( CINDER_ANDROID )
+	typedef uint16_t index_t;
+	#define CINDER_GL_INDEX_TYPE GL_UNSIGNED_SHORT
+#endif
 
 //! Returns whether a particular OpenGL extension is available. Caches results
 bool isExtensionAvailable( const std::string &extName );
@@ -79,6 +107,7 @@ inline void disableVerticalSync() { enableVerticalSync( false ); }
 //! Returns whether vertical sync is enabled for the current context
 bool isVerticalSyncEnabled();
 
+#if ! defined( CINDER_GLES2 )
 //! Sets the \c MODELVIEW and \c PROJECTION matrices to reflect the values of \a cam. Leaves the \c MatrixMode as \c MODELVIEW.
 void setMatrices( const Camera &cam );
 //! Sets the \c MODELVIEW matrix to reflect the values of \a cam. Leaves the \c MatrixMode as \c MODELVIEW.
@@ -106,7 +135,7 @@ Matrix44f getModelView();
 //! Returns the value of the current \c PROJECTION matrix as a Matrix44f.
 Matrix44f getProjection();
 
-//! Sets the viepwort and \c MODELVIEW and \c PROJECTION matrices to be a perspective projection with the upper-left corner at \c [0,0] and the lower-right at \c [screenWidth,screenHeight], but flipped vertically if not \a originUpperLeft.
+//! Sets the viewport and \c MODELVIEW and \c PROJECTION matrices to be a perspective projection with the upper-left corner at \c [0,0] and the lower-right at \c [screenWidth,screenHeight], but flipped vertically if not \a originUpperLeft.
 void setMatricesWindowPersp( int screenWidth, int screenHeight, float fovDegrees = 60.0f, float nearPlane = 1.0f, float farPlane = 1000.0f, bool originUpperLeft = true );
 //! Sets the viewport and \c MODELVIEW and \c PROJECTION matrices to be a perspective projection with the upper-left corner at \c [0,0] and the lower-right at \c [screenWidth,screenHeight], but flipped vertically if not \a originUpperLeft.
 inline void setMatricesWindowPersp( const Vec2i &screenSize, float fovDegrees = 60.0f, float nearPlane = 1.0f, float farPlane = 1000.0f, bool originUpperLeft = true )
@@ -118,9 +147,11 @@ inline void setMatricesWindow( const Vec2i &screenSize, bool originUpperLeft = t
 
 //! Returns the current OpenGL Viewport as an Area
 Area getViewport();
+#endif
 //! Sets the current OpenGL Viewport to \a area
 void setViewport( const Area &area );
 
+#if ! defined( CINDER_GLES2 )
 //! Produces a translation by \a pos in the current matrix.
 void translate( const Vec2f &pos );
 //! Produces a translation by \a x and \a y in the current matrix.
@@ -145,6 +176,7 @@ void rotate( const Vec3f &xyz );
 void rotate( const Quatf &quat );
 //! Produces a 2D rotation, the equivalent of a rotation around the Z axis by \a degrees.
 inline void rotate( float degrees ) { rotate( Vec3f( 0, 0, degrees ) ); }
+#endif
 
 #if ! defined( CINDER_GLES )
 //! Equivalent to glBegin() in immediate mode
@@ -168,6 +200,8 @@ inline void texCoord( float x, float y, float z ) { glTexCoord3f( x, y, z ); }
 //! Used between calls to gl::begin() and gl::end(), sets the 3D texture coordinate for the next vertex.
 inline void texCoord( const Vec3f &v ) { glTexCoord3f( v.x, v.y, v.z ); }
 #endif // ! defined( CINDER_GLES )
+
+#if ! defined( CINDER_GLES2 )
 //! Sets the current color and the alpha value to 1.0
 inline void color( float r, float g, float b ) { glColor4f( r, g, b, 1.0f ); }
 //! Sets the current color and alpha value
@@ -180,6 +214,7 @@ inline void color( const ColorA8u &c ) { glColor4ub( c.r, c.g, c.b, c.a ); }
 inline void color( const Color &c ) { glColor4f( c.r, c.g, c.b, 1.0f ); }
 //! Sets the current color and alpha value
 inline void color( const ColorA &c ) { glColor4f( c.r, c.g, c.b, c.a ); }
+#endif // ! defined( CINDER_GLES2 )
 
 //! Enables the OpenGL State \a state. Equivalent to calling to glEnable( state );
 inline void enable( GLenum state ) { glEnable( state ); }
@@ -215,6 +250,7 @@ void enableDepthRead( bool enable = true );
 //! Enables writing to the depth buffer when \a enable.
 void enableDepthWrite( bool enable = true );
 
+#if ! defined( CINDER_GLES2 )
 //! Draws a line from \a start to \a end
 void drawLine( const Vec2f &start, const Vec2f &end );
 //! Draws a line from \a start to \a end
@@ -281,16 +317,17 @@ void draw( const TriMesh &mesh );
 void drawRange( const TriMesh &mesh, size_t startTriangle, size_t triangleCount );
 //! Draws a cinder::gl::VboMesh \a mesh at the origin.
 
-#if ! defined ( CINDER_GLES )
+#if ! defined( CINDER_GLES )
 void draw( const VboMesh &vbo );
 //! Draws a range of vertices and elements of cinder::gl::VboMesh \a mesh at the origin. Default parameters for \a vertexStart and \a vertexEnd imply the VboMesh's full range of vertices.
 void drawRange( const VboMesh &vbo, size_t startIndex, size_t indexCount, int vertexStart = -1, int vertexEnd = -1 );
 //! Draws a range of elements from a cinder::gl::VboMesh \a vbo.
 void drawArrays( const VboMesh &vbo, GLint first, GLsizei count );
-//!	Draws a textured quad of size \a scale that is aligned with the vectors \a bbRight and \a bbUp at \a pos, rotated by \a rotationDegrees around the vector orthogonal to \a bbRight and \a bbUp.
 #endif
-	
+
+//!	Draws a textured quad of size \a scale that is aligned with the vectors \a bbRight and \a bbUp at \a pos, rotated by \a rotationDegrees around the vector orthogonal to \a bbRight and \a bbUp.
 void drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp );
+	
 //! Draws \a texture on the XY-plane
 void draw( const Texture &texture );
 //! Draws \a texture on the XY-plane at \a pos
@@ -301,12 +338,13 @@ void draw( const Texture &texture, const Rectf &rect );
 void draw( const Texture &texture, const Area &srcArea, const Rectf &destRect );
 
 //! Draws a string \a str with its lower left corner located at \a pos. Optional \a font and \a color affect the style.
-void drawString( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), Font font = Font() );
+void drawString( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), FontRef font = FontRef() );
 //! Draws a string \a str with the horizontal center of its baseline located at \a pos. Optional \a font and \a color affect the style
-void drawStringCentered( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), Font font = Font() );
+void drawStringCentered( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), FontRef font = FontRef() );
 //! Draws a right-justified string \a str with the center of its  located at \a pos. Optional \a font and \a color affect the style
-void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), Font font = Font() );
+void drawStringRight( const std::string &str, const Vec2f &pos, const ColorA &color = ColorA( 1, 1, 1, 1 ), FontRef font = FontRef() );
 
+#endif // ! defined( CINDER_GLES2 )
 
 //! Convenience class designed to push and pop the currently bound texture for a given texture unit
 struct SaveTextureBindState {
@@ -317,6 +355,7 @@ struct SaveTextureBindState {
 	GLint	mOldID;
 };
 
+#if ! defined( CINDER_GLES2 )
 //! Convenience class designed to push and pop a boolean OpenGL state
 struct BoolState {
 	BoolState( GLint target );
@@ -342,6 +381,7 @@ struct SaveColorState {
   private:
 	GLfloat		mOldValues[4];
 };
+#endif
 
 //! Convenience class which pushes and pops the currently bound framebuffer
 struct SaveFramebufferBinding {
@@ -380,11 +420,11 @@ inline void glTexCoord4f( const cinder::Vec4f &v ) { glTexCoord4f( v.x, v.y, v.z
 //inline void glMultiTexCoord2f( GLenum target, const cinder::Vec2f &v ) { glMultiTexCoord2f( target, v.x, v.y ); }
 //inline void glMultiTexCoord3f( GLenum target, const cinder::Vec3f &v ) { glMultiTexCoord3f( target, v.x, v.y, v.z ); }
 //inline void glMultiTexCoord4f( GLenum target, const cinder::Vec4f &v ) { glMultiTexCoord4f( target, v.x, v.y, v.z, v.w ); }
-#endif // ! defined( CINDER_GLES )
 inline void glTranslatef( const cinder::Vec3f &v ) { glTranslatef( v.x, v.y, v.z ); }
 inline void glScalef( const cinder::Vec3f &v ) { glScalef( v.x, v.y, v.z ); }
 inline void glRotatef( float angle, const cinder::Vec3f &v ) { glRotatef( angle, v.x, v.y, v.z ); }
 inline void glRotatef( const cinder::Quatf &quat ) { cinder::Vec3f axis; float angle; quat.getAxisAngle( &axis, &angle ); glRotatef( cinder::toDegrees( angle ), axis.x, axis.y, axis.z ); }
 inline void glMultMatrixf( const cinder::Matrix44f &m ) { glMultMatrixf( m.m ); }
 inline void glLoadMatrixf( const cinder::Matrix44f &m ) { glLoadMatrixf( m.m ); }
+#endif // ! defined( CINDER_GLES )
 //@}

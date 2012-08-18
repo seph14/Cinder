@@ -12,6 +12,24 @@ build/
 lib/libcinder*.a
 lib/cinder*.lib
 
+android/jni/FreeImage/
+android/jni/freetype-2.4.5/
+android/jni/boost
+android/jni/include
+android/jni/src
+android/obj/
+android/setup/FreeImage/FreeImage3150.zip
+android/setup/freetype/freetype-2.4.5.tar.bz2
+android/jni/Configure.mk
+samples/*/android/assets
+samples/*/android/bin
+samples/*/android/libs
+samples/*/android/obj
+boost
+build.xml
+local.properties
+proguard.cfg
+
 # Windows cruft
 *.suo
 *.ncb

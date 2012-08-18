@@ -49,6 +49,7 @@
 	namespace cinder {
 		void cpuidwrap( int *p, unsigned int param );
 	}
+#elif defined( CINDER_ANDROID )
 #endif
 
 #include <string>
@@ -257,7 +258,7 @@ bool System::hasSse2()
 	if( ! instance()->mCachedValues[HAS_SSE2] ) {
 #if defined( CINDER_COCOA )	
 		instance()->mHasSSE2 = ( getSysCtlValue<int>( "hw.optional.sse2" ) == 1 );
-#else
+#elif defined( CINDER_MSW )
 		instance()->mHasSSE2 = ( instance()->mCPUID_EDX & 0x04000000 ) != 0;
 #endif
 		instance()->mCachedValues[HAS_SSE2] = true;
@@ -271,7 +272,7 @@ bool System::hasSse3()
 	if( ! instance()->mCachedValues[HAS_SSE3] ) {
 #if defined( CINDER_COCOA )	
 		instance()->mHasSSE3 = ( getSysCtlValue<int>( "hw.optional.sse3" ) == 1 );
-#else
+#elif defined( CINDER_MSW )
 		instance()->mHasSSE3 = ( instance()->mCPUID_ECX & 0x00000001 ) != 0;
 #endif
 		instance()->mCachedValues[HAS_SSE3] = true;
@@ -285,7 +286,7 @@ bool System::hasSse4_1()
 	if( ! instance()->mCachedValues[HAS_SSE4_1] ) {
 #if defined( CINDER_COCOA )	
 		instance()->mHasSSE4_1 = ( getSysCtlValue<int>( "hw.optional.sse4_1" ) == 1 );
-#else
+#elif defined( CINDER_MSW )
 		instance()->mHasSSE4_1 = ( instance()->mCPUID_ECX & ( 1 << 19 ) ) != 0;
 #endif
 		instance()->mCachedValues[HAS_SSE4_1] = true;
@@ -299,7 +300,7 @@ bool System::hasSse4_2()
 	if( ! instance()->mCachedValues[HAS_SSE4_2] ) {
 #if defined( CINDER_COCOA )	
 		instance()->mHasSSE4_2 = ( getSysCtlValue<int>( "hw.optional.sse4_2" ) == 1 );
-#else
+#elif defined( CINDER_MSW )
 		instance()->mHasSSE4_2 = ( instance()->mCPUID_ECX & ( 1 << 20 ) ) != 0;
 #endif
 		instance()->mCachedValues[HAS_SSE4_2] = true;
@@ -313,7 +314,7 @@ bool System::hasX86_64()
 	if( ! instance()->mCachedValues[HAS_X86_64] ) {
 #if defined( CINDER_COCOA )	
 		instance()->mHasX86_64 = ( getSysCtlValue<int>( "hw.optional.x86_64" ) == 1 );
-#else
+#elif defined( CINDER_MSW )
 		instance()->mHasX86_64 = ( instance()->mCPUID_EDX & ( 1 << 29 ) ) != 0;
 #endif
 		instance()->mCachedValues[HAS_X86_64] = true;
@@ -327,7 +328,7 @@ int System::getNumCpus()
 	if( ! instance()->mCachedValues[PHYSICAL_CPUS] ) {
 #if defined( CINDER_COCOA )	
 		instance()->mPhysicalCPUs = getSysCtlValue<int>( "hw.packages" );
-#else
+#elif defined( CINDER_MSW )
 		const int MAX_NUMBER_OF_LOGICAL_PROCESSORS = 96;
 		const int MAX_NUMBER_OF_PHYSICAL_PROCESSORS = 8;
 		const int MAX_NUMBER_OF_IOAPICS = 16;
@@ -367,7 +368,7 @@ int System::getNumCores()
 	if( ! instance()->mCachedValues[LOGICAL_CPUS] ) {
 #if defined( CINDER_COCOA )	
 		instance()->mLogicalCPUs = getSysCtlValue<int>( "hw.logicalcpu" );
-#else
+#elif defined( CINDER_MSW )
 		::SYSTEM_INFO sys;
 		::GetSystemInfo( &sys );
 		instance()->mLogicalCPUs = sys.dwNumberOfProcessors;
@@ -387,7 +388,7 @@ int System::getOsMajorVersion()
 #elif defined( CINDER_COCOA )	
 		if( Gestalt(gestaltSystemVersionMajor, reinterpret_cast<SInt32*>( &(instance()->mOSMajorVersion) ) ) != noErr)
 			throw SystemExcFailedQuery();
-#else
+#elif defined( CINDER_MSW )
 		::OSVERSIONINFOEX info;
 		::ZeroMemory( &info, sizeof( OSVERSIONINFOEX ) );
 		info.dwOSVersionInfoSize = sizeof( OSVERSIONINFOEX );
@@ -409,7 +410,7 @@ int System::getOsMinorVersion()
 #elif defined( CINDER_COCOA )	
 		if( Gestalt(gestaltSystemVersionMinor, reinterpret_cast<SInt32*>( &(instance()->mOSMinorVersion) ) ) != noErr)
 			throw SystemExcFailedQuery();
-#else
+#elif defined( CINDER_MSW )
 		::OSVERSIONINFOEX info;
 		::ZeroMemory( &info, sizeof( OSVERSIONINFOEX ) );
 		info.dwOSVersionInfoSize = sizeof( OSVERSIONINFOEX );
@@ -434,7 +435,7 @@ int System::getOsBugFixVersion()
 #elif defined( CINDER_COCOA )	
 		if( Gestalt(gestaltSystemVersionBugFix, reinterpret_cast<SInt32*>( &(instance()->mOSBugFixVersion) ) ) != noErr)
 			throw SystemExcFailedQuery();
-#else
+#elif defined( CINDER_MSW )
 		::OSVERSIONINFOEX info;
 		::ZeroMemory( &info, sizeof( OSVERSIONINFOEX ) );
 		info.dwOSVersionInfoSize = sizeof( OSVERSIONINFOEX );
@@ -462,6 +463,9 @@ bool System::hasMultiTouch()
 		int value = ::GetSystemMetrics( 94/*SM_DIGITIZER*/ );
 		instance()->mHasMultiTouch = (value & 0x00000080/*NID_READY*/ ) && 
 				( (value & 0x00000040/*NID_MULTI_INPUT*/ ) || (value & 0x00000001/*NID_INTEGRATED_TOUCH*/ ) );
+#elif defined( CINDER_ANDROID )
+	//  XXX check for multitouch support
+	instance()->mHasMultiTouch = true;
 #endif
 		instance()->mCachedValues[MULTI_TOUCH] = true;
 	}
@@ -478,6 +482,9 @@ int32_t System::getMaxMultiTouchPoints()
 		instance()->mMaxMultiTouchPoints = 6; // we don't seem to be able to query this at runtime; should be hardcoded based on the device
 #elif defined( CINDER_MSW )
 		instance()->mMaxMultiTouchPoints = ::GetSystemMetrics( 95/*SM_MAXIMUMTOUCHES*/ );
+#elif defined( CINDER_ANDROID )
+		// XXX can this be queried?
+		instance()->mMaxMultiTouchPoints = 2;
 #endif
 		instance()->mCachedValues[MAX_MULTI_TOUCH_POINTS] = true;
 	}

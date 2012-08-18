@@ -26,6 +26,8 @@
 #	include <mach/mach_time.h>
 #elif defined( CINDER_MSW ) 
 #	include <windows.h>
+#elif defined( CINDER_LINUX )
+#	include <time.h>
 #endif
 
 namespace cinder {
@@ -38,8 +40,12 @@ void Rand::randomize()
 {
 #if defined( CINDER_COCOA )
 	sBase = boost::mt19937( mach_absolute_time() );
-#else
+#elif defined( CINDER_MSW )
 	sBase = boost::mt19937( ::GetTickCount() );
+#elif defined( CINDER_LINUX )
+	struct timespec time;
+	clock_gettime( CLOCK_MONOTONIC, &time );
+	sBase = boost::mt19937( time.tv_sec * 1e3 + time.tv_nsec / 1e6);
 #endif
 }
 

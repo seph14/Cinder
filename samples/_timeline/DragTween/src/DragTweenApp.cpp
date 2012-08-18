@@ -42,6 +42,7 @@ class DragTweenApp : public AppNative {
 	void mouseDrag( MouseEvent event );
 	void mouseUp( MouseEvent event );
 	void draw();
+    void resume(bool renewContext);
 	
 	vector<Circle>			mCircles;
 	Circle					*mCurrentDragCircle;
@@ -49,6 +50,10 @@ class DragTweenApp : public AppNative {
 
 void DragTweenApp::setup()
 {
+#if defined( CINDER_ANDROID )
+	mCircles.clear();
+#endif
+
 	// setup the initial animation
 	const size_t numCircles = 35;
 	for( size_t c = 0; c < numCircles; ++c ) {
@@ -60,6 +65,13 @@ void DragTweenApp::setup()
 	}
 
 	mCurrentDragCircle = 0;
+}
+
+void DragTweenApp::resume(bool renewContext)
+{
+	if (renewContext) {
+		setup();
+	}
 }
 
 void DragTweenApp::mouseDown( MouseEvent event )
@@ -92,6 +104,7 @@ void DragTweenApp::mouseUp( MouseEvent event )
 		
 	mCurrentDragCircle = 0;
 }
+
 void DragTweenApp::draw()
 {
 	// clear out the window with black
@@ -101,6 +114,5 @@ void DragTweenApp::draw()
 	for( vector<Circle>::const_iterator circleIt = mCircles.begin(); circleIt != mCircles.end(); ++circleIt )
 		circleIt->draw();
 }
-
 
 CINDER_APP_NATIVE( DragTweenApp, RendererGl )

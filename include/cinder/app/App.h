@@ -34,6 +34,7 @@
 #include "cinder/DataSource.h"
 #include "cinder/Timer.h"
 #include "cinder/Function.h"
+#include "cinder/Timeline.h"
 #if defined( CINDER_COCOA )
 	#if defined( CINDER_COCOA_TOUCH )
 		#if defined( __OBJC__ )
@@ -54,6 +55,8 @@
 //	class CinderView;
 #elif defined( CINDER_MSW )
 	#include "cinder/msw/OutputDebugStringStream.h"
+#elif defined( CINDER_ANDROID )
+	#include "cinder/android/LogStream.h"
 #endif
 
 #include <vector>
@@ -337,12 +340,13 @@ class App {
 	static fs::path				getResourcePath( const fs::path &rsrcRelativePath );
 	//! Returns the absolute file path to the bundle's resources folder. \sa \ref CinderResources
 	static fs::path				getResourcePath();
-#else
+#elif defined( CINDER_MSW )
 	//! Returns a DataSourceRef to an application resource. \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
 	static DataSourceRef		loadResource( int mswID, const std::string &mswType );
+#elif defined( CINDER_ANDROID )
+	static DataSourceAssetRef	loadResource( const std::string &resourcePath );
 #endif
 	
-	//! Returns a DataSourceRef to an application asset. Throws a AssetLoadExc on failure.
 	DataSourceRef			loadAsset( const fs::path &relativePath );
 	//! Returns a fs::path to an application asset. Returns an empty path on failure.
 	fs::path				getAssetPath( const fs::path &relativePath );
@@ -424,6 +428,8 @@ class App {
 #if defined( CINDER_MSW )
 	friend class AppImplMsw;
 	std::shared_ptr<cinder::msw::dostream>	mOutputStream;
+#elif defined( CINDER_ANDROID )
+	std::shared_ptr<cinder::android::dostream> mOutputStream;
 #else
 	static void				*sAutoReleasePool;
 #endif
@@ -500,9 +506,11 @@ inline DataSourceRef		loadResource( const std::string &macPath, int mswID, const
 #if defined( CINDER_COCOA )
 	//! Returns a DataSource to an application resource. \a macPath is a path relative to the bundle's resources folder. \sa \ref CinderResources
 	inline DataSourceRef	loadResource( const std::string &macPath ) { return App::loadResource( macPath ); }
-#else
+#elif defined( CINDER_MSW )
 	//! Returns a DataSource to an application resource. \a mswID and \a mswType identify the resource as defined the application's .rc file(s). \sa \ref CinderResources
 	inline DataSourceRef	loadResource( int mswID, const std::string &mswType ) { return App::loadResource( mswID, mswType ); }
+#elif defined( CINDER_ANDROID )
+	inline DataSourceAssetRef	loadResource( const std::string &resourcePath ) { return App::loadResource( resourcePath ); }
 #endif
 
 //! Returns a DataSourceRef to the active App's's asset. Throws a AssetLoadExc on failure.
@@ -551,8 +559,8 @@ inline ::CGContextRef	createWindowCgContext() { return ((Renderer2d*)(App::get()
 //! Exception for failed resource loading
 class ResourceLoadExc : public Exception {
   public:
-#if defined( CINDER_COCOA )
-	ResourceLoadExc( const std::string &macPath );
+#if defined( CINDER_COCOA ) || defined( CINDER_ANDROID )
+	ResourceLoadExc( const std::string &path );
 #elif defined( CINDER_MSW )
 	ResourceLoadExc( int mswID, const std::string &mswType );
 	ResourceLoadExc( const std::string &macPath, int mswID, const std::string &mswType );
@@ -574,3 +582,4 @@ class AssetLoadExc : public Exception {
 };
 
 } } // namespace cinder::app
+

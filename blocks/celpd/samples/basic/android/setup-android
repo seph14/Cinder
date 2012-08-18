@@ -1,0 +1,19 @@
+# source this file 
+ANDROID_TOOL=android
+
+# Use android.bat on cygwin
+hash ${ANDROID_TOOL} 2>&-
+if [ $? -ne 0 ]; then
+    ANDROID_TOOL=android.bat
+fi
+
+${ANDROID_TOOL} update project --path . --name BasicAudio --target android-10
+
+if [ -z $NDK_MODULE_PATH ]; then
+echo "Set NDK_MODULE_PATH set to your Cinder module path (e.g. $CINDER/android/prebuilt)"
+fi
+
+echo
+echo "Ready to run ndk-build && ant"
+
+
