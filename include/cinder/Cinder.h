@@ -24,6 +24,7 @@
 
 #include <boost/cstdint.hpp>
 #include <boost/version.hpp>
+#include <boost/chrono.hpp>
 
 #if BOOST_VERSION < 104800
 	#error "Cinder requires Boost version 1.48 or later"
