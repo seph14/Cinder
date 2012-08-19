@@ -13,6 +13,10 @@ ifdef USE_FREETYPE
 include $(TOP_PATH)/freetype-2.4.5/Android.mk
 endif  # USE_FREETYPE
 
+ifdef USE_OCV_CAPTURE
+include $(TOP_PATH)/ocvcapture/Android.mk
+endif
+
 include $(CLEAR_VARS)
 
 CINDER_SRC   = ../../../src/cinder
@@ -152,6 +156,12 @@ LOCAL_SRC_FILES  += $(CINDER_SRC)/ImageSourceFileFreeImage.cpp
 LOCAL_CFLAGS     += -DCINDER_FREEIMAGE
 endif
 
+ifdef USE_OCV_CAPTURE
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/../ocvcapture
+#add implementation source
+LOCAL_CFLAGS     += -DCINDER_OCVCAPTURE
+endif
+
 ifdef USE_STBIMAGE
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../src/stb_image
 LOCAL_SRC_FILES  += $(STBIMAGE_SRC)/stb_image.c \
@@ -170,7 +180,7 @@ LOCAL_STATIC_LIBRARIES	:= android_native_app_glue
 
 # Module exports
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../include $(LOCAL_PATH)/../../../boost
-LOCAL_EXPORT_LDLIBS := -llog -lEGL $(GLES_LDLIB) -lz
+LOCAL_EXPORT_LDLIBS := -llog -lEGL $(GLES_LDLIB) -lz -ldl
 
 include $(BUILD_STATIC_LIBRARY)
 

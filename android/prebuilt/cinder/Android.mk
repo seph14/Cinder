@@ -9,6 +9,13 @@ ifdef USE_FREEIMAGE
 	include $(PREBUILT_STATIC_LIBRARY)
 endif
 
+ifdef USE_OCV_CAPTURE
+	include $(CLEAR_VARS)
+	LOCAL_MODULE := ocvcapture
+	LOCAL_SRC_FILES := ../../obj/local/$(TARGET_ARCH_ABI)/libocvcapture.a
+	include $(PREBUILT_STATIC_LIBRARY)
+endif
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := ft2
 LOCAL_SRC_FILES := ../../obj/local/$(TARGET_ARCH_ABI)/libft2.a
