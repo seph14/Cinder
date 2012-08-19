@@ -1,6 +1,7 @@
 #include "cinder/app/AppNative.h"
 #include "cinder/gl/gl.h"
 #include "cinder/gl/Texture.h"
+#include "cinder/gl/TextureFont.h"
 #include "cinder/Easing.h"
 #include "cinder/Text.h"
 
@@ -94,7 +95,9 @@ class EaseGalleryApp : public AppNative {
 void EaseGalleryApp::setup()
 {
 	// setWindowSize( 950, 800 );
+#if defined( CINDER_ANDROID )
     EaseBox::sTexFont = gl::TextureFontRef();
+#endif
     gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
 
 	mEaseBoxes.push_back( EaseBox( EaseInQuad(), "EaseInQuad" ) );
