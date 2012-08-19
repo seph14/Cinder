@@ -28,7 +28,6 @@ samples/*/android/bin
 samples/*/android/libs
 samples/*/android/obj
 
-boost
 build.xml
 local.properties
 project.properties

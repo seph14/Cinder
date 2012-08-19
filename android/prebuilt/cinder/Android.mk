@@ -15,31 +15,6 @@ LOCAL_SRC_FILES := ../../obj/local/$(TARGET_ARCH_ABI)/libft2.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
-LOCAL_MODULE := boost_date_time
-LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_date_time.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := boost_exception
-LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_exception.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := boost_filesystem
-LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_filesystem.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := boost_system
-LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_system.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := boost_thread
-LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libboost_thread.a
-include $(PREBUILT_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
 LOCAL_MODULE := cairo
 LOCAL_SRC_FILES := ../../../lib/android/$(TARGET_ARCH_ABI)/libcairo.a
 include $(PREBUILT_STATIC_LIBRARY)
@@ -55,6 +30,7 @@ include $(LOCAL_PATH)/../../jni/cinder/Configure.mk
 LOCAL_MODULE := cinder
 LOCAL_SRC_FILES := ../../obj/local/$(TARGET_ARCH_ABI)/libcinder.a
 LOCAL_EXPORT_CFLAGS += -D_GLIBCPP_USE_WCHAR_T -D__LITTLE_ENDIAN__
+LOCAL_EXPORT_CFLAGS += -Wno-psabi -Wno-overflow
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../include $(LOCAL_PATH)/../../../boost
 LOCAL_EXPORT_LDLIBS := -llog -lEGL -lz
 
