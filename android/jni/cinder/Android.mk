@@ -57,6 +57,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/ip/Resize.cpp \
 					$(CINDER_SRC)/ip/Threshold.cpp \
 					$(CINDER_SRC)/ip/Trim.cpp \
+					$(CINDER_SRC)/ip/YUVConvert.cpp \
 					$(CINDER_SRC)/svg/Svg.cpp \
 					$(CINDER_SRC)/Area.cpp \
 					$(CINDER_SRC)/AxisAlignedBox.cpp \
@@ -67,6 +68,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/BSplineFit.cpp \
 					$(CINDER_SRC)/Buffer.cpp \
 					$(CINDER_SRC)/Camera.cpp \
+					$(CINDER_SRC)/Capture.cpp \
 					$(CINDER_SRC)/Channel.cpp \
 					$(CINDER_SRC)/CinderMath.cpp \
 					$(CINDER_SRC)/Color.cpp \
@@ -158,7 +160,7 @@ endif
 
 ifdef USE_OCV_CAPTURE
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/../ocvcapture
-#add implementation source
+LOCAL_SRC_FILES  += $(CINDER_SRC)/CaptureImplAndroid.cpp
 LOCAL_CFLAGS     += -DCINDER_OCVCAPTURE
 endif
 

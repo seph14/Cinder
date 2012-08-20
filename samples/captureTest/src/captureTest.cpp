@@ -3,6 +3,9 @@
 #if defined( CINDER_COCOA_TOUCH )
 	#include "cinder/app/AppCocoaTouch.h"
 	typedef ci::app::AppCocoaTouch AppBase;
+#elif defined( CINDER_ANDROID )
+	#include "cinder/app/AppNative.h"
+	typedef ci::app::AppNative AppBase;
 #else
 	#include "cinder/app/AppBasic.h"
 	typedef ci::app::AppBasic AppBase;
@@ -75,6 +78,8 @@ void CaptureApp::draw()
 
 #if defined( CINDER_COCOA_TOUCH )
 CINDER_APP_COCOA_TOUCH( CaptureApp, RendererGl )
+#elif defined( CINDER_ANDROID )
+CINDER_APP_NATIVE( CaptureApp, RendererGl(3) )
 #else
 CINDER_APP_BASIC( CaptureApp, RendererGl )
 #endif
