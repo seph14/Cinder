@@ -1,11 +1,12 @@
 
 #include "cinder/CaptureImplAndroid.h"
+#include "android/log.h"
 
 #include <set>
 using namespace std;
 
 #if !defined(LOGD) && !defined(LOGI) && !defined(LOGE)
-#define LOG_TAG "CINDER OCVCAPTURE"
+#define LOG_TAG "cinder"
 #define LOGD(...) ((void)__android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__))
 #define LOGI(...) ((void)__android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__))
 #define LOGE(...) ((void)__android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__))
@@ -36,7 +37,7 @@ public:
 
                 mCapture->setFrame(buffer, bufferSize);
 
-                //pthread_cond_broadcast(&m_capture->m_nextFrameCond); // to grab in sync
+                //pthread_cond_broadcast(&mCapture->mNextFrameCond); // to grab in sync
                 pthread_mutex_unlock(&mCapture->mNextFrameMutex);
             }
             return true;
@@ -81,7 +82,7 @@ public:
         {
             mCapture->mWaitingNextFrame = true;
             // grab frames in sync
-            //pthread_cond_wait(&mNextFrameCond, &mNextFrameMutex);
+            //pthread_cond_wait(&mCapture->mNextFrameCond, &mCapture->mNextFrameMutex);
         }
 
         if (mCapture->mDataState == CaptureImplAndroid::CVCAPTURE_ANDROID_STATE_HAS_NEW_FRAME_UNGRABBED) 
@@ -150,22 +151,18 @@ const vector<Capture::DeviceRef>& CaptureImplAndroid::getDevices( bool forceRefr
 
 CaptureImplAndroid::CaptureImplAndroid( int32_t width, int32_t height, const Capture::DeviceRef device )
 {
+    LOGI("CaptureImplAndroid: %dx%d id(%d)", width, height, device->getUniqueId());
     mDevice = device;
     open(device->getUniqueId());
     if(mIsCapturing)
     {
-        setFrameSize(width, height);
-        
-        mWidth = mActivity->getFrameWidth();
-        mHeight = mActivity->getFrameHeight();
-
-        //allocate memory if needed
-        prepareCacheForYUV(mWidth, mHeight);
+        //setFrameSize(width, height);
 
         if (mFrameFormat == ip::YUV_Unknown)
         {
             union {double prop; const char* name;} u;
             u.prop = (double)mActivity->getProperty(ANDROID_CAMERA_PROPERTY_PREVIEW_FORMAT_STRING);
+
             if (0 == strcmp(u.name, "yuv420sp"))
                 mFrameFormat = ip::YUV_NV21;
             else if (0 == strcmp(u.name, "yvu420sp"))
@@ -203,7 +200,7 @@ void CaptureImplAndroid::open(int cameraId)
     if (mActivity == 0) return;
 
     pthread_mutex_init(&mNextFrameMutex, NULL);
-    //pthread_cond_init (&mNextFrameCond,  NULL);
+    //pthread_cond_init(&mNextFrameCond,  NULL);
 
     CameraActivity::ErrorCode errcode = mActivity->connect(cameraId);
 
@@ -281,6 +278,7 @@ void CaptureImplAndroid::setFrameSize(int width, int height)
     int best_w = width;
     int best_h = height;
     double minDiff = 10000000.0;
+    double minDiff_w = 10000000.0;
     
     std::vector<std::string> sizes_str = splitString(u.name, ',');
     for(std::vector<std::string>::iterator it = sizes_str.begin(); it != sizes_str.end(); ++it) 
@@ -288,30 +286,38 @@ void CaptureImplAndroid::setFrameSize(int width, int height)
         std::vector<std::string> wh_str = splitString(*it, 'x');
         double _w = ::atof(wh_str[0].c_str());
         double _h = ::atof(wh_str[1].c_str());
-        if (std::abs(_h - height) < minDiff) 
+        if (std::abs(_h - height) < minDiff || (std::abs(_h - height) == minDiff && std::abs(_w - width) < minDiff_w)) 
         {
             best_w = (int)_w;
             best_h = (int)_h;
             minDiff = std::abs(_h - height);
+            minDiff_w = std::abs(_w - width);
         }
     }
 
     mActivity->setProperty(ANDROID_CAMERA_PROPERTY_FRAMEWIDTH, best_w);
     mActivity->setProperty(ANDROID_CAMERA_PROPERTY_FRAMEHEIGHT, best_h);
     //
-    mActivity->applyProperties();
-    mCameraParamsChanged = false;
-    mDataState = CVCAPTURE_ANDROID_STATE_NO_FRAME; //we will wait new frame
+    //mActivity->applyProperties();
+    mCameraParamsChanged = true;
+    //mDataState = CVCAPTURE_ANDROID_STATE_NO_FRAME; //we will wait new frame
 }
 
 bool CaptureImplAndroid::checkNewFrame() const
 {
-    return mDataState == CVCAPTURE_ANDROID_STATE_HAS_NEW_FRAME_UNGRABBED;
+    //return mDataState == CVCAPTURE_ANDROID_STATE_HAS_NEW_FRAME_UNGRABBED;
+    return mFrameGrabber->grabFrame();
 }
 
 //Attention: this method should be called inside pthread_mutex_lock(mNextFrameMutex) only
 void CaptureImplAndroid::setFrame(const void* buffer, int bufferSize)
 {
+    int _mWidth = mActivity->getFrameWidth();
+    int _mHeight = mActivity->getFrameHeight();
+
+    //allocate memory if needed
+    prepareCacheForYUV(_mWidth, _mHeight);
+
     //copy data
     memcpy(mFrameYUV420next, buffer, bufferSize);
 
@@ -321,9 +327,9 @@ void CaptureImplAndroid::setFrame(const void* buffer, int bufferSize)
 
 void CaptureImplAndroid::prepareCacheForYUV(int width, int height)
 {
-    if (!mFrameYUV420next)
+    if (mWidth!=width || mHeight!=height)
     {
-        LOGD("CaptureImplAndroid::prepareCacheForYUV: Changing size of buffers: from width=%d height=%d to width=%d height=%d", mWidth, mHeight, width, height);
+        LOGD("prepareCacheForYUV: Changing size of buffers: from width=%d height=%d to width=%d height=%d", mWidth, mHeight, width, height);
         
         uint8_t *tmp = mFrameYUV420next;
         mFrameYUV420next = new uint8_t [width * height * 3 / 2];
@@ -337,8 +343,11 @@ void CaptureImplAndroid::prepareCacheForYUV(int width, int height)
             delete[] tmp;
         }
 
+        mWidth = width;
+        mHeight = height;
+
         mCurrentFrame.reset();
-        mCurrentFrame = Surface8u( width, height, true, SurfaceChannelOrder::BGRA );
+        mCurrentFrame = Surface8u( width, height, false, SurfaceChannelOrder::RGB );
     }
 }
 
@@ -368,9 +377,10 @@ Surface8u CaptureImplAndroid::getSurface() const
     // Attention! 
     // all the operations in this function below should occupy less time 
     // than the period between two frames from camera
-    if(mFrameGrabber->grabFrame())
+    uint8_t *current_frameYUV420 = mFrameYUV420;
+    //if(mFrameGrabber->grabFrame())
+    if(NULL != current_frameYUV420)
     {   
-        const uint8_t *current_frameYUV420 = mFrameYUV420;
         ip::YUVConvert(current_frameYUV420, mFrameFormat, mWidth, mHeight*3/2, &mCurrentFrame);
     }
     

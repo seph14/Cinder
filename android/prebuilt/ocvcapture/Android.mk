@@ -1,15 +1,9 @@
-LOCAL_PATH := $(call my-dir)/../../../lib/android/ocvcapture/$(TARGET_ARCH_ABI)
-
-include $(CLEAR_VARS)
-LOCAL_MODULE := ocvcapture_static
-LOCAL_SRC_FILES := libocvcapture.a
-include $(PREBUILT_STATIC_LIBRARY)
+LOCAL_PATH := $(call my-dir)/$(TARGET_ARCH_ABI)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := ocv_camera_r220
 LOCAL_SRC_FILES := libnative_camera_r2.2.0.so
 include $(PREBUILT_SHARED_LIBRARY)
-
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := ocv_camera_r233
