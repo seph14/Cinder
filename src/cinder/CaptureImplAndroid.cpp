@@ -61,7 +61,10 @@ public:
     AndroidFrameGrabber(CaptureImplAndroid* capture)
     {
         mCapture = capture;
+        hasNewFrame = false;
     }
+
+    bool hasNewFrame;
 
     bool grabFrame()
     {
@@ -94,6 +97,8 @@ public:
 
             mCapture->mDataState = CaptureImplAndroid::CVCAPTURE_ANDROID_STATE_HAS_FRAME_GRABBED;
             mCapture->mFramesGrabbed++;
+
+            hasNewFrame = true;
 
             res=true;
         } 
@@ -156,6 +161,8 @@ CaptureImplAndroid::CaptureImplAndroid( int32_t width, int32_t height, const Cap
     open(device->getUniqueId());
     if(mIsCapturing)
     {
+        // result in signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr deadbaad
+        // looks like lib cant reinit internaly probaly only on selected phones
         //setFrameSize(width, height);
 
         if (mFrameFormat == ip::YUV_Unknown)
@@ -381,7 +388,11 @@ Surface8u CaptureImplAndroid::getSurface() const
     //if(mFrameGrabber->grabFrame())
     if(NULL != current_frameYUV420)
     {   
-        ip::YUVConvert(current_frameYUV420, mFrameFormat, mWidth, mHeight*3/2, &mCurrentFrame);
+        if(mFrameGrabber->hasNewFrame)
+        {
+            ip::YUVConvert(current_frameYUV420, mFrameFormat, mWidth, mHeight*3/2, &mCurrentFrame);
+            mFrameGrabber->hasNewFrame = false;
+        }
     }
     
     return mCurrentFrame;
