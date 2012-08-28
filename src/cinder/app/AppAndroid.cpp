@@ -120,7 +120,7 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
         int action = actionCode & AMOTION_EVENT_ACTION_MASK;
         int index  = (actionCode & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
         const char* actionName = (action >= 0 && action <= 6) ? actionNames[action] : "UNKNOWN";
-        CI_LOGI("Received touch action %s pointer index %d", actionName, index);
+        // CI_LOGI("Received touch action %s pointer index %d", actionName, index);
 
         double timestamp = engine->cinderApp->getElapsedSeconds();
         if (action == AMOTION_EVENT_ACTION_DOWN || action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
@@ -131,7 +131,7 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             touchState->touchesBegan.push_back(touch);
             touchState->activeTouches.insert(std::make_pair(pointerId, touch));
 
-            CI_LOGI("Pointer id %d down x %d y %d", pointerId, x, y);
+            // CI_LOGI("Pointer id %d down x %f y %f", pointerId, x, y);
         }
         else if (action == AMOTION_EVENT_ACTION_MOVE) {
             int pointerCount = AMotionEvent_getPointerCount(event);
@@ -147,7 +147,7 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
                     touchState->touchesMoved.push_back(touch);
                     touchState->activeTouches.erase(pointerId);
                     touchState->activeTouches.insert(std::make_pair(pointerId, touch));
-                    CI_LOGI("Pointer id %d move x %d y %d", pointerId, x, y);
+                    // CI_LOGI("Pointer id %d move x %f y %f", pointerId, x, y);
                 }
             }
         }
@@ -157,7 +157,7 @@ static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) 
             float y = AMotionEvent_getY(event, index);
             touchState->touchesEnded.push_back(TouchEvent::Touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL));
             touchState->activeTouches.erase(pointerId);
-            CI_LOGI("Pointer id %d up x %d y %d", pointerId, x, y);
+            // CI_LOGI("Pointer id %d up x %f y %f", pointerId, x, y);
         }
 
         return 1;
