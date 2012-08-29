@@ -28,7 +28,7 @@ JSONCPP_SRC  = ../../../src/jsoncpp
 LOCAL_MODULE 	 := cinder
 
 # required for wchar_t support, used by boost::filesystem
-LOCAL_CFLAGS     := -D_GLIBCPP_USE_WCHAR_T -D__LITTLE_ENDIAN__
+LOCAL_CFLAGS := -D_GLIBCPP_USE_WCHAR_T -D__LITTLE_ENDIAN__
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
 					$(LOCAL_PATH)/../../../boost \
