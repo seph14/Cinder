@@ -522,14 +522,14 @@ void* AppAndroid::getSavedState()
     return mEngine->savedState;
 }
 
-fs::path AppAndroid::getInternalDataPath()
+fs::path AppAndroid::getInternalDataPath() const
 {
     const char* path = (mAndroidApp && mAndroidApp->activity) ? 
         mAndroidApp->activity->internalDataPath : NULL;
     return path ? fs::path(path) : fs::path();
 }
 
-fs::path AppAndroid::getExternalDataPath()
+fs::path AppAndroid::getExternalDataPath() const
 {
     const char* path = (mAndroidApp && mAndroidApp->activity) ? 
         mAndroidApp->activity->externalDataPath : NULL;

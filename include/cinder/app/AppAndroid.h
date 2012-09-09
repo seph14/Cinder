@@ -58,9 +58,9 @@ class AppAndroid : public App {
 	virtual void*       getSavedState();
 
 	//! Return read-write data path located on internal storage
-	fs::path getInternalDataPath();
+	fs::path getInternalDataPath() const;
 	//! Return read-write data path located on external storage
-	fs::path getExternalDataPath();
+	fs::path getExternalDataPath() const;
 	//! Returns Android SDK version
 	int32_t  getSdkVersion();
 
