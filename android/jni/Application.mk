@@ -11,6 +11,10 @@ ifdef USE_ARMEABI_V7A
 APP_ABI += armeabi-v7a
 endif
 
+ifdef USE_X86
+APP_ABI += x86
+endif
+
 ifdef USE_FREEIMAGE
 APP_MODULES += freeimage
 endif
