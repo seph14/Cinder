@@ -32,14 +32,14 @@
  
  */
 
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
 using namespace ci;
 using namespace ci::app;
 
 #include "OscSender.h"
 
-// We'll create a new Cinder Application by deriving from the BasicApp class
-class OSCSenderApp : public AppBasic {
+// We'll create a new Cinder Application by deriving from the NativeApp class
+class OSCSenderApp : public AppNative {
  public:
 	void prepareSettings(Settings *settings);
 	void setup();
@@ -95,4 +95,4 @@ void OSCSenderApp::draw()
 }
 
 // This line tells Cinder to actually create the application
-CINDER_APP_BASIC( OSCSenderApp, RendererGl )
+CINDER_APP_NATIVE( OSCSenderApp, RendererGl )

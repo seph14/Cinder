@@ -115,40 +115,37 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(JSONCPP_SRC)/json_value.cpp \
 					$(JSONCPP_SRC)/json_writer.cpp
 
+# OSC block
+OSC_BLOCK = ../../../blocks/osc
+OSC_SRC   = $(OSC_BLOCK)/src
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(OSC_BLOCK)/include
+LOCAL_SRC_FILES  += $(OSC_SRC)/OscBundle.cpp \
+                    $(OSC_SRC)/OscListener.cpp \
+					$(OSC_SRC)/OscMessage.cpp \
+					$(OSC_SRC)/OscSender.cpp
+
 ifdef USE_GLES2
-
-# Propipe block
-PROPIPE_SRC  = ../../../blocks/propipe/src
-# Built-in propipe block
-LOCAL_SRC_FILES  += $(PROPIPE_SRC)/propipe/Context.cpp \
-                    $(PROPIPE_SRC)/propipe/Draw.cpp \
-                    $(PROPIPE_SRC)/propipe/DrawShader.cpp \
-                    $(PROPIPE_SRC)/propipe/Matrices.cpp \
-                    $(PROPIPE_SRC)/propipe/TextureFont.cpp
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(PROPIPE_SRC)
-
-LOCAL_SRC_FILES  += $(CINDER_SRC)/gl/GlslProg.cpp \
-                    $(CINDER_SRC)/gl/Vbo.cpp
-LOCAL_CFLAGS += -DCINDER_GLES2
-GLES_LDLIB = -lGLESv2
+  # Propipe block
+  PROPIPE_SRC  = ../../../blocks/propipe/src
+  # Built-in propipe block
+  LOCAL_SRC_FILES  += $(PROPIPE_SRC)/propipe/Context.cpp \
+                      $(PROPIPE_SRC)/propipe/Draw.cpp \
+                      $(PROPIPE_SRC)/propipe/DrawShader.cpp \
+                      $(PROPIPE_SRC)/propipe/Matrices.cpp \
+                      $(PROPIPE_SRC)/propipe/TextureFont.cpp
+  LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(PROPIPE_SRC)
+  
+  LOCAL_SRC_FILES  += $(CINDER_SRC)/gl/GlslProg.cpp \
+                      $(CINDER_SRC)/gl/Vbo.cpp
+  LOCAL_CFLAGS += -DCINDER_GLES2
+  GLES_LDLIB = -lGLESv2
 else
-
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(TWEAKBAR_SRC)
-LOCAL_SRC_FILES += $(CINDER_SRC)/gl/Light.cpp \
-                   $(CINDER_SRC)/gl/Material.cpp \
-                   $(CINDER_SRC)/gl/TileRender.cpp
-
-# TWEAKBAR_SRC   = ../../../src/AntTweakBar
-# LOCAL_SRC_FILES += \
-#				   $(CINDER_SRC)/params/Params.cpp \
-#				   $(TWEAKBAR_SRC)/TwBar.cpp \
-#				   $(TWEAKBAR_SRC)/TwColors.cpp \
-#				   $(TWEAKBAR_SRC)/TwFonts.cpp \
-#				   $(TWEAKBAR_SRC)/TwMgr.cpp \
-#				   $(TWEAKBAR_SRC)/TwOpenGL.cpp
-
-LOCAL_CFLAGS += -DCINDER_GLES1
-GLES_LDLIB = -lGLESv1_CM
+  LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(TWEAKBAR_SRC)
+  LOCAL_SRC_FILES += $(CINDER_SRC)/gl/Light.cpp \
+                     $(CINDER_SRC)/gl/Material.cpp \
+                     $(CINDER_SRC)/gl/TileRender.cpp
+  LOCAL_CFLAGS += -DCINDER_GLES1
+  GLES_LDLIB = -lGLESv1_CM
 endif
 
 ifdef USE_FREEIMAGE
@@ -178,7 +175,7 @@ endif
 
 LOCAL_CFLAGS += -Wno-psabi -Wno-overflow
 
-LOCAL_STATIC_LIBRARIES	:= android_native_app_glue 
+LOCAL_STATIC_LIBRARIES	:= android_native_app_glue boost_thread
 
 # Module exports
 LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../include $(LOCAL_PATH)/../../../boost
@@ -187,4 +184,5 @@ LOCAL_EXPORT_LDLIBS := -llog -lEGL $(GLES_LDLIB) -lz -ldl
 include $(BUILD_STATIC_LIBRARY)
 
 $(call import-module,android/native_app_glue)
+$(call import-module,boost)
 

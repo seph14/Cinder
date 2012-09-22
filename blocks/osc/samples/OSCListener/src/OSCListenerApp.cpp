@@ -24,7 +24,7 @@
  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
 
 using namespace ci;
 using namespace ci::app;
@@ -32,7 +32,7 @@ using namespace ci::app;
 #include "OscListener.h"
 
 // We'll create a new Cinder Application by deriving from the BasicApp class
-class OSCListenerApp : public AppBasic {
+class OSCListenerApp : public AppNative {
  public:
 	
 	void prepareSettings(Settings *settings);
@@ -107,4 +107,4 @@ void OSCListenerApp::draw()
 
 
 // This line tells Cinder to actually create the application
-CINDER_APP_BASIC( OSCListenerApp, RendererGl )
+CINDER_APP_NATIVE( OSCListenerApp, RendererGl )
