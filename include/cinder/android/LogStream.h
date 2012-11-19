@@ -21,7 +21,7 @@ public:
 protected:
     int sync() {
         output_debug_string(this->str().c_str());
-        str(std::basic_string<CharT>());    // Clear the string buffer
+        this->str(std::basic_string<CharT>());    // Clear the string buffer
 
         return 0;
     }
