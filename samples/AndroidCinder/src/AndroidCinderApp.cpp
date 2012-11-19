@@ -40,7 +40,6 @@ void AndroidCinderApp::helloCinder()
     env->CallVoidMethod(getActivity(), helloCinder);
 
     //  Free JNI reference
-    JNIEnv* env = getJNIEnv();
     env->DeleteLocalRef(androidCinderActivity);
 }
 
