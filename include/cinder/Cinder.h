@@ -71,8 +71,6 @@ using boost::uint64_t;
 
 #if defined( _MSC_VER ) && ( _MSC_VER >= 1600 ) || defined( _LIBCPP_VERSION )
 	#include <memory>
-#elif defined( CINDER_ANDROID )
-    #include <memory>
 #elif defined( CINDER_COCOA )
 	#include <tr1/memory>
 	namespace std {

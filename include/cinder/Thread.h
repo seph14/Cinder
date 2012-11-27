@@ -27,7 +27,7 @@
 	#include "cinder/cocoa/CinderCocoa.h"
 #endif
 
-#if defined( _LIBCPP_VERSION )
+#if defined( _LIBCPP_VERSION ) && ! defined( CINDER_ANDROID )
 	#include <thread>
 	#include <mutex>
 #else

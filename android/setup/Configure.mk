@@ -12,6 +12,9 @@
 # Also build x86 binaries
 # USE_X86 = yes
 
+# Build with C++11 support
+USE_CPP_11 = yes
+
 # Suggest leaving these enabled by default
 USE_STBIMAGE = yes
 USE_FREETYPE = yes
@@ -24,6 +27,6 @@ USE_FREETYPE = yes
 USE_ASSET_MANAGER = yes
 
 # Enable OCV Android Native Camera module (experimental)
-USE_OCV_CAPTURE = yes
+# USE_OCV_CAPTURE = yes
 
 

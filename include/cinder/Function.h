@@ -30,8 +30,6 @@
 
 #if defined( _MSC_VER ) && ( _MSC_VER >= 1600 ) || defined( _LIBCPP_VERSION )
 	#include <functional>
-#elif defined( CINDER_ANDROID )
-    #include <functional>
 #else
 	#if defined( CINDER_COCOA )
 		#include <tr1/functional>
