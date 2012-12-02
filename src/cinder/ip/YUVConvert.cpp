@@ -365,6 +365,8 @@ void YUVConvert(const uint8_t *yuv_data, YUVFormat format, int32_t width, int32_
                 //TODO
             }
             break;
+        case YUV_Unknown:
+            break;
     }
 }
 
