@@ -5,7 +5,7 @@ APP_ABI      := armeabi
 APP_PLATFORM := android-9
 APP_STL      := gnustl_static
 APP_MODULES  := cinder
-APP_CPPFLAGS := -fexceptions -frtti
+APP_CPPFLAGS := -fexceptions -frtti -Wno-format-security
 
 ifdef USE_CPP_11
 APP_CFLAGS += -std=c++11 -D_LIBCPP_VERSION

@@ -278,6 +278,7 @@ string loadString( DataSourceRef dataSource )
 	return string( static_cast<const char*>( padded.getData() ) );
 }
 
+#if ! defined( CINDER_ANDROID )
 wstring toUtf16( const string &utf8 )
 {
 #if defined( CINDER_MSW )
@@ -324,6 +325,7 @@ string toUtf8( const wstring &utf16 )
 	return string( [utf16NS cStringUsingEncoding:NSUTF8StringEncoding] );	
 #endif
 }
+#endif
 
 void sleep( float milliseconds )
 {
@@ -420,6 +422,8 @@ vector<string> stackTrace()
 	free( strs );
 	
 	return result;
+#else
+    return vector<string>();
 #endif
 }
 

@@ -852,7 +852,7 @@ void ScaledFont::textExtents( const char *utf8, TextExtents *extents )
 	cairo_scaled_font_text_extents( mCairoScaledFont, utf8, extents->getCairoTextExtents() );
 }
 
-/*void ScaledFont::glyphExents( const Glyph *glyphs, int32_t num_glyphs )
+void ScaledFont::glyphExents( const Glyph *glyphs, int32_t num_glyphs )
 {
 	cairo_scaled_font_glyph_extents( mCairoScaledFont, const_cast<Glyph *>( glyphs )->getCairoGlyph(), num_glyphs );
 }
@@ -1623,6 +1623,8 @@ void Context::appendPath( const cinder::Path2d &path )
 			break;
 			case Path2d::CLOSE:
 				closePath();
+			break;
+			case Path2d::MOVETO:
 			break;
 		}
 	}

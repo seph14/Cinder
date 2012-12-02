@@ -28,7 +28,7 @@ struct EaseBox {
 		mLabelTex = gl::Texture( text.render( true ) );
 #else
         if (!sTexFont)
-            sTexFont = gl::TextureFont::create( Font( loadFile("/system/fonts/DroidSans.ttf"), 18 ) );
+            sTexFont = gl::TextureFont::create( Font::create( loadFile("/system/fonts/DroidSans.ttf"), 18 ) );
         mName = name;
 #endif
 	}
@@ -48,7 +48,7 @@ struct EaseBox {
         Vec2f labelSize = sTexFont->measureString( mName );
         Vec2f baseline;
         baseline.x = (mDrawRect.getWidth() - labelSize.x) / 2.0f + mDrawRect.x1;
-        float ascent = sTexFont->getFont().getAscent();
+        float ascent = sTexFont->getFont()->getAscent();
         baseline.y = mDrawRect.y1 + (mDrawRect.y2 - mDrawRect.y1 - ascent) / 2.0f + ascent;
         sTexFont->drawString( mName, baseline );
 #endif
