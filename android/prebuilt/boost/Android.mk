@@ -42,7 +42,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := boost_thread
-LOCAL_EXPORT_CFLAGS := -DPAGE_SIZE=getpagesize\(\)
+# LOCAL_EXPORT_CFLAGS := -DPAGE_SIZE=getpagesize\(\)
 LOCAL_SRC_FILES := libboost_thread.a
 
 include $(PREBUILT_STATIC_LIBRARY)

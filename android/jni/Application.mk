@@ -8,7 +8,7 @@ APP_MODULES  := cinder
 APP_CPPFLAGS := -fexceptions -frtti -Wno-format-security
 
 ifdef USE_CPP_11
-APP_CFLAGS += -std=c++11 -D_LIBCPP_VERSION
+APP_CPPFLAGS += -std=c++11 -D_LIBCPP_VERSION
 endif
 
 ifdef USE_ARMEABI_V7A
