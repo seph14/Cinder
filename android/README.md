@@ -30,7 +30,7 @@ Quickstart
     % . ./setup-android
 ```
 
-* Configure build settings by editing jni/cinder/Configure.mk (optional)
+* Configure build settings by editing $CINDER/android/Configure.mk (optional)
   
     USE_FREEIMAGE - use FreeImage image library (wide format compatibility but large)
 
@@ -72,8 +72,8 @@ C++11
 -----
 
 Cinder can be built with C++11 support by enabling "USE_CPP_11" in Configure.mk.
-A linked application will require the following changes to Application.mk:
 
+It's recommended to add the following to a linked app's Application.mk:
 APP_CPPFLAGS += -std=c++11 -D_LIBCPP_VERSION
 
 This will enable C++11 language support and switches the appropriate imports in

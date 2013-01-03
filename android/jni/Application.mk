@@ -1,5 +1,5 @@
-CINDER_JNI_PATH = $(call my-dir)
-include $(CINDER_JNI_PATH)/cinder/Configure.mk
+LOCAL_PATH = $(call my-dir)/..
+include $(LOCAL_PATH)/Configure.mk
 
 APP_ABI      := armeabi
 APP_PLATFORM := android-9

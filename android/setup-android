@@ -55,13 +55,23 @@ unpack_freeimage
 unpack_freetype
 unpack_boost
 
-if [ ! -e jni/cinder/Configure.mk ]; then
-    cp -pf setup/Configure.mk jni/cinder/Configure.mk
+if [ ! -e Configure.mk ]; then
+    if [ -e jni/cinder/Configure.mk ]; then
+        cp -pf jni/cinder/Configure.mk Configure.mk
+        RETVAL=$?
+        if [ $RETVAL -eq 0 ] ; then
+            rm -f jni/cinder/Configure.mk
+            echo "Detected an existing jni/cinder/Configure.mk - moved to Configure.mk."
+        else
+            echo "Error copying jni/cinder/Configure.mk - please move it to $CINDER/android/Configure.mk"
+        fi
+    else
+        cp -pf setup/Configure.mk Configure.mk
+    fi
 else
-    echo
-    echo "Detected an existing jni/Cinder/Configure.mk - you may want to check"
-    echo "it against setup/Configure.mk"
+    echo "Configure.mk already exists - check setup/Configure.mk for new settings."
 fi
+
 
 echo
 if [ $? -ne 0 ]; then
