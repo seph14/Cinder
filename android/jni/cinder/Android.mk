@@ -139,18 +139,18 @@ LOCAL_SRC_FILES  += $(CINDER_SRC)/ImageSourceFileFreeImage.cpp
 LOCAL_CFLAGS     += -DCINDER_FREEIMAGE
 endif
 
-ifdef USE_OCV_CAPTURE
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/android/jni/ocvcapture
-LOCAL_SRC_FILES  += $(CINDER_SRC)/Capture.cpp \
-					$(CINDER_SRC)/CaptureImplAndroid.cpp
-LOCAL_CFLAGS     += -DCINDER_OCVCAPTURE
-endif
-
 ifdef USE_STBIMAGE
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(STBIMAGE_SRC)
 LOCAL_SRC_FILES  += $(STBIMAGE_SRC)/stb_image.c \
                     $(CINDER_SRC)/ImageSourceFileStbImage.cpp
 LOCAL_CFLAGS     += -DCINDER_STBIMAGE
+endif
+
+ifdef USE_OCV_CAPTURE
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/android/jni/ocvcapture
+LOCAL_SRC_FILES  += $(CINDER_SRC)/Capture.cpp \
+					$(CINDER_SRC)/CaptureImplAndroid.cpp
+LOCAL_CFLAGS     += -DCINDER_OCVCAPTURE
 endif
 
 #  Android Asset Manager requires to be built against 2.3+
