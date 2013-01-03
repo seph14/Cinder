@@ -6,29 +6,29 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE 	 := freeimage
 
-FREEIMAGE_PATH    = $(TOP_PATH)/FreeImage
-LOCAL_C_INCLUDES := $(FREEIMAGE_PATH)/Source \
-					$(FREEIMAGE_PATH)/Source/Metadata \
-					$(FREEIMAGE_PATH)/Source/FreeImageToolkit \
-					$(FREEIMAGE_PATH)/Source/LibJPEG \
-					$(FREEIMAGE_PATH)/Source/LibMNG \
-					$(FREEIMAGE_PATH)/Source/LibPNG \
-					$(FREEIMAGE_PATH)/Source/LibTIFF \
-					$(FREEIMAGE_PATH)/Source/ZLib \
-					$(FREEIMAGE_PATH)/Source/LibOpenJPEG \
-					$(FREEIMAGE_PATH)/Source/OpenEXR \
-					$(FREEIMAGE_PATH)/Source/OpenEXR/Half \
-					$(FREEIMAGE_PATH)/Source/OpenEXR/Iex \
-					$(FREEIMAGE_PATH)/Source/OpenEXR/IlmImf \
-					$(FREEIMAGE_PATH)/Source/OpenEXR/IlmThread \
-					$(FREEIMAGE_PATH)/Source/OpenEXR/Imath \
-					$(FREEIMAGE_PATH)/Source/LibRawLite \
-					$(FREEIMAGE_PATH)/Source/LibRawLite/dcraw \
-					$(FREEIMAGE_PATH)/Source/LibRawLite/internal \
-					$(FREEIMAGE_PATH)/Source/LibRawLite/libraw \
-					$(FREEIMAGE_PATH)/Source/LibRawLite/src
+# FREEIMAGE_PATH    = $(TOP_PATH)/FreeImage
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/Source \
+					$(LOCAL_PATH)/Source/Metadata \
+					$(LOCAL_PATH)/Source/FreeImageToolkit \
+					$(LOCAL_PATH)/Source/LibJPEG \
+					$(LOCAL_PATH)/Source/LibMNG \
+					$(LOCAL_PATH)/Source/LibPNG \
+					$(LOCAL_PATH)/Source/LibTIFF \
+					$(LOCAL_PATH)/Source/ZLib \
+					$(LOCAL_PATH)/Source/LibOpenJPEG \
+					$(LOCAL_PATH)/Source/OpenEXR \
+					$(LOCAL_PATH)/Source/OpenEXR/Half \
+					$(LOCAL_PATH)/Source/OpenEXR/Iex \
+					$(LOCAL_PATH)/Source/OpenEXR/IlmImf \
+					$(LOCAL_PATH)/Source/OpenEXR/IlmThread \
+					$(LOCAL_PATH)/Source/OpenEXR/Imath \
+					$(LOCAL_PATH)/Source/LibRawLite \
+					$(LOCAL_PATH)/Source/LibRawLite/dcraw \
+					$(LOCAL_PATH)/Source/LibRawLite/internal \
+					$(LOCAL_PATH)/Source/LibRawLite/libraw \
+					$(LOCAL_PATH)/Source/LibRawLite/src
 
-FREEIMAGE_SRC    = ../FreeImage/Source
+FREEIMAGE_SRC    = Source
 LOCAL_SRC_FILES := $(FREEIMAGE_SRC)/FreeImage/BitmapAccess.cpp \
 				   $(FREEIMAGE_SRC)/FreeImage/ColorLookup.cpp \
 				   $(FREEIMAGE_SRC)/FreeImage/FreeImage.cpp \

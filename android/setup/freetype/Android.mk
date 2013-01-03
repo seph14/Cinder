@@ -1,17 +1,15 @@
 # based on Android.mk from Android source distribution
 #
-LOCAL_PATH:= $(call my-dir)
+LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-
-FREETYPE_PATH = $(TOP_PATH)/freetype-2.4.5
 
 # compile in ARM mode, since the glyph loader/renderer is a hotspot
 # when loading complex pages in the browser
 #
 LOCAL_ARM_MODE := arm
 
-FREETYPE_SRC = ../freetype-2.4.5/src
+FREETYPE_SRC = src
 
 LOCAL_SRC_FILES := \
 	$(FREETYPE_SRC)/base/ftbbox.c \
@@ -34,8 +32,8 @@ LOCAL_SRC_FILES := \
 	$(FREETYPE_SRC)/pshinter/pshinter.c
 
 LOCAL_C_INCLUDES += \
-	$(FREETYPE_PATH)/builds \
-	$(FREETYPE_PATH)/include
+	$(LOCAL_PATH)/builds \
+	$(LOCAL_PATH)/include
 
 LOCAL_CFLAGS += -W -Wall
 LOCAL_CFLAGS += -fPIC -DPIC

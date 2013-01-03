@@ -1,41 +1,26 @@
 #  Cinder on Android makefile
 #
-
-LOCAL_PATH := $(call my-dir)
-
-include $(LOCAL_PATH)/Configure.mk
-
-ifdef USE_FREEIMAGE
-include $(TOP_PATH)/FreeImage/Android.mk
-endif # USE_FREEIMAGE
-
-ifdef USE_FREETYPE
-include $(TOP_PATH)/freetype-2.4.5/Android.mk
-endif  # USE_FREETYPE
-
-ifdef USE_OCV_CAPTURE
-include $(TOP_PATH)/ocvcapture/Android.mk
-endif
+LOCAL_PATH := $(call my-dir)/../../..
 
 include $(CLEAR_VARS)
 
-CINDER_SRC   = ../../../src/cinder
-TESS_SRC     = ../../../src/libtess2
-STBIMAGE_SRC = ../../../src/stb_image
-UTF8_CPP_SRC = ../../../include/utf8-cpp
-JSONCPP_SRC  = ../../../src/jsoncpp
+CINDER_SRC   = src/cinder
+TESS_SRC     = src/libtess2
+STBIMAGE_SRC = src/stb_image
+UTF8_CPP_SRC = include/utf8-cpp
+JSONCPP_SRC  = src/jsoncpp
 
-LOCAL_MODULE 	 := cinder
+LOCAL_MODULE := cinder
 
 # required for wchar_t support, used by boost::filesystem
 LOCAL_CFLAGS := -D_GLIBCPP_USE_WCHAR_T -D__LITTLE_ENDIAN__
 
-LOCAL_C_INCLUDES := $(LOCAL_PATH)/../../../include \
-					$(LOCAL_PATH)/../../../boost \
+LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
+					$(LOCAL_PATH)/boost \
 					$(LOCAL_PATH)/$(TESS_SRC) \
 					$(LOCAL_PATH)/$(UTF8_CPP_SRC) \
-					$(LOCAL_PATH)/../freetype-2.4.5/include \
-					$(LOCAL_PATH)/../../../include/android/cairo
+					$(LOCAL_PATH)/include/freetype \
+					$(LOCAL_PATH)/include/android/cairo
 
 LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(CINDER_SRC)/app/AppAndroid.cpp \
@@ -116,7 +101,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 					$(JSONCPP_SRC)/json_writer.cpp
 
 # OSC block
-OSC_BLOCK = ../../../blocks/osc
+OSC_BLOCK = blocks/osc
 OSC_SRC   = $(OSC_BLOCK)/src
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(OSC_BLOCK)/include
 LOCAL_SRC_FILES  += $(OSC_SRC)/OscBundle.cpp \
@@ -126,7 +111,7 @@ LOCAL_SRC_FILES  += $(OSC_SRC)/OscBundle.cpp \
 
 ifdef USE_GLES2
   # Propipe block
-  PROPIPE_SRC  = ../../../blocks/propipe/src
+  PROPIPE_SRC  = blocks/propipe/src
   # Built-in propipe block
   LOCAL_SRC_FILES  += $(PROPIPE_SRC)/propipe/Context.cpp \
                       $(PROPIPE_SRC)/propipe/Draw.cpp \
@@ -149,20 +134,20 @@ else
 endif
 
 ifdef USE_FREEIMAGE
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../FreeImage/Source
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/android/jni/FreeImage/Source
 LOCAL_SRC_FILES  += $(CINDER_SRC)/ImageSourceFileFreeImage.cpp
 LOCAL_CFLAGS     += -DCINDER_FREEIMAGE
 endif
 
 ifdef USE_OCV_CAPTURE
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../ocvcapture
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/android/jni/ocvcapture
 LOCAL_SRC_FILES  += $(CINDER_SRC)/Capture.cpp \
 					$(CINDER_SRC)/CaptureImplAndroid.cpp
 LOCAL_CFLAGS     += -DCINDER_OCVCAPTURE
 endif
 
 ifdef USE_STBIMAGE
-LOCAL_C_INCLUDES += $(LOCAL_PATH)/../../../src/stb_image
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(STBIMAGE_SRC)
 LOCAL_SRC_FILES  += $(STBIMAGE_SRC)/stb_image.c \
                     $(CINDER_SRC)/ImageSourceFileStbImage.cpp
 LOCAL_CFLAGS     += -DCINDER_STBIMAGE
@@ -178,7 +163,7 @@ LOCAL_CFLAGS += -Wno-psabi -Wno-overflow
 LOCAL_STATIC_LIBRARIES	:= android_native_app_glue boost_thread
 
 # Module exports
-LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/../../../include $(LOCAL_PATH)/../../../boost
+LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/include $(LOCAL_PATH)/boost
 LOCAL_EXPORT_LDLIBS := -llog -lEGL $(GLES_LDLIB) -lz -ldl
 
 include $(BUILD_STATIC_LIBRARY)
