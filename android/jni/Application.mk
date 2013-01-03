@@ -31,3 +31,6 @@ ifdef USE_OCV_CAPTURE
 APP_MODULES += ocvcapture_activity
 endif
 
+ifeq ($(NDK_TOOLCHAIN_VERSION),clang3.1)
+  APP_CFLAGS += -Qunused-arguments
+endif
