@@ -15,7 +15,7 @@ Quickstart
 
 * Install prerequisites:
 
-  - Android SDK and Android NDK R8
+  - Android SDK and Android NDK R8D
   - Boost v1.50 is required in the top Cinder directory.  The setup-android
     script will automatically install this if there is no "boost" directory
     under Cinder.
@@ -66,6 +66,18 @@ NDK_MODULE_PATH if it is not already defined.
 
 See $NDK/docs/IMPORT-MODULE.html for more details of how to use
 NDK_MODULE_PATH.
+
+
+C++11
+-----
+
+Cinder can be built with C++11 support by enabling "USE_CPP_11" in Configure.mk.
+A linked application will require the following changes to Application.mk:
+
+APP_CPPFLAGS += -std=c++11 -D_LIBCPP_VERSION
+
+This will enable C++11 language support and switches the appropriate imports in
+the Cinder header files.
 
 
 Orientation
@@ -171,5 +183,5 @@ Parts of the font rendering code are based on freetype-gl (http://code.google.co
 Copyright 2011 Nicolas P. Rougier. All rights reserved
 
 
-safetydank 20120621
+safetydank 20130103
 
