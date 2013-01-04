@@ -12,6 +12,15 @@ build/
 lib/libcinder*.a
 lib/cinder*.lib
 
+# Windows cruft
+*.suo
+*.ncb
+*.sdf
+Debug/
+Release/
+ipch/
+
+# Android cruft
 android/jni/cinder/Configure.mk
 android/Configure.mk
 lib/android
@@ -34,10 +43,3 @@ project.properties
 proguard.cfg
 proguard-project.txt
 
-# Windows cruft
-*.suo
-*.ncb
-*.sdf
-Debug/
-Release/
-ipch/
