@@ -83,7 +83,7 @@ else
     echo "export CINDER_PATH=$NEW_CINDER_PATH"
     echo "export NDK_MODULE_PATH=\$CINDER_PATH/android/prebuilt"
     echo
-    echo "Edit jni/cinder/Configure.mk to select Cinder build settings (optional)"
+    echo "Edit Configure.mk to select Cinder build settings (optional)"
     echo
     echo "Android source tree created, ready to run ndk-build"
     echo
