@@ -35,11 +35,11 @@ function unpack_freeimage {
 # }
 
 function unpack_boost {
-    local SRC_BOOST=boost_1_50_0.tar.bz2
+    local SRC_BOOST=boost_1_52_0.tar.bz2
     if [ ! -e ../boost -a ! -e setup/boost/$SRC_BOOST ]; then
         echo "Downloading Boost source archive"
         mkdir -p setup/boost
-        curl -L -O http://downloads.sourceforge.net/project/boost/boost/1.50.0/$SRC_BOOST
+        curl -L -O http://downloads.sourceforge.net/project/boost/boost/1.52.0/$SRC_BOOST
         mv $SRC_BOOST setup/boost
     fi
 
