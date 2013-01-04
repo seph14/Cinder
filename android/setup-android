@@ -46,7 +46,7 @@ function unpack_boost {
     if [ ! -e ../boost ]; then
         echo "Setup Boost sources..."
         tar jxf setup/boost/$SRC_BOOST -C ..
-        mv ../boost_1_50_0 ../boost
+        mv ../boost_1_52_0 ../boost
         chmod -R a+rwX ../boost
     fi
 }
