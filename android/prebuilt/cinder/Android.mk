@@ -11,7 +11,7 @@ endif
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := ft2
-LOCAL_SRC_FILES := obj/local/$(TARGET_ARCH_ABI)/libft2.a
+LOCAL_SRC_FILES := ../lib/android/$(TARGET_ARCH_ABI)/libft2.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)

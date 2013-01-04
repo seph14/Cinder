@@ -23,10 +23,6 @@ ifdef USE_FREEIMAGE
 APP_MODULES += freeimage
 endif
 
-ifdef USE_FREETYPE
-APP_MODULES += ft2
-endif
-
 ifdef USE_OCV_CAPTURE
 APP_MODULES += ocvcapture_activity
 endif

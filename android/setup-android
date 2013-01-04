@@ -20,19 +20,19 @@ function unpack_freeimage {
     cp -pf setup/FreeImage/tif_dirinfo.c jni/FreeImage/Source/LibTIFF/tif_dirinfo.c
 }
 
-function unpack_freetype {
-    if [ ! -e setup/freetype/freetype-2.4.5.tar.bz2 ]; then
-        echo "Downloading freetype source distribution"
-        curl -L -O http://download.savannah.gnu.org/releases/freetype/freetype-2.4.5.tar.bz2
-        mv freetype-2.4.5.tar.bz2 setup/freetype
-    fi
-
-    echo "Setup freetype..."
-    rm -rf jni/freetype-2.4.5
-    tar jxf setup/freetype/freetype-2.4.5.tar.bz2 -C jni
-    cp -p setup/freetype/Android.mk jni/freetype-2.4.5
-	cp -pf setup/freetype/ftmodule.h jni/freetype-2.4.5/include/freetype/config/ftmodule.h
-}
+# function unpack_freetype {
+#     if [ ! -e setup/freetype/freetype-2.4.5.tar.bz2 ]; then
+#         echo "Downloading freetype source distribution"
+#         curl -L -O http://download.savannah.gnu.org/releases/freetype/freetype-2.4.5.tar.bz2
+#         mv freetype-2.4.5.tar.bz2 setup/freetype
+#     fi
+# 
+#     echo "Setup freetype..."
+#     rm -rf jni/freetype-2.4.5
+#     tar jxf setup/freetype/freetype-2.4.5.tar.bz2 -C jni
+#     cp -p setup/freetype/Android.mk jni/freetype-2.4.5
+# 	cp -pf setup/freetype/ftmodule.h jni/freetype-2.4.5/include/freetype/config/ftmodule.h
+# }
 
 function unpack_boost {
     local SRC_BOOST=boost_1_50_0.tar.bz2
@@ -52,7 +52,7 @@ function unpack_boost {
 }
 
 unpack_freeimage
-unpack_freetype
+# unpack_freetype
 unpack_boost
 
 if [ ! -e Configure.mk ]; then
