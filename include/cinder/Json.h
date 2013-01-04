@@ -30,7 +30,7 @@
 #include "cinder/Utilities.h"
 
 #include <string>
-#include <boost/container/list.hpp>
+#include "boost/container/cinder_fixed_list.hpp"
 
 namespace Json {
 class Value;
