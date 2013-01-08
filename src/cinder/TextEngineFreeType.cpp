@@ -201,7 +201,7 @@ FontRef TextEngineFreeType::getDefaultFont()
 {
 #if defined( CINDER_ANDROID )
 	if( ! mDefaultFont )
-		mDefaultFont = createFont(loadFile("/system/fonts/DroidSans.ttf"), 12);
+		mDefaultFont = createFont(loadFile("/system/fonts/DroidSans.ttf"), 20);
 	return mDefaultFont;
 #else
 	return FontRef();
