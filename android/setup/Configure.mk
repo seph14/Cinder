@@ -29,6 +29,9 @@ USE_FREETYPE = yes
 # (requires Android SDK level 9 or over)
 USE_ASSET_MANAGER = yes
 
+# Build against gnustl_shared instead of gnustl_static
+# USE_STL_SHARED = yes
+
 # Enable OCV Android Native Camera module (experimental)
 # USE_OCV_CAPTURE = yes
 

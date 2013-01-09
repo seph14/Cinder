@@ -3,9 +3,14 @@ include $(LOCAL_PATH)/Configure.mk
 
 APP_ABI      := armeabi
 APP_PLATFORM := android-9
-APP_STL      := gnustl_static
 APP_MODULES  := cinder
 APP_CPPFLAGS := -fexceptions -frtti -Wno-format-security
+
+ifdef USE_STL_SHARED
+  APP_STL := gnustl_shared
+else
+  APP_STL := gnustl_static
+endif
 
 ifdef USE_CPP_11
 APP_CPPFLAGS += -std=c++11 -D_LIBCPP_VERSION
