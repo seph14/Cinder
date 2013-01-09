@@ -553,14 +553,23 @@ void AppAndroid::launch( const char *title, int argc, char * const argv[] )
     android_run(this, mAndroidApp);
 }
 
-int	AppAndroid::getWindowWidth() const
+int AppAndroid::getWindowWidth() const
 {
     return mWidth;
 }
 
-int	AppAndroid::getWindowHeight() const
+int AppAndroid::getWindowHeight() const
 {
     return mHeight;
+}
+
+int AppAndroid::getWindowDensity() const
+{
+    int density = AConfiguration_getDensity(mAndroidApp->config);
+    if (density == ACONFIGURATION_DENSITY_DEFAULT || density == ACONFIGURATION_DENSITY_NONE)
+        density = ACONFIGURATION_DENSITY_MEDIUM;
+
+    return density;
 }
 
 void AppAndroid::setWindowWidth( int windowWidth )

@@ -112,6 +112,8 @@ class AppAndroid : public App {
 	virtual int		getWindowWidth() const;
 	//! Returns the height of the App's window measured in pixels, or the screen when in full-screen mode.	
 	virtual int		getWindowHeight() const;
+	//! Returns the logical density of the App's window measured in dpi (dots per inch)
+	virtual int		getWindowDensity() const;
 
 	void			setWindowWidth( int windowWidth );
 	void			setWindowHeight( int windowHeight );
