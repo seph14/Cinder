@@ -254,8 +254,10 @@ void Texture::init( const unsigned char *data, int unpackRowLength, GLenum dataF
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_WRAP_T, format.mWrapT );
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_MIN_FILTER, format.mMinFilter );	
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_MAG_FILTER, format.mMagFilter );
+#if ! defined( CINDER_GLES2 )
 	if( format.mMipmapping )
 		glTexParameteri( mObj->mTarget, GL_GENERATE_MIPMAP, GL_TRUE );
+#endif
 	if( mObj->mTarget == GL_TEXTURE_2D ) {
 		mObj->mMaxU = mObj->mMaxV = 1.0f;
 	}
@@ -272,6 +274,10 @@ void Texture::init( const unsigned char *data, int unpackRowLength, GLenum dataF
 #if ! defined( CINDER_GLES )
 	glPixelStorei( GL_UNPACK_ROW_LENGTH, 0 );
 #endif	
+#if defined( CINDER_GLES2 )
+	if ( format.mMipmapping )
+		glGenerateMipmap( mObj->mTarget );
+#endif
 }
 
 void Texture::init( const float *data, GLint dataFormat, const Format &format )
@@ -285,8 +291,10 @@ void Texture::init( const float *data, GLint dataFormat, const Format &format )
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_WRAP_T, format.mWrapT );
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_MIN_FILTER, format.mMinFilter );	
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_MAG_FILTER, format.mMagFilter );
+#if ! defined( CINDER_GLES2 )
 	if( format.mMipmapping )
 		glTexParameteri( mObj->mTarget, GL_GENERATE_MIPMAP, GL_TRUE );
+#endif
 	if( mObj->mTarget == GL_TEXTURE_2D ) {
 		mObj->mMaxU = mObj->mMaxV = 1.0f;
 	}
@@ -301,6 +309,10 @@ void Texture::init( const float *data, GLint dataFormat, const Format &format )
 	}
 	else
 		glTexImage2D( mObj->mTarget, 0, mObj->mInternalFormat, mObj->mWidth, mObj->mHeight, 0, GL_LUMINANCE, GL_FLOAT, 0 );  // init to black...
+#if defined( CINDER_GLES2 )
+	if ( format.mMipmapping )
+		glGenerateMipmap( mObj->mTarget );
+#endif
 }
 
 void Texture::init( ImageSourceRef imageSource, const Format &format )
@@ -385,8 +397,10 @@ void Texture::init( ImageSourceRef imageSource, const Format &format )
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_WRAP_T, format.mWrapT );
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_MIN_FILTER, format.mMinFilter );	
 	glTexParameteri( mObj->mTarget, GL_TEXTURE_MAG_FILTER, format.mMagFilter );
+#if ! defined( CINDER_GLES2 )
 	if( format.mMipmapping )
 		glTexParameteri( mObj->mTarget, GL_GENERATE_MIPMAP, GL_TRUE );
+#endif
 	if( mObj->mTarget == GL_TEXTURE_2D ) {
 		mObj->mMaxU = mObj->mMaxV = 1.0f;
 	}
@@ -412,6 +426,10 @@ void Texture::init( ImageSourceRef imageSource, const Format &format )
 		imageSource->load( target );		
 		glTexImage2D( mObj->mTarget, 0, mObj->mInternalFormat, mObj->mWidth, mObj->mHeight, 0, dataFormat, GL_FLOAT, target->getData() );
 	}
+#if defined( CINDER_GLES2 )
+	if ( format.mMipmapping )
+		glGenerateMipmap( mObj->mTarget );
+#endif
 }
 
 void Texture::update( const Surface &surface )
@@ -507,11 +525,13 @@ void Texture::SurfaceChannelOrderToDataFormatAndType( const SurfaceChannelOrder 
 			*dataFormat = GL_RGBA;
 			*type = GL_UNSIGNED_BYTE;
 		break;
+#if ! defined( CINDER_ANDROID )
 		case SurfaceChannelOrder::BGRA:
 		case SurfaceChannelOrder::BGRX:
 			*dataFormat = GL_BGRA;
 			*type = GL_UNSIGNED_BYTE;
 		break;
+#endif // ! defined( CINDER_ANDROID )
 #if ! defined( CINDER_GLES )
 		case SurfaceChannelOrder::BGR:
 			*dataFormat = GL_BGR;

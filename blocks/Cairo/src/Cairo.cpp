@@ -41,7 +41,14 @@
 #elif defined( CINDER_MSW )
 	#include "cinder/app/App.h"
 	#include <cairo-win32.h>
+#elif defined( CINDER_ANDROID )
+    #include <cairo-ft.h>
+    /*  Used with cairo_bool_t */
+    #define TRUE 1
+    #define FALSE 0
 #endif
+
+#include "cinder/TextEngine.h"
 
 using std::vector;
 
@@ -274,6 +281,7 @@ void SurfaceImage::initCinderSurface( bool alpha, cairo_surface_t *cairoSurface 
 	cairo_surface_reference( cairoSurface ); // decremented by the mCinderSurface deallocator
 }
 
+#if ! defined( CINDER_ANDROID )
 /////////////////////////////////////////////////////////////////////////////
 // SurfaceSvg
 SurfaceSvg::SurfaceSvg( const fs::path &filePath, uint32_t width, uint32_t height )
@@ -286,6 +294,7 @@ SurfaceSvg::SurfaceSvg( const SurfaceSvg &other )
 	: SurfaceBase( other )
 {
 }
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // SurfacePdf
@@ -793,14 +802,14 @@ FontFace::FontFace( const std::string &faceName )
 	CFRelease( nameRef );
 #elif defined( CINDER_MSW )
 	HFONT hf;
-    HDC hdc;
-    long lfHeight;
-    
-    hdc = ::GetDC( NULL );
-    lfHeight = -MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-    ReleaseDC( NULL, hdc );
+	HDC hdc;
+	long lfHeight;
 
-    hf = CreateFontA( lfHeight, 0, 0, 0, 0, TRUE, 0, 0, 0, 0, 0, 0, 0, faceName.c_str() );
+	hdc = ::GetDC( NULL );
+	lfHeight = -MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+	ReleaseDC( NULL, hdc );
+
+	hf = CreateFontA( lfHeight, 0, 0, 0, 0, TRUE, 0, 0, 0, 0, 0, 0, 0, faceName.c_str() );
 	mCairoFontFace = cairo_win32_font_face_create_for_hfont( hf );
 #endif
 }
@@ -1422,8 +1431,8 @@ void Context::showPage()
 void convertCairoToCinderPath( cairo_path_t *path, cinder::Shape2d *resultPath )
 {
 	for( int i=0; i < path->num_data; i += path->data[i].header.length ) {
-         cairo_path_data_t *data = &path->data[i];
-         switch( data->header.type ) {
+		cairo_path_data_t *data = &path->data[i];
+		switch( data->header.type ) {
 			case CAIRO_PATH_MOVE_TO:
 				resultPath->moveTo( (float)data[1].point.x, (float)data[1].point.y );
 			break;
@@ -1437,8 +1446,8 @@ void convertCairoToCinderPath( cairo_path_t *path, cinder::Shape2d *resultPath )
 			case CAIRO_PATH_CLOSE_PATH:
 				resultPath->close();
 			break;
-         }
-     }
+		}
+	}
 }
 
 void Context::copyPath( cinder::Shape2d *resultPath )
@@ -1620,6 +1629,8 @@ void Context::appendPath( const cinder::Path2d &path )
 			case Path2d::CLOSE:
 				closePath();
 			break;
+			case Path2d::MOVETO:
+			break;
 		}
 	}
 }
@@ -1734,15 +1745,28 @@ void Context::getFontOptions( FontOptions *options )
 	cairo_get_font_options( mCairo, options->getCairoFontOptions() );
 }
 
-void Context::setFont( const cinder::Font &font )
+void Context::setFont( const cinder::FontRef font )
 {
+	TextEngineRef textEngine = font->getTextEngine();
+    cairo_font_face_t *cairoFont = NULL;
 #if defined( CINDER_COCOA )
-	cairo_font_face_t *cairoFont = cairo_quartz_font_face_create_for_cgfont( font.getCgFontRef() );
+	if ( textEngine->getEngineType() == TextEngine::CORETEXT ) {
+		FontCoreTextRef ctFont = std::dynamic_pointer_cast<FontCoreText>( font );
+		cairoFont = cairo_quartz_font_face_create_for_cgfont( ctFont->getCgFontRef() );
+	}
 #elif defined( CINDER_MSW )
-	cairo_font_face_t *cairoFont = cairo_win32_font_face_create_for_logfontw( &font.getLogfont() );
+	if ( textEngine->getEngineType() == TextEngine::GDIPLUS ) {
+		FontGdiPlusRef gdiFont = std::dynamic_pointer_cast<FontGdiPlus>( font ); 
+		cairoFont = cairo_win32_font_face_create_for_logfontw( &gdiFont->getLogfont() );
+	}
+#elif defined( CINDER_ANDROID )
+	if ( textEngine->getEngineType() == TextEngine::FREETYPE ) {
+		FontFreeTypeRef ftFont = std::dynamic_pointer_cast<FontFreeType>( font );
+		cairoFont = cairo_ft_font_face_create_for_ft_face( ftFont->getFTFace(), FT_LOAD_DEFAULT | FT_LOAD_FORCE_AUTOHINT );
+	}
 #endif
 	cairo_set_font_face( mCairo, cairoFont );
-	cairo_set_font_size( mCairo, font.getSize() );
+	cairo_set_font_size( mCairo, font->getSize() );
 	cairo_font_face_destroy( cairoFont );
 }
 
@@ -2024,8 +2048,8 @@ class SvgRendererCairo : public svg::Renderer {
 		}*/
 		mCtx.appendPath( span.getShape() );
 #else		
-		std::shared_ptr<Font> font = span.getFont();
-		mCtx.setFont( *font );
+		FontRef font = span.getFont();
+		mCtx.setFont( font );
 
 		mCtx.moveTo( mTextPenStack.back() );
 		// we can use a text path when the rotate is empty
@@ -2041,7 +2065,7 @@ class SvgRendererCairo : public svg::Renderer {
 			fontMatrix = oldFontMatrix;
 			fontMatrix *= rotationMatrix;
 			mCtx.setFontMatrix( fontMatrix );
-			TextBox tbox = TextBox().font( *font ).text( span.getString() );
+			TextBox tbox = TextBox().font( font ).text( span.getString() );
 			std::vector<std::pair<uint16_t,Vec2f> > glyphs = tbox.measureGlyphs();
 			Vec2f curPoint = mCtx.getCurrentPoint();
 			for( size_t g = 0; g < glyphs.size(); ++g ) {

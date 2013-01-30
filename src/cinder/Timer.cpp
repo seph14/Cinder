@@ -38,6 +38,9 @@ Timer::Timer()
 	::QueryPerformanceFrequency( &nativeFreq );
 	mInvNativeFreq = 1.0 / nativeFreq.QuadPart;
 	mStartTime = mEndTime = -1;
+#elif defined( CINDER_LINUX )
+	memset(&mStartTime, 0, sizeof(struct timespec));
+	memset(&mEndTime, 0, sizeof(struct timespec));
 #endif
 }
 
@@ -45,12 +48,15 @@ Timer::Timer( bool startOnConstruction )
 	: mIsStopped( true )
 {
 #if defined( CINDER_COCOA )
-		mEndTime = mStartTime = -1;
+	mEndTime = mStartTime = -1;
 #elif defined( CINDER_MSW )
 	::LARGE_INTEGER nativeFreq;
 	::QueryPerformanceFrequency( &nativeFreq );
 	mInvNativeFreq = 1.0 / nativeFreq.QuadPart;
 	mStartTime = mEndTime = -1;
+#elif defined( CINDER_LINUX )
+	memset(&mStartTime, 0, sizeof(struct timespec));
+	memset(&mEndTime, 0, sizeof(struct timespec));
 #endif
 	if( startOnConstruction ) {
 		start();
@@ -65,6 +71,8 @@ void Timer::start()
 	::LARGE_INTEGER rawTime;
 	::QueryPerformanceCounter( &rawTime );
 	mStartTime = rawTime.QuadPart * mInvNativeFreq;
+#elif defined( CINDER_LINUX )
+	clock_gettime(CLOCK_MONOTONIC, &mStartTime);
 #endif
 
 	mIsStopped = false;
@@ -72,6 +80,18 @@ void Timer::start()
 
 double Timer::getSeconds() const
 {
+#if defined( CINDER_LINUX )
+	if (mIsStopped) {
+		return ((mEndTime.tv_sec + mEndTime.tv_nsec / double(1e9)) - 
+				(mStartTime.tv_sec + mStartTime.tv_nsec / double(1e9)));
+	}
+	else {
+		struct timespec mCurrentTime;
+		clock_gettime(CLOCK_MONOTONIC, &mCurrentTime);
+		return ((mCurrentTime.tv_sec + mCurrentTime.tv_nsec / double(1e9)) - 
+				(mStartTime.tv_sec + mStartTime.tv_nsec / double(1e9)));
+	}
+#else
 	if( mIsStopped )
 		return mEndTime - mStartTime;
 	else {
@@ -83,6 +103,7 @@ double Timer::getSeconds() const
 	return (rawTime.QuadPart * mInvNativeFreq) - mStartTime;
 #endif
 	}
+#endif
 }
 
 void Timer::stop()
@@ -94,6 +115,8 @@ void Timer::stop()
 		::LARGE_INTEGER rawTime;
 		::QueryPerformanceCounter( &rawTime );
 		mEndTime = rawTime.QuadPart * mInvNativeFreq;
+#elif defined( CINDER_LINUX )
+		clock_gettime(CLOCK_MONOTONIC, &mEndTime);
 #endif
 		mIsStopped = true;
 	}

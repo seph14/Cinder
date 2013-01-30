@@ -129,6 +129,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GoodNightMorning", "..\..\_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleViewer", "..\..\_svg\SimpleViewer\vc10\SimpleViewer.vcxproj", "{8A79FACF-47FE-46C8-BF97-576D9C6FFFEE}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TextureFont", "..\..\TextureFont\vc10\TextureFont.vcxproj", "{BCAAF1B8-CD95-4E0B-921F-8BBFF54F82DE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EaseGallery", "..\..\EaseGallery\vc10\EaseGallery.vcxproj", "{0FD118B9-0FB7-4B91-87BA-F5E8474DA326}"
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StereoscopicRendering", "..\..\StereoscopicRendering\vc10\StereoscopicRendering.vcxproj", "{84638D62-9C27-43F1-ADFC-6B21200F86A5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CaptureBasic", "..\..\CaptureBasic\vc10\CaptureBasic.vcxproj", "{829C0320-5FAE-497F-A99F-5924866F5058}"
@@ -379,6 +382,7 @@ Global
 		{6012A6C4-5927-4CC8-8783-4995E1269D05}.Debug|Win32.Build.0 = Debug|Win32
 		{6012A6C4-5927-4CC8-8783-4995E1269D05}.Release|Win32.ActiveCfg = Release|Win32
 		{6012A6C4-5927-4CC8-8783-4995E1269D05}.Release|Win32.Build.0 = Release|Win32
+<<<<<<< HEAD
 		{39B4C992-D197-40CF-99CD-A8D01EACEE12}.Debug|Win32.ActiveCfg = Debug|Win32
 		{39B4C992-D197-40CF-99CD-A8D01EACEE12}.Debug|Win32.Build.0 = Debug|Win32
 		{39B4C992-D197-40CF-99CD-A8D01EACEE12}.Release|Win32.ActiveCfg = Release|Win32
@@ -395,14 +399,46 @@ Global
 		{8A79FACF-47FE-46C8-BF97-576D9C6FFFEE}.Debug|Win32.Build.0 = Debug|Win32
 		{8A79FACF-47FE-46C8-BF97-576D9C6FFFEE}.Release|Win32.ActiveCfg = Release|Win32
 		{8A79FACF-47FE-46C8-BF97-576D9C6FFFEE}.Release|Win32.Build.0 = Release|Win32
+=======
+		{4C9C5B19-145C-42A1-A8F4-78DF328DDB24}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4C9C5B19-145C-42A1-A8F4-78DF328DDB24}.Debug|Win32.Build.0 = Debug|Win32
+		{4C9C5B19-145C-42A1-A8F4-78DF328DDB24}.Release|Win32.ActiveCfg = Release|Win32
+		{4C9C5B19-145C-42A1-A8F4-78DF328DDB24}.Release|Win32.Build.0 = Release|Win32
+		{7D290687-19C4-42B2-8AB5-84FDB172F341}.Debug|Win32.ActiveCfg = Debug|Win32
+		{7D290687-19C4-42B2-8AB5-84FDB172F341}.Debug|Win32.Build.0 = Debug|Win32
+		{7D290687-19C4-42B2-8AB5-84FDB172F341}.Release|Win32.ActiveCfg = Release|Win32
+		{7D290687-19C4-42B2-8AB5-84FDB172F341}.Release|Win32.Build.0 = Release|Win32
+		{3C4AEC5E-0F32-467C-A747-25CAF6559451}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3C4AEC5E-0F32-467C-A747-25CAF6559451}.Debug|Win32.Build.0 = Debug|Win32
+		{3C4AEC5E-0F32-467C-A747-25CAF6559451}.Release|Win32.ActiveCfg = Release|Win32
+		{3C4AEC5E-0F32-467C-A747-25CAF6559451}.Release|Win32.Build.0 = Release|Win32
+		{56A915A0-7BCF-4EBA-B6DA-381DB8B5034E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{56A915A0-7BCF-4EBA-B6DA-381DB8B5034E}.Debug|Win32.Build.0 = Debug|Win32
+		{56A915A0-7BCF-4EBA-B6DA-381DB8B5034E}.Release|Win32.ActiveCfg = Release|Win32
+		{56A915A0-7BCF-4EBA-B6DA-381DB8B5034E}.Release|Win32.Build.0 = Release|Win32
+<<<<<<< HEAD
+		{BCAAF1B8-CD95-4E0B-921F-8BBFF54F82DE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BCAAF1B8-CD95-4E0B-921F-8BBFF54F82DE}.Debug|Win32.Build.0 = Debug|Win32
+		{BCAAF1B8-CD95-4E0B-921F-8BBFF54F82DE}.Release|Win32.ActiveCfg = Release|Win32
+		{BCAAF1B8-CD95-4E0B-921F-8BBFF54F82DE}.Release|Win32.Build.0 = Release|Win32
+		{0FD118B9-0FB7-4B91-87BA-F5E8474DA326}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0FD118B9-0FB7-4B91-87BA-F5E8474DA326}.Debug|Win32.Build.0 = Debug|Win32
+		{0FD118B9-0FB7-4B91-87BA-F5E8474DA326}.Release|Win32.ActiveCfg = Release|Win32
+		{0FD118B9-0FB7-4B91-87BA-F5E8474DA326}.Release|Win32.Build.0 = Release|Win32
+=======
+>>>>>>> android-dev
 		{84638D62-9C27-43F1-ADFC-6B21200F86A5}.Debug|Win32.ActiveCfg = Debug|Win32
 		{84638D62-9C27-43F1-ADFC-6B21200F86A5}.Debug|Win32.Build.0 = Debug|Win32
 		{84638D62-9C27-43F1-ADFC-6B21200F86A5}.Release|Win32.ActiveCfg = Release|Win32
 		{84638D62-9C27-43F1-ADFC-6B21200F86A5}.Release|Win32.Build.0 = Release|Win32
+<<<<<<< HEAD
 		{829C0320-5FAE-497F-A99F-5924866F5058}.Debug|Win32.ActiveCfg = Debug|Win32
 		{829C0320-5FAE-497F-A99F-5924866F5058}.Debug|Win32.Build.0 = Debug|Win32
 		{829C0320-5FAE-497F-A99F-5924866F5058}.Release|Win32.ActiveCfg = Release|Win32
 		{829C0320-5FAE-497F-A99F-5924866F5058}.Release|Win32.Build.0 = Release|Win32
+=======
+>>>>>>> upstream/dev
+>>>>>>> android-dev
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

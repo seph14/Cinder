@@ -71,7 +71,7 @@ void MultiTouchApp::prepareSettings( Settings *settings )
 
 void MultiTouchApp::touchesBegan( TouchEvent event )
 {
-console() << "Began: " << event << std::endl;
+	console() << "Began: " << event << std::endl;
 	for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt ) {
 		Color newColor( CM_HSV, Rand::randFloat(), 1, 1 );
 		mActivePoints.insert( make_pair( touchIt->getId(), TouchPoint( touchIt->getPos(), newColor ) ) );
@@ -87,7 +87,7 @@ console() << "Moved: " << event << std::endl;
 
 void MultiTouchApp::touchesEnded( TouchEvent event )
 {
-console() << "Ended: " << event << std::endl;
+	console() << "Ended: " << event << std::endl;
 	for( vector<TouchEvent::Touch>::const_iterator touchIt = event.getTouches().begin(); touchIt != event.getTouches().end(); ++touchIt ) {
 		mActivePoints[touchIt->getId()].startDying();
 		mDyingPoints.push_back( mActivePoints[touchIt->getId()] );
@@ -107,6 +107,7 @@ void MultiTouchApp::mouseDrag( MouseEvent event )
 
 void MultiTouchApp::draw()
 {
+    gl::setMatricesWindow( getWindowSize() );
 	gl::enableAlphaBlending();
 	gl::setMatricesWindow( getWindowSize() );
 	gl::clear( Color( 0.1f, 0.1f, 0.1f ) );
@@ -125,8 +126,9 @@ void MultiTouchApp::draw()
 	
 	// draw yellow circles at the active touch points
 	gl::color( Color( 1, 1, 0 ) );
-	for( vector<TouchEvent::Touch>::const_iterator touchIt = getActiveTouches().begin(); touchIt != getActiveTouches().end(); ++touchIt )
+	for( vector<TouchEvent::Touch>::const_iterator touchIt = getActiveTouches().begin(); touchIt != getActiveTouches().end(); ++touchIt ) {
 		gl::drawStrokedCircle( touchIt->getPos(), 20.0f );
+    }
 }
 
 CINDER_APP_NATIVE( MultiTouchApp, RendererGl )

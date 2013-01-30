@@ -43,4 +43,10 @@
 		typedef AppBasic		AppNative;
 	} } // namespace cinder::app		
 	#define CINDER_APP_NATIVE( APP, RENDERER )	CINDER_APP_BASIC( APP, RENDERER )	
+#elif defined( CINDER_ANDROID )
+	#include "cinder/app/AppAndroid.h"
+	namespace cinder { namespace app {
+		typedef AppAndroid		AppNative;
+	} }
+	#define CINDER_APP_NATIVE( APP, RENDERER ) CINDER_APP_ANDROID( APP, RENDERER )	
 #endif

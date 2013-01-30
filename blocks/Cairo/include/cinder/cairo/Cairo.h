@@ -44,6 +44,10 @@
 #include <vector>
 #include <iomanip>
 
+#if defined( ANDROID )
+//  Different version of Cairo, skip forward declarations
+#include <cairo.h>
+#else
 // Forward declarations used by our cairo wrappers 
 struct _cairo_surface;
 typedef struct _cairo_surface cairo_surface_t;
@@ -85,6 +89,7 @@ typedef struct _cairo_text_extents cairo_text_extents_t;
 
 struct _cairo_font_extents;
 typedef struct _cairo_font_extents cairo_font_extents_t;
+#endif
 
 namespace cinder { namespace cairo {
 /////////////////////////////////////////////////////////////////////////////
@@ -143,6 +148,8 @@ class SurfaceImage : public SurfaceBase {
 	cinder::Surface		mCinderSurface;
 };
 
+//  SurfaceSvg disabled on Android, requires linking to libpng
+#if ! defined( CINDER_ANDROID )
 /////////////////////////////////////////////////////////////////////////////
 // SurfaceSvg
 class SurfaceSvg : public SurfaceBase {
@@ -151,6 +158,7 @@ class SurfaceSvg : public SurfaceBase {
 	SurfaceSvg( const fs::path &filePath, uint32_t aWidth, uint32_t aHeight );
 	SurfaceSvg( const SurfaceSvg &other );
 };
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // SurfacePdf
@@ -676,7 +684,7 @@ class Context
 	void        deviceToUserDistance( double *dx, double *dy );
 	
 // Text/font functions
-	void		setFont( const cinder::Font &font );
+	void        setFont( const cinder::FontRef font );
 	void        selectFontFace( const std::string &family, int32_t slant, int32_t weight );
 	void        setFontSize( double size );
 	void        setFontMatrix( const Matrix &matrix );

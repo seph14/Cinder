@@ -3,7 +3,7 @@
 // * The completion callback sets the background to blue using a free function
 // * The update callback makes the radius of the circle the distance to the nearest edge using a member function
 
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
 #include "cinder/Timeline.h"
 #include "cinder/gl/gl.h"
 
@@ -44,14 +44,20 @@ struct ColorToGreenFunctor {
 	Color		*mColorPtr;
 };
 
-class CustomCallbackApp : public AppBasic {
+class CustomCallbackApp : public AppNative {
   public:
+    void prepareSettings(Settings *settings);
 	void setup();
 	void mouseDown( MouseEvent event );	
 	void draw();
 	
 	Circle		mCircle;
 };
+
+void CustomCallbackApp::prepareSettings(Settings *settings)
+{
+    settings->enableMultiTouch(false);
+}
 
 // a free function which sets gBackgroundColor to blue
 void setBackgroundToBlue()
@@ -61,6 +67,8 @@ void setBackgroundToBlue()
 
 void CustomCallbackApp::setup()
 {
+    gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
+
 	setBackgroundToBlue();
 
 	mCircle.mPos = Vec2f( 50, 50 );
@@ -82,4 +90,4 @@ void CustomCallbackApp::draw()
 }
 
 
-CINDER_APP_BASIC( CustomCallbackApp, RendererGl )
+CINDER_APP_NATIVE( CustomCallbackApp, RendererGl )

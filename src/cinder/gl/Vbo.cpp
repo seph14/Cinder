@@ -25,6 +25,18 @@
 
 using namespace std;
 
+#if defined(CINDER_ANDROID) && defined( CINDER_GLES2 )
+
+//  Android GLES2 compatible functions and constants
+#define glBufferDataARB    glBufferData
+#define glBufferSubDataARB glBufferSubData
+#define glMapBuffer        glMapBufferOES
+#define glUnmapBuffer      glUnmapBufferOES
+
+#define GL_WRITE_ONLY  GL_WRITE_ONLY_OES
+
+#endif
+
 namespace cinder { namespace gl {
 
 //enum { CUSTOM_ATTR_FLOAT, CUSTOM_ATTR_FLOAT2, CUSTOM_ATTR_FLOAT3, CUSTOM_ATTR_FLOAT4, TOTAL_CUSTOM_ATTR_TYPES };
@@ -448,6 +460,7 @@ void VboMesh::initializeBuffers( bool staticDataPlanar )
 		mObj->mCustomDynamicLocations = vector<GLint>( mObj->mLayout.mCustomDynamic.size(), -1 );
 }
 
+#if ! defined(CINDER_GLES)
 void VboMesh::enableClientStates() const
 {
 	if( mObj->mLayout.hasPositions() )
@@ -562,6 +575,8 @@ void VboMesh::bindAllData() const
 		}	
 	}
 }
+
+#endif
 
 void VboMesh::bindIndexBuffer() const
 {

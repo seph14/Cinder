@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+
+# This script downloads and installs Cinder dependencies required for Android.
+# It requires curl, unzip, tar and bzip2 to be in the PATH.
+#
+
+function unpack_freeimage {
+    if [ ! -e setup/FreeImage/FreeImage3150.zip ]; then
+        echo "Downloading FreeImage source distribution..."
+        curl -O http://expandingbrain.com/cinder/FreeImage3150.zip
+        mv FreeImage3150.zip setup/FreeImage
+    fi
+
+    echo "Setup FreeImage..."
+    rm -rf jni/FreeImage
+    unzip -q setup/FreeImage/FreeImage3150.zip -d jni
+    cp -p setup/FreeImage/Android.mk jni/FreeImage
+	# patched source files with missing function implementations
+    cp -pf setup/FreeImage/dcraw_common.cpp jni/FreeImage/Source/LibRawLite/internal/dcraw_common.cpp
+    cp -pf setup/FreeImage/tif_dirinfo.c jni/FreeImage/Source/LibTIFF/tif_dirinfo.c
+}
+
+# function unpack_freetype {
+#     if [ ! -e setup/freetype/freetype-2.4.5.tar.bz2 ]; then
+#         echo "Downloading freetype source distribution"
+#         curl -L -O http://download.savannah.gnu.org/releases/freetype/freetype-2.4.5.tar.bz2
+#         mv freetype-2.4.5.tar.bz2 setup/freetype
+#     fi
+# 
+#     echo "Setup freetype..."
+#     rm -rf jni/freetype-2.4.5
+#     tar jxf setup/freetype/freetype-2.4.5.tar.bz2 -C jni
+#     cp -p setup/freetype/Android.mk jni/freetype-2.4.5
+# 	cp -pf setup/freetype/ftmodule.h jni/freetype-2.4.5/include/freetype/config/ftmodule.h
+# }
+
+function unpack_boost {
+    local SRC_BOOST=boost_1_52_0.tar.bz2
+    if [ ! -e ../boost -a ! -e setup/boost/$SRC_BOOST ]; then
+        echo "Downloading Boost source archive"
+        mkdir -p setup/boost
+        curl -L -O http://downloads.sourceforge.net/project/boost/boost/1.52.0/$SRC_BOOST
+        mv $SRC_BOOST setup/boost
+    fi
+
+    if [ ! -e ../boost ]; then
+        echo "Setup Boost sources..."
+        tar jxf setup/boost/$SRC_BOOST -C ..
+        mv ../boost_1_52_0 ../boost
+        chmod -R a+rwX ../boost
+    fi
+}
+
+unpack_freeimage
+# unpack_freetype
+unpack_boost
+
+if [ ! -e Configure.mk ]; then
+    if [ -e jni/cinder/Configure.mk ]; then
+        cp -pf jni/cinder/Configure.mk Configure.mk
+        RETVAL=$?
+        if [ $RETVAL -eq 0 ] ; then
+            rm -f jni/cinder/Configure.mk
+            echo "Detected an existing jni/cinder/Configure.mk - moved to Configure.mk."
+        else
+            echo "Error copying jni/cinder/Configure.mk - please move it to $CINDER/android/Configure.mk"
+        fi
+    else
+        cp -pf setup/Configure.mk Configure.mk
+    fi
+else
+    echo "Configure.mk already exists - check setup/Configure.mk for new settings."
+fi
+
+
+echo
+if [ $? -ne 0 ]; then
+    echo "Error creating Android tree, check your Cinder source layout."
+else
+    NEW_CINDER_PATH=$PWD/..
+    echo "Recommended environment variable settings:"
+    echo
+    echo "export CINDER_PATH=$NEW_CINDER_PATH"
+    echo "export NDK_MODULE_PATH=\$CINDER_PATH/android/prebuilt"
+    echo
+    echo "Edit Configure.mk to select Cinder build settings (optional)"
+    echo
+    echo "Android source tree created, ready to run ndk-build"
+    echo
+fi
+

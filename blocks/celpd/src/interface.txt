@@ -1,0 +1,124 @@
+TYPES
+
+// message classes
+Bang()
+Float(float)
+Symbol(string)
+List
+Message
+
+SENDING
+
+// MESSAGES
+
+// single messages
+pd.sendBang("test");
+pd.sendFloat("test", 100);
+pd.sendSymbol("test", "symbol1");
+  ** OR **
+pd.send("test") << Bang() << 100 << "symbol1";
+
+// compound messages
+
+// send a list
+//
+// [ 100 292.99 c string (
+// |
+// [ s test (
+//
+
+List aList;
+aList << 100 << 292.99 << 'c' << "string";
+pd.sendList("test", aList);
+  ** OR **
+pd.sendList("test") << 100 << 292.99 << 'c' << "string";
+
+// send a typed message
+//
+// [; pd dsp 1 (
+//
+
+Message msg;
+msg << "1";
+pd.sendMessage("pd", "dsp", msg);
+   ** OR **
+pd.sendMessage("pd", "dsp") << 1;
+
+// MIDI
+
+Note(int pitch, int velocity, int channel=0)
+ControlChange(int controller, int value, int channel=0)
+ProgramChange(int program, int channel=0)
+PitchBend(int value, int channel=0)
+Aftertouch(int value, int channel=0)
+PolyAftertouch(int pitch, int value, int channel=0)
+
+// midi channels should be 1-16? ... same as patching
+
+// note
+pd.sendMidi(Note(60));
+pd.sendMidi(Note(60, 100));
+pd.sendMidi(Note(60, 100, 0));
+pd.sendMidi() << Note(60) << Note(60, 100) << Note(60, 100, 0);
+
+// controls
+pd.sendMidi() << ControlChange(7, 100) << ControlChange(7, 100, 0);	// 7 - Volume
+pd.sendMidi() << ProgamChange(40) << ProgramChange(40, 0);	// 40 - Violin
+pd.sendMidi() << PitchBend(8000) << PitchBend(8000, 0);	// value -8192 to 8192
+pd.sendMidi() << Aftertouch(100) << Aftertouch(100, 0);
+pd.sendMidi() << PolyAftertouch(60, 100) << PolyAftertouch(60, 100, 0);
+
+// raw midi
+// Noteon chan 0, Middle C, velocity
+pd.sendRawMidi() << 0x90 << 0x3c << 0x40;
+pd.sendSysEx() << 0xF0 << 0x7D << 0xF7;
+pd.sendSysExRT() << 0xF0 << 0x7D << 0xF7;
+
+
+RECEIVING
+
+public ofxPdListener {
+
+	public:
+
+		void printReceived(const std::string& message) {}
+
+		void bangReceived(string dest) {}
+		void floatReceived(string dest, float value) {}
+		void symbolReceived(string dest, string symbol) {}
+		void listReceived(string dest, const List& list) {}
+		void messageReceived(string dest, string msg, const List& list) {}
+		
+		void noteReceived(int channel, int pitch, int velocity) {}
+		void controlChangeReceived(int channel, int controller, int val) {}
+		void programChangeReceived(int channel, int program) {}
+		void pitchbendReceived(int channel, int val) {}
+		void aftertouchReceived(int channel, int val) {}
+		void polyAftertouchReceived(int channel, int pitch, int val) {}
+		
+		void midiByteReceived(int port, int byte) {}
+		void sysexReceived(int port, int byte) {}
+		void sysexRealtimeReceived(int port, int byte) {}
+};
+
+pd.addListener(listener);	// add listener to global space
+pd.addListener(listener, "source1");
+
+pd.addSource("source1");		// add "test" source
+
+pd.subscribe(listener, "source1");	// subscribe listener to "test",
+								// adds both if not already added,
+								// takes listener out of global space
+
+pd.addSource("source2");
+pd.subscribe(listener, "source2");
+
+
+pd.unsubscribe(listener, "source2");
+
+pd.unsubscribe(listener, "source1");	// unsubscribe listener to "test'
+
+
+pd.unsubscribe(listener);	// unsubscribes listener from all sources, global
+pd.removeListener(listener);		// removes listener from global space
+

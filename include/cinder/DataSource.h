@@ -28,6 +28,13 @@
 #include "cinder/Stream.h"
 #include "cinder/Filesystem.h"
 
+#if defined( CINDER_ANDROID )
+extern "C" {
+	struct AAssetManager;
+	typedef struct AAssetManager AAssetManager;
+}
+#endif
+
 namespace cinder {
 
 typedef std::shared_ptr<class DataSource>	DataSourceRef;
@@ -81,6 +88,32 @@ class DataSourcePath : public DataSource {
 };
 
 DataSourceRef	loadFile( const fs::path &path );
+
+#if defined( CINDER_ANDROID )
+
+typedef std::shared_ptr<class DataSourceAsset>	DataSourceAssetRef;
+
+class DataSourceAsset : public DataSource {
+  public:
+	static DataSourceAssetRef	create( AAssetManager *mgr, const std::string &path );
+
+	virtual bool	isFilePath() { return true; }
+	virtual bool	isUrl() { return false; }
+
+	virtual IStreamRef	createStream();
+
+  protected:
+	DataSourceAsset( AAssetManager *mgr, const std::string &path );
+	
+	virtual	void	createBuffer();
+	
+	IStreamAssetRef	mStream;	
+	AAssetManager  *mManager;
+};
+
+DataSourceAssetRef	loadAsset( AAssetManager *mgr, const std::string &path );
+
+#endif
 
 typedef std::shared_ptr<class DataSourceUrl>	DataSourceUrlRef;
 

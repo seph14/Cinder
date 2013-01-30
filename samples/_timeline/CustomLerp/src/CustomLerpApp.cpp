@@ -1,4 +1,5 @@
-#include "cinder/app/AppBasic.h"
+#include "cinder/app/AppNative.h"
+
 #include "cinder/gl/gl.h"
 #include "cinder/Rand.h"
 #include "cinder/Timeline.h"
@@ -30,8 +31,9 @@ Box boxLerp( const Box &start, const Box &end, float t )
 }
 
 
-class CustomLerpApp : public AppBasic {
+class CustomLerpApp : public AppNative {
   public:
+    void    prepareSettings(Settings *settings);
 	void	setup();
 	void	mouseDown( MouseEvent event );	
 	Box		randomBox( Vec2f center );
@@ -40,10 +42,16 @@ class CustomLerpApp : public AppBasic {
 	Anim<Box>	mBox;
 };
 
+void CustomLerpApp::prepareSettings(Settings *settings)
+{
+    settings->enableMultiTouch(false);
+}
+
 void CustomLerpApp::setup()
 {
+    gl::setMatricesWindow(getWindowWidth(), getWindowHeight());
 	mBox = randomBox( getWindowCenter() );
-}
+};
 
 void CustomLerpApp::mouseDown( MouseEvent event )
 {
@@ -62,9 +70,7 @@ void CustomLerpApp::draw()
 {
 	// clear out the window with black
 	gl::clear( Color( 0.7f, 0.7f, 0.7f ) );
-	
 	mBox().draw();
 }
 
-
-CINDER_APP_BASIC( CustomLerpApp, RendererGl )
+CINDER_APP_NATIVE( CustomLerpApp, RendererGl )

@@ -58,6 +58,14 @@
 		class UIView;
 		class EAGLContext;
 	#endif
+#elif defined( CINDER_ANDROID )
+    extern "C" {
+        struct ANativeWindow;
+        struct android_app;
+    }
+	namespace cinder { namespace app {
+		class AppImplAndroidRendererGl;
+	} }
 #endif
 
 
@@ -95,6 +103,11 @@ class Renderer {
 
 	virtual HWND				getHwnd() = 0;
 	virtual HDC					getDc() { return NULL; }
+
+#elif defined( CINDER_ANDROID )
+	virtual void setup( class App *aApp, struct android_app *androidApp, int32_t* width, int32_t* height ) = 0;
+    virtual void teardown() {}
+    virtual bool isValidDisplay() = 0;
 #endif
 
 	virtual Surface	copyWindowSurface( const Area &area ) = 0;
@@ -142,6 +155,10 @@ class RendererGl : public Renderer {
 	virtual HWND	getHwnd() { return mWnd; }
 	virtual void	prepareToggleFullScreen();
 	virtual void	finishToggleFullScreen();
+#elif defined( CINDER_ANDROID )
+    virtual void    setup( App *aApp, struct android_app *androidApp, int32_t* width, int32_t* height );
+    virtual void    teardown();
+    virtual bool    isValidDisplay();
 #endif
 
 	enum	{ AA_NONE = 0, AA_MSAA_2, AA_MSAA_4, AA_MSAA_6, AA_MSAA_8, AA_MSAA_16, AA_MSAA_32 };
@@ -166,6 +183,8 @@ class RendererGl : public Renderer {
 #elif defined( CINDER_MSW )
 	class AppImplMswRendererGl	*mImpl;
 	HWND						mWnd;
+#elif defined( CINDER_ANDROID )
+	AppImplAndroidRendererGl	*mImpl;
 #endif
 };
 

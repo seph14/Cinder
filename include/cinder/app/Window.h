@@ -399,6 +399,9 @@ class Window : public std::enable_shared_from_this<Window> {
 	static WindowRef		privateCreate__( id<WindowImplCocoa> impl, App *app )
 #elif defined( CINDER_MSW )
 	static WindowRef		privateCreate__( WindowImplMsw *impl, App *app )
+#elif defined( CINDER_ANDROID )
+    // XXX create Android WindowImpl ???
+    static WindowRef        privateCreate__( void *impl, App *app )
 #else
 	static WindowRef		privateCreate__( WindowImplCocoa *impl, App *app )
 #endif
@@ -431,6 +434,9 @@ class Window : public std::enable_shared_from_this<Window> {
   #endif
 #elif defined( CINDER_MSW )
 	void		setImpl( WindowImplMsw *impl ) { mImpl = impl; }
+#elif defined( CINDER_ANDROID )
+    //  XXX replace void* with Android impl
+    void        setImpl( void *impl ) { mImpl = impl; }
 #endif
 
 	App							*mApp;
@@ -451,6 +457,9 @@ class Window : public std::enable_shared_from_this<Window> {
   #endif
 #elif defined( CINDER_MSW )
 	WindowImplMsw		*mImpl;
+#elif defined( CINDER_ANDROID )
+    //  XXX replace with Android impl
+    void *mImpl;
 #endif
 };
 

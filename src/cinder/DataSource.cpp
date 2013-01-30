@@ -22,6 +22,10 @@
 
 #include "cinder/DataSource.h"
 
+#if defined( CINDER_ANDROID )
+#include <android/asset_manager.h>
+#endif
+
 namespace cinder {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -84,6 +88,39 @@ DataSourceRef loadFile( const fs::path &path )
 {
 	return DataSourcePath::create( path );
 }
+
+#if defined( CINDER_ANDROID ) && defined( CINDER_AASSET )
+/////////////////////////////////////////////////////////////////////////////
+// DataSourceAsset
+DataSourceAssetRef DataSourceAsset::create( AAssetManager *mgr, const std::string &path )
+{
+	return DataSourceAssetRef( new DataSourceAsset( mgr, path ) );
+}
+
+DataSourceAsset::DataSourceAsset( AAssetManager *mgr, const std::string &path )
+	: DataSource( path, Url() ), mManager(mgr)
+{
+	setFilePathHint( path );
+}
+
+void DataSourceAsset::createBuffer()
+{
+	IStreamAssetRef stream = loadAssetStream( mManager, mFilePathHint );
+	if( ! stream )
+		throw StreamExc();
+	mBuffer = loadStreamBuffer( stream );
+}
+
+IStreamRef DataSourceAsset::createStream()
+{
+	return loadAssetStream( mManager, mFilePathHint );
+}
+
+DataSourceAssetRef loadAsset( AAssetManager *mgr, const std::string &path )
+{
+	return DataSourceAsset::create( mgr, path );
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // DataSourceUrl

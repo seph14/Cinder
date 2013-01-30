@@ -31,6 +31,10 @@
 	#include "cinder/cocoa/CinderCocoa.h"
 	#include "cinder/UrlImplCocoa.h"
 	typedef cinder::IStreamUrlImplCocoa		IStreamUrlPlatformImpl;
+#elif defined( CINDER_ANDROID )
+	//  XXX just a stub for now
+	#include "cinder/UrlImplAndroid.h"
+	typedef cinder::IStreamUrlImplAndroid   IStreamUrlPlatformImpl;
 #else
 	#include "cinder/UrlImplCurl.h"
 	typedef cinder::IStreamUrlImplCurl		IStreamUrlPlatformImpl;
@@ -60,6 +64,8 @@ std::string Url::encode( const std::string &unescaped )
 	std::wstring wideUnescaped = toUtf16( unescaped );
 	UrlEscape( wideUnescaped.c_str(), buffer, &bufferSize, 0 );
 	return toUtf8( std::wstring( buffer ) );
+#else
+    return std::string();
 #endif	
 }
 

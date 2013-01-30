@@ -27,7 +27,7 @@
 	#include "cinder/cocoa/CinderCocoa.h"
 #endif
 
-#if (defined( _MSC_VER ) && ( _MSC_VER >= 1700 )) || defined( _LIBCPP_VERSION )
+#if (defined( _MSC_VER ) && ( _MSC_VER >= 1700 )) || ( defined( _LIBCPP_VERSION ) && ! defined( CINDER_ANDROID ) )
 	#include <thread>
 	#include <mutex>
 	#include <condition_variable>

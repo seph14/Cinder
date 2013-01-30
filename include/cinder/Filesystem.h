@@ -24,7 +24,15 @@
 
 #include "cinder/Cinder.h"
 
-#define BOOST_FILESYSTEM_VERSION 3
+#if defined(CINDER_ANDROID)
+    // TODO: build the filesystem v3 library for Android
+    #define BOOST_FILESYSTEM_VERSION 3
+    // #define BOOST_FILESYSTEM_VERSION 2
+    // #define BOOST_SYSTEM_NO_DEPRECATED
+#else
+    #define BOOST_FILESYSTEM_VERSION 3
+#endif
+
 #define BOOST_FILESYSTEM_NO_DEPRECATED
 #include <boost/filesystem.hpp>
 

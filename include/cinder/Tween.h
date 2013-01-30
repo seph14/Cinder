@@ -194,7 +194,6 @@ class Tween : public TweenBase {
 		friend class Timeline;
 	};
 
-
   protected:
 	virtual void reverse()
 	{

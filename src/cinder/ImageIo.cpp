@@ -31,6 +31,13 @@
 	#include "cinder/ImageTargetFileWic.h" // this is necessary to force the instantiation of the IMAGEIO_REGISTER macro
 #elif defined( CINDER_COCOA )
 	#include "cinder/cocoa/CinderCocoa.h"
+#elif defined( CINDER_ANDROID ) 
+    #if defined ( CINDER_FREEIMAGE )
+	    #include "cinder/ImageSourceFileFreeImage.h"
+    #endif
+    #if defined ( CINDER_STBIMAGE )
+        #include "cinder/ImageSourceFileStbImage.h"
+    #endif
 #endif
 
 using namespace std;
