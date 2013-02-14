@@ -3,6 +3,12 @@
 #include "cinder/Text.h"
 #include "cinder/gl/TextureFontAtlas.h"
 
+#if defined( _MSC_VER ) && ( _MSC_VER >= 1600 ) || defined( _LIBCPP_VERSION )
+	using std::unordered_map;
+#else
+	using boost::unordered_map;
+#endif
+
 using namespace std;
 
 namespace cinder { namespace pp {
@@ -73,7 +79,7 @@ void TextureFont::drawGlyphs( DrawShader& shader, const vector<pair<uint16_t,Vec
 			baseline = Vec2f( floor( baseline.x ), floor( baseline.y ) );
 			
 		for( vector<pair<uint16_t,Vec2f> >::const_iterator glyphIt = glyphMeasures.begin(); glyphIt != glyphMeasures.end(); ++glyphIt ) {
-			boost::unordered_map<Font::Glyph, GlyphInfo>::const_iterator glyphInfoIt = mGlyphMap.find( glyphIt->first );
+			unordered_map<Font::Glyph, GlyphInfo>::const_iterator glyphInfoIt = mGlyphMap.find( glyphIt->first );
 			if( (glyphInfoIt == mGlyphMap.end()) || (mGlyphMap[glyphIt->first].mTextureIndex != texIdx) )
 				continue;
 				
@@ -148,7 +154,7 @@ void TextureFont::drawGlyphs( DrawShader& shader, const vector<pair<uint16_t,Vec
 			offset = Vec2f( floor( offset.x ), floor( offset.y ) );
 
 		for( vector<pair<uint16_t,Vec2f> >::const_iterator glyphIt = glyphMeasures.begin(); glyphIt != glyphMeasures.end(); ++glyphIt ) {
-			boost::unordered_map<Font::Glyph, GlyphInfo>::const_iterator glyphInfoIt = mGlyphMap.find( glyphIt->first );
+			unordered_map<Font::Glyph, GlyphInfo>::const_iterator glyphInfoIt = mGlyphMap.find( glyphIt->first );
 			if( (glyphInfoIt == mGlyphMap.end()) || (mGlyphMap[glyphIt->first].mTextureIndex != texIdx) )
 				continue;
 				

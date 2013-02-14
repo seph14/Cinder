@@ -27,7 +27,7 @@
 #include "cinder/gl/Texture.h"
 
 #include <map>
-#if defined( _MSC_VER ) && ( _MSC_VER >= 1600 ) || defined( _LIBCPP_VERSION )
+#if (defined( _MSC_VER ) && ( _MSC_VER >= 1600 )) || defined( _LIBCPP_VERSION )
 	#include <unordered_map>
 #else
 	#include <boost/unordered_map.hpp>

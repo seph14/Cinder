@@ -339,6 +339,7 @@ Surface	RendererGl::copyWindowSurface( const Area &area )
 
 #endif // 
 
+#if ! defined( CINDER_ANDROID )
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Renderer2d
 Renderer2d::Renderer2d( const Renderer2d &renderer )
@@ -487,5 +488,7 @@ Surface	Renderer2d::copyWindowSurface( const Area &area )
 }
 
 #endif // defined( CINDER_MSW )
+
+#endif // defined (CINDER_ANDROID)
 
 } } // namespace cinder::app

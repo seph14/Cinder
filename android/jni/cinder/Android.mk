@@ -26,7 +26,6 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(CINDER_SRC)/app/AppAndroid.cpp \
                     $(CINDER_SRC)/app/Renderer.cpp \
                     $(CINDER_SRC)/app/AppImplAndroidRendererGl.cpp \
-                    $(CINDER_SRC)/cairo/Cairo.cpp \
                     $(CINDER_SRC)/gl/gl.cpp \
                     $(CINDER_SRC)/gl/Fbo.cpp \
                     $(CINDER_SRC)/gl/Texture.cpp \
@@ -99,6 +98,8 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(JSONCPP_SRC)/json_reader.cpp \
                     $(JSONCPP_SRC)/json_value.cpp \
                     $(JSONCPP_SRC)/json_writer.cpp
+
+#                    $(CINDER_SRC)/cairo/Cairo.cpp 
 
 # OSC block
 OSC_BLOCK = blocks/osc

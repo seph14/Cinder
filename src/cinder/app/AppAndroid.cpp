@@ -15,6 +15,11 @@ using std::map;
 using ci::app::TouchEvent;
 using ci::app::Orientation_t;
 
+/**
+ * Shared state for our app.
+ * XXX move this into App(Impl)Android
+ */
+
 enum ActivityState {
     ACTIVITY_START = 0,
     ACTIVITY_RESUME,
@@ -23,18 +28,14 @@ enum ActivityState {
     ACTIVITY_DESTROY
 };
 
-typedef map<int32_t, TouchEvent::Touch> ActiveTouchMap;
 struct TouchState {
     vector<TouchEvent::Touch> touchesBegan;
     vector<TouchEvent::Touch> touchesMoved;
     vector<TouchEvent::Touch> touchesEnded;
 
-    ActiveTouchMap activeTouches;
+    map<int32_t, TouchEvent::Touch> activeTouches;
 };
 
-/**
- * Shared state for our app.
- */
 struct engine {
     struct android_app* androidApp;
     void* savedState;
@@ -46,7 +47,7 @@ struct engine {
     int animating;
 
     ci::app::AppAndroid* cinderApp;
-    ci::app::Renderer*   cinderRenderer;
+    ci::app::RendererRef cinderRenderer;
 
     TouchState* touchState;
 
@@ -64,18 +65,6 @@ struct engine {
     JavaVM* vm;
 };
 
-static void updateWindowSize(struct engine* engine)
-{
-    if (engine->androidApp->window) {
-        int32_t winWidth = ANativeWindow_getWidth(engine->androidApp->window);
-        int32_t winHeight = ANativeWindow_getHeight(engine->androidApp->window);
-        if ( winWidth != engine->cinderApp->mWidth || winHeight != engine->cinderApp->mHeight ) {
-            engine->cinderApp->setWindowSize(winWidth, winHeight);
-            engine->cinderApp->privateResize__(ci::Vec2i(winWidth, winHeight));
-        }
-    }
-}
- 
 static void engine_draw_frame(struct engine* engine) {
     ci::app::AppAndroid& app      = *(engine->cinderApp);
     ci::app::Renderer&   renderer = *(engine->cinderRenderer);
@@ -87,29 +76,30 @@ static void engine_draw_frame(struct engine* engine) {
     }
 
     //  XXX handles delayed window size updates from orientation changes
-    updateWindowSize(engine);
+    app.updateWindowSizes();
 
     // XXX startDraw not necessary?
     // renderer.startDraw();
     app.privateUpdate__();
-    app.privateDraw__();
+    app.draw();
     renderer.finishDraw();
 }
 
 /**
  * Process the next input event.
  */
-static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
-    static const char* actionNames[] = {
-        "AMOTION_EVENT_ACTION_DOWN",
-        "AMOTION_EVENT_ACTION_UP",
-        "AMOTION_EVENT_ACTION_MOVE",
-        "AMOTION_EVENT_ACTION_CANCEL",
-        "AMOTION_EVENT_ACTION_OUTSIDE",
-        "AMOTION_EVENT_ACTION_POINTER_DOWN",
-        "AMOTION_EVENT_ACTION_POINTER_UP",
-    };
 
+static const char* actionNames[] = {
+    "AMOTION_EVENT_ACTION_DOWN",
+    "AMOTION_EVENT_ACTION_UP",
+    "AMOTION_EVENT_ACTION_MOVE",
+    "AMOTION_EVENT_ACTION_CANCEL",
+    "AMOTION_EVENT_ACTION_OUTSIDE",
+    "AMOTION_EVENT_ACTION_POINTER_DOWN",
+    "AMOTION_EVENT_ACTION_POINTER_UP",
+};
+
+static int32_t engine_handle_input(struct android_app* app, AInputEvent* event) {
     struct engine* engine = (struct engine*)app->userData;
     struct TouchState* touchState = engine->touchState;
 
@@ -174,22 +164,22 @@ static void engine_update_touches(ci::app::AppAndroid& app, TouchState* touchSta
 {
     if ( app.getSettings().isMultiTouchEnabled() ) {
         if ( ! touchState->touchesBegan.empty() ) {
-            app.privateTouchesBegan__( ci::app::TouchEvent( touchState->touchesBegan ) );
+            app.privateTouchesBegan__( ci::app::TouchEvent( app.getWindow(), touchState->touchesBegan ) );
             touchState->touchesBegan.clear();
         }
         if ( ! touchState->touchesMoved.empty() ) {
-            app.privateTouchesMoved__( ci::app::TouchEvent( touchState->touchesMoved ) );
+            app.privateTouchesMoved__( ci::app::TouchEvent( app.getWindow(), touchState->touchesMoved ) );
             touchState->touchesMoved.clear();
         }
         if ( ! touchState->touchesEnded.empty() ) {
-            app.privateTouchesEnded__( ci::app::TouchEvent( touchState->touchesEnded ) );
+            app.privateTouchesEnded__( ci::app::TouchEvent( app.getWindow(), touchState->touchesEnded ) );
             touchState->touchesEnded.clear();
         }
 
         //  set active touches
         vector<ci::app::TouchEvent::Touch> activeList;
-        ActiveTouchMap& activeMap = touchState->activeTouches;
-        for (ActiveTouchMap::iterator it = activeMap.begin(); it != activeMap.end(); ++it) {
+        auto& activeMap = touchState->activeTouches;
+        for (auto it = activeMap.begin(); it != activeMap.end(); ++it) {
            activeList.push_back(it->second);
         }
         app.privateSetActiveTouches__(activeList);
@@ -197,22 +187,26 @@ static void engine_update_touches(ci::app::AppAndroid& app, TouchState* touchSta
     else {
         const float contentScale = 1.0f;
 
+        using cinder::app::MouseEvent;
+
         //  Mouse emulation if multi-touch is disabled
         if ( ! touchState->touchesBegan.empty() ) {
             for (vector<TouchEvent::Touch>::iterator it = touchState->touchesBegan.begin(); it != touchState->touchesBegan.end(); ++it) {
                 ci::Vec2f pt = it->getPos();
-                int mods = 0;
+                uint32_t mods = 0;
                 mods |= cinder::app::MouseEvent::LEFT_DOWN;
-                app.privateMouseDown__( cinder::app::MouseEvent( cinder::app::MouseEvent::LEFT_DOWN, pt.x * contentScale, pt.y * contentScale, mods, 0.0f, 0 ) );
+                MouseEvent event( app.getWindow(), MouseEvent::LEFT_DOWN, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
+                app.getWindow()->emitMouseDown( &event );
             }
             touchState->touchesBegan.clear();
         }
         if ( ! touchState->touchesMoved.empty() ) {
             for (vector<TouchEvent::Touch>::iterator it = touchState->touchesMoved.begin(); it != touchState->touchesMoved.end(); ++it) {
                 ci::Vec2f pt = it->getPos();
-                int mods = 0;
+                uint32_t mods = 0;
                 mods |= cinder::app::MouseEvent::LEFT_DOWN;
-                app.privateMouseDrag__( cinder::app::MouseEvent( cinder::app::MouseEvent::LEFT_DOWN, pt.x * contentScale, pt.y * contentScale, mods, 0.0f, 0 ) );
+                MouseEvent event( app.getWindow(), 0, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
+                app.getWindow()->emitMouseDrag( &event );
             }
             touchState->touchesMoved.clear();
         }
@@ -221,7 +215,8 @@ static void engine_update_touches(ci::app::AppAndroid& app, TouchState* touchSta
                 ci::Vec2f pt = it->getPos();
                 int mods = 0;
                 mods |= cinder::app::MouseEvent::LEFT_DOWN;
-                app.privateMouseUp__( cinder::app::MouseEvent( cinder::app::MouseEvent::LEFT_DOWN, pt.x * contentScale, pt.y * contentScale, mods, 0.0f, 0 ) );
+                MouseEvent event( app.getWindow(), MouseEvent::LEFT_DOWN, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
+                app.getWindow()->emitMouseUp( &event );
             }
             touchState->touchesEnded.clear();
         }
@@ -275,7 +270,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             if (engine->androidApp->window != NULL) {
                 engine->orientation = cinderApp->orientationFromConfig();
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
-                updateWindowSize(engine);
+                cinderApp->updateWindowSizes();
                 cinderApp->privatePrepareSettings__();
                 engine->animating = 0;
 
@@ -309,7 +304,8 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                     CI_LOGD("XXXXXX SETUP privateSetup__");
                     cinderApp->privateSetup__();
                 }
-                engine->cinderApp->privateResize__(ci::Vec2i( cinderApp->mWidth, cinderApp->mHeight ));
+                // engine->cinderApp->privateResize__(ci::Vec2i( cinderApp->mWidth, cinderApp->mHeight ));
+                engine->cinderApp->getWindow()->emitResize();
                 engine->setupCompleted = true;
                 engine->renewContext   = false;
                 engine->resumed        = false;
@@ -453,9 +449,9 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
                     while (ASensorEventQueue_getEvents(engine.sensorEventQueue,
                             &event, 1) > 0) {
                         const float kGravity = 1.0f / 9.80665f;
-                        cinderApp->privateAccelerated__(ci::Vec3f(-event.acceleration.x * kGravity, 
-                                                                   event.acceleration.y * kGravity, 
-                                                                   event.acceleration.z * kGravity));
+                        // cinderApp->privateAccelerated__(ci::Vec3f(-event.acceleration.x * kGravity, 
+                        //                                            event.acceleration.y * kGravity, 
+                        //                                            event.acceleration.z * kGravity));
                     }
                 }
             }
@@ -481,10 +477,35 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
 
 namespace cinder { namespace app {
 
+///////////////////////////////////////////////////////////////////////////////
+// WindowImplAndroid
+
+void WindowImplAndroid::updateWindowSize()
+{
+    if (mNativeWindow) {
+        int32_t newWidth  = ANativeWindow_getWidth(mNativeWindow);
+        int32_t newHeight = ANativeWindow_getHeight(mNativeWindow);
+        if ( newWidth != mWindowWidth || newHeight != mWindowHeight ) {
+            mAppImpl->setWindowSize(newWidth, newHeight);
+            // mAppImpl->privateResize__(ci::Vec2i(winWidth, winHeight));
+            mWindowWidth  = newWidth;
+            mWindowHeight = newHeight;
+            mWindowRef->emitResize();
+        }
+    }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// AppAndroid
+
 AppAndroid::AppAndroid()
     : App()
 {
     mLastAccel = mLastRawAccel = Vec3f::zero();
+
+    // Only single window support on Android 
+    mActiveWindow = createWindow(getSettings().getDefaultWindowFormat());
 }
 
 AppAndroid::~AppAndroid()
@@ -587,6 +608,31 @@ void AppAndroid::setWindowSize( int windowWidth, int windowHeight )
     setWindowWidth(windowWidth);
     setWindowHeight(windowHeight);
 }
+
+void AppAndroid::updateWindowSizes()
+{
+    for (auto window : mWindows)
+        window->updateWindowSize();
+}
+
+WindowRef AppAndroid::createWindow( Window::Format format )
+{
+    //  Single window support on Android
+    if( ! mWindows.empty() )
+        return getWindow();
+
+	if( ! format.getRenderer() )
+		format.setRenderer( getDefaultRenderer()->clone() );
+
+	mWindows.push_back( new WindowImplAndroid( format, findSharedRenderer( format.getRenderer() ), this ) );
+
+	// XXX ??? emit initial resize if we have fired setup
+	// if ( mSetupHasBeenCalled )
+	// 	mWindows.back()->getWindow()->emitResize();
+
+	return mWindows.back()->getWindow();
+}
+
 
 //! Enables the accelerometer
 void AppAndroid::enableAccelerometer( float updateFrequency, float filterFactor )
@@ -706,21 +752,21 @@ void AppAndroid::privateTouchesEnded__( const TouchEvent &event )
         touchesEnded( event );
 }
 
-void AppAndroid::privateAccelerated__( const Vec3f &direction )
-{
-    Vec3f filtered = mLastAccel * (1.0f - mAccelFilterFactor) + direction * mAccelFilterFactor;
-
-    AccelEvent event( filtered, direction, mLastAccel, mLastRawAccel );
-
-    bool handled = false;
-    for( CallbackMgr<bool (AccelEvent)>::iterator cbIter = mCallbacksAccelerated.begin(); ( cbIter != mCallbacksAccelerated.end() ) && ( ! handled ); ++cbIter )
-        handled = (cbIter->second)( event );		
-    if( ! handled )	
-        accelerated( event );
-
-    mLastAccel = filtered;
-    mLastRawAccel = direction;
-}
+// void AppAndroid::privateAccelerated__( const Vec3f &direction )
+// {
+//     Vec3f filtered = mLastAccel * (1.0f - mAccelFilterFactor) + direction * mAccelFilterFactor;
+// 
+//     AccelEvent event( filtered, direction, mLastAccel, mLastRawAccel );
+// 
+//     bool handled = false;
+//     for( CallbackMgr<bool (AccelEvent)>::iterator cbIter = mCallbacksAccelerated.begin(); ( cbIter != mCallbacksAccelerated.end() ) && ( ! handled ); ++cbIter )
+//         handled = (cbIter->second)( event );		
+//     if( ! handled )	
+//         accelerated( event );
+// 
+//     mLastAccel = filtered;
+//     mLastRawAccel = direction;
+// }
 
 Orientation_t AppAndroid::orientationFromConfig()
 {

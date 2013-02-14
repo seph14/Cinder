@@ -2,6 +2,7 @@
 
 #include "cinder/app/App.h"
 #include "cinder/app/TouchEvent.h"
+#include "cinder/app/Window.h"
 // #include "cinder/app/AccelEvent.h"
 #include "cinder/Filesystem.h"
 
@@ -23,7 +24,8 @@ enum Orientation_t
     ORIENTATION_SQUARE
 };
 
-class AppAndroid : public App {
+class AppAndroid : public App
+{
   public:
 	class Settings : public App::Settings {
 	  public:
@@ -118,6 +120,7 @@ class AppAndroid : public App {
 	void			setWindowWidth( int windowWidth );
 	void			setWindowHeight( int windowHeight );
 	void			setWindowSize( int windowWidth, int windowHeight );
+    void            updateWindowSizes();
 
 	//! Enables the device's accelerometer and modifies its filtering. \a updateFrequency represents the frequency with which accelerated() is called, measured in Hz. \a filterFactor represents the amount to weight the current value relative to the previous.
 	void enableAccelerometer( float updateFrequency = 30.0f, float filterFactor = 0.1f );
@@ -173,7 +176,7 @@ class AppAndroid : public App {
 	void		privateTouchesMoved__( const TouchEvent &event );
 	void		privateTouchesEnded__( const TouchEvent &event );
 	void		privateSetActiveTouches__( const std::vector<TouchEvent::Touch> &touches ) { mActiveTouches = touches; }
-	void		privateAccelerated__( const Vec3f &direction );
+	// void		privateAccelerated__( const Vec3f &direction );
 	//! \endcond
 	//
 
@@ -219,6 +222,10 @@ class AppAndroid : public App {
 
     struct timespec mStartTime;
 
+    WindowRef createWindow( Window::Format format );
+	std::list<class WindowImplAndroid*>	mWindows;
+    WindowRef mActiveWindow;
+
   public:
 	static DataSourceAssetRef loadResource(const std::string &resourcePath);
 
@@ -229,6 +236,72 @@ class AppAndroid : public App {
 	//! Copy an entire Android resource (asset) dir to a writable path
 	static void copyResourceDir(const fs::path& resourcePath, const fs::path& destDir, bool overwrite=true);
 };
+
+class WindowImplAndroid
+{
+  public:
+	WindowImplAndroid( const Window::Format &format, RendererRef sharedRenderer, AppAndroid *appImpl );
+
+	virtual bool		isFullScreen() { return mFullScreen; }
+	virtual void		setFullScreen( bool fullScreen );
+	virtual Vec2i		getSize() const { return Vec2i( mWindowWidth, mWindowHeight ); }
+	virtual void		setSize( const Vec2i &size );
+	virtual Vec2i		getPos() const { return mWindowOffset; }
+	virtual void		setPos( const Vec2i &pos );
+	virtual void		close();
+	virtual std::string	getTitle() const;
+	virtual void		setTitle( const std::string &title );
+	virtual void		hide();
+	virtual void		show();
+	virtual bool		isHidden() const;
+	virtual DisplayRef	getDisplay() const { return mDisplay; }
+	virtual RendererRef	getRenderer() const { return mRenderer; }
+	virtual const std::vector<TouchEvent::Touch>&	getActiveTouches() const { return mActiveTouches; }
+	virtual void*		getNative() { return mNativeWindow; }
+
+	void			enableMultiTouch();
+	bool			isBorderless() const { return mBorderless; }
+	void			setBorderless( bool borderless );
+	bool			isAlwaysOnTop() const { return mAlwaysOnTop; }
+	void			setAlwaysOnTop( bool alwaysOnTop );
+    void            updateWindowSize();
+
+	AppAndroid*				getAppImpl() { return mAppImpl; }
+	WindowRef				getWindow() { return mWindowRef; }
+	virtual void			keyDown( const KeyEvent &event );
+	virtual void			draw();
+	virtual void			redraw();
+	virtual void			resize();
+
+	void			privateClose();
+  protected:
+// 	void			createWindow( const Vec2i &windowSize, const std::string &title, RendererRef sharedRenderer );
+// 	void			completeCreation();
+// 	static void		registerWindowClass();
+// 	void			getScreenSize( int clientWidth, int clientHeight, int *resultWidth, int *resultHeight );
+// 	void			onTouch( HWND hWnd, WPARAM wParam, LPARAM lParam );
+// 	void			toggleFullScreen();
+// 
+ 	AppAndroid				*mAppImpl;
+ 	WindowRef				mWindowRef;
+  	ANativeWindow			*mNativeWindow;
+// 	HDC						mDC;
+// 	DWORD					mWindowStyle, mWindowExStyle;
+ 	Vec2i					mWindowOffset;
+// 	bool					mHidden;
+ 	int						mWindowWidth, mWindowHeight;
+ 	bool					mFullScreen, mBorderless, mAlwaysOnTop, mResizable;
+// 	Vec2i					mWindowedPos, mWindowedSize;
+ 	DisplayRef				mDisplay;
+ 	RendererRef				mRenderer;
+// 	std::map<DWORD,Vec2f>			mMultiTouchPrev;
+ 	std::vector<TouchEvent::Touch>	mActiveTouches;
+// 	bool					mIsDragging;
+// 
+// 	friend AppAndroid;
+// 	friend LRESULT CALLBACK WndProc( HWND, UINT, WPARAM, LPARAM );
+};
+
 
 } } // namespace cinder::app
 
