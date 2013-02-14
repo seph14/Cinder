@@ -127,7 +127,7 @@ Surface RendererGl::copyWindowSurface( const Area &area )
 	GLint oldPackAlignment;
 	glGetIntegerv( GL_PACK_ALIGNMENT, &oldPackAlignment ); 
 	glPixelStorei( GL_PACK_ALIGNMENT, 1 );
-	glReadPixels( area.x1, mApp->getWindowHeight() - area.y2, area.getWidth(), area.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, s.getData() );
+	glReadPixels( area.x1, mApp->getWindow()->toPixels( mApp->getWindowHeight() ) - area.y2, area.getWidth(), area.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, s.getData() );
 	glPixelStorei( GL_PACK_ALIGNMENT, oldPackAlignment );		
 	ip::flipVertical( &s );
 	return s;
@@ -203,7 +203,7 @@ Surface	RendererGl::copyWindowSurface( const Area &area )
 	GLint oldPackAlignment;
 	glGetIntegerv( GL_PACK_ALIGNMENT, &oldPackAlignment ); 
 	glPixelStorei( GL_PACK_ALIGNMENT, 1 );
-	glReadPixels( area.x1, mApp->getWindowHeight() - area.y2, area.getWidth(), area.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, s.getData() );
+	glReadPixels( area.x1, mApp->getWindow()->toPixels( mApp->getWindowHeight() ) - area.y2, area.getWidth(), area.getHeight(), GL_RGBA, GL_UNSIGNED_BYTE, s.getData() );
 	glPixelStorei( GL_PACK_ALIGNMENT, oldPackAlignment );	
 	ip::flipVertical( &s );
 
@@ -216,13 +216,14 @@ RendererGl::~RendererGl()
 	delete mImpl;
 }
 
-void RendererGl::setup( App *aApp, HWND wnd, HDC dc )
+void RendererGl::setup( App *aApp, HWND wnd, HDC dc, RendererRef sharedRenderer )
 {
 	mWnd = wnd;
 	mApp = aApp;
 	if( ! mImpl )
 		mImpl = new AppImplMswRendererGl( mApp, this );
-	mImpl->initialize( wnd, dc );
+
+	mImpl->initialize( wnd, dc, sharedRenderer );
 }
 
 void RendererGl::kill()
@@ -267,7 +268,7 @@ Surface	RendererGl::copyWindowSurface( const Area &area )
 	GLint oldPackAlignment;
 	glGetIntegerv( GL_PACK_ALIGNMENT, &oldPackAlignment ); 
 	glPixelStorei( GL_PACK_ALIGNMENT, 1 );
-	glReadPixels( area.x1, mApp->getWindowHeight() - area.y2, area.getWidth(), area.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, s.getData() );
+	glReadPixels( area.x1, mApp->getWindow()->toPixels( mApp->getWindowHeight() ) - area.y2, area.getWidth(), area.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, s.getData() );
 	glPixelStorei( GL_PACK_ALIGNMENT, oldPackAlignment );	
 	ip::flipVertical( &s );
 	return s;
@@ -437,12 +438,12 @@ Renderer2d::Renderer2d( bool doubleBuffer )
 {
 }
 
-void Renderer2d::setup( App *app, HWND wnd, HDC dc )
+void Renderer2d::setup( App *app, HWND wnd, HDC dc, RendererRef /*sharedRenderer*/ )
 {
 	mApp = app;
 	mWnd = wnd;
 	mImpl = new AppImplMswRendererGdi( app, mDoubleBuffer );
-	mImpl->initialize( wnd, dc );
+	mImpl->initialize( wnd, dc, RendererRef() /* we don't use shared renderers on GDI */ );
 }
 
 void Renderer2d::kill()

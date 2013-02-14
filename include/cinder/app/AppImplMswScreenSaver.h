@@ -36,9 +36,10 @@ class WindowImplMswScreenSaver;
 
 class AppImplMswScreenSaver : public AppImplMsw {
  public:
-	AppImplMswScreenSaver( class AppScreenSaver *aApp, HWND aWnd );
+	AppImplMswScreenSaver( class AppScreenSaver *aApp );
 	virtual ~AppImplMswScreenSaver() {}
 	
+	void		init( HWND aWnd );
 	void		run();
 	void		quit() {} // we can't really force a quit
 		
@@ -67,8 +68,8 @@ class AppImplMswScreenSaver : public AppImplMsw {
 
 class WindowImplMswScreenSaver : public WindowImplMsw {
   public:
-	WindowImplMswScreenSaver( HWND hwnd, RendererRef renderer, AppImplMswScreenSaver *appImpl )
-		: WindowImplMsw( hwnd, renderer, appImpl ) {}
+	WindowImplMswScreenSaver( HWND hwnd, RendererRef renderer, RendererRef sharedRenderer, AppImplMswScreenSaver *appImpl )
+		: WindowImplMsw( hwnd, renderer, sharedRenderer, appImpl ) {}
 
   protected:
 	friend AppImplMswScreenSaver;
