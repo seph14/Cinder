@@ -124,7 +124,7 @@ void AppImplAndroidRendererGl::makeCurrentContext()
 
 void AppImplAndroidRendererGl::swapBuffers()
 {
-    if (EGL_FALSE == eglSwapBuffers(mDisplay, mSurface)) {
+    if (eglSwapBuffers(mDisplay, mSurface) == EGL_FALSE) {
         CI_LOGE("eglSwapBuffers returned EGL_FALSE : %s", EGLErrorString());
     }
 }

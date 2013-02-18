@@ -24,8 +24,9 @@ LOCAL_C_INCLUDES := $(LOCAL_PATH)/include \
 
 LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(CINDER_SRC)/app/AppAndroid.cpp \
-                    $(CINDER_SRC)/app/Renderer.cpp \
                     $(CINDER_SRC)/app/AppImplAndroidRendererGl.cpp \
+                    $(CINDER_SRC)/app/Renderer.cpp \
+                    $(CINDER_SRC)/app/Window.cpp \
                     $(CINDER_SRC)/gl/gl.cpp \
                     $(CINDER_SRC)/gl/Fbo.cpp \
                     $(CINDER_SRC)/gl/Texture.cpp \
@@ -57,6 +58,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(CINDER_SRC)/Color.cpp \
                     $(CINDER_SRC)/DataSource.cpp \
                     $(CINDER_SRC)/DataTarget.cpp \
+                    $(CINDER_SRC)/Display.cpp \
                     $(CINDER_SRC)/Exception.cpp \
                     $(CINDER_SRC)/Font.cpp \
                     $(CINDER_SRC)/Frustum.cpp \

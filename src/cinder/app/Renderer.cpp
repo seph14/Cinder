@@ -337,6 +337,11 @@ Surface	RendererGl::copyWindowSurface( const Area &area )
 	return s;
 }
 
+void RendererGl::makeCurrentContext()
+{
+	mImpl->makeCurrentContext();
+}
+
 #endif // 
 
 #if ! defined( CINDER_ANDROID )
@@ -489,6 +494,6 @@ Surface	Renderer2d::copyWindowSurface( const Area &area )
 
 #endif // defined( CINDER_MSW )
 
-#endif // defined (CINDER_ANDROID)
+#endif // ! defined (CINDER_ANDROID)
 
 } } // namespace cinder::app

@@ -226,7 +226,18 @@ void Display::enumerateDisplays()
 	
 	sDisplaysInitialized = true;
 }
-#endif // defined( CINDER_MSW )
+
+#elif defined( CINDER_ANDROID )
+
+void Display::enumerateDisplays()
+{
+	if( sDisplaysInitialized )
+		return;
+
+	sDisplaysInitialized = true;
+}
+
+#endif 
 
 DisplayRef Display::getMainDisplay()
 {

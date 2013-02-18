@@ -153,6 +153,9 @@ class AppAndroid : public App
 
 	//! Returns a pointer to the current global AppBasic
 	virtual const Settings&	getSettings() const { return mSettings; }
+    virtual WindowRef getWindow() const;
+    virtual size_t getNumWindows() const;
+	virtual WindowRef getWindowIndex( size_t index ) const;
 
     void setAndroidImpl( struct android_app* androidApp );
 
@@ -235,6 +238,8 @@ class AppAndroid : public App
 	static void copyResource(const fs::path& resourcePath, const fs::path& destDir, bool overwrite=true);
 	//! Copy an entire Android resource (asset) dir to a writable path
 	static void copyResourceDir(const fs::path& resourcePath, const fs::path& destDir, bool overwrite=true);
+
+	virtual fs::path			getAppPath() const;
 };
 
 class WindowImplAndroid
@@ -243,37 +248,37 @@ class WindowImplAndroid
 	WindowImplAndroid( const Window::Format &format, RendererRef sharedRenderer, AppAndroid *appImpl );
 
 	virtual bool		isFullScreen() { return mFullScreen; }
-	virtual void		setFullScreen( bool fullScreen );
+	// virtual void		setFullScreen( bool fullScreen );
 	virtual Vec2i		getSize() const { return Vec2i( mWindowWidth, mWindowHeight ); }
-	virtual void		setSize( const Vec2i &size );
+	// virtual void		setSize( const Vec2i &size );
 	virtual Vec2i		getPos() const { return mWindowOffset; }
-	virtual void		setPos( const Vec2i &pos );
-	virtual void		close();
-	virtual std::string	getTitle() const;
-	virtual void		setTitle( const std::string &title );
-	virtual void		hide();
-	virtual void		show();
-	virtual bool		isHidden() const;
+	// virtual void		setPos( const Vec2i &pos );
+	// virtual void		close();
+	// virtual std::string	getTitle() const;
+	// virtual void		setTitle( const std::string &title );
+	// virtual void		hide();
+	// virtual void		show();
+	// virtual bool		isHidden() const;
 	virtual DisplayRef	getDisplay() const { return mDisplay; }
 	virtual RendererRef	getRenderer() const { return mRenderer; }
 	virtual const std::vector<TouchEvent::Touch>&	getActiveTouches() const { return mActiveTouches; }
 	virtual void*		getNative() { return mNativeWindow; }
 
-	void			enableMultiTouch();
-	bool			isBorderless() const { return mBorderless; }
-	void			setBorderless( bool borderless );
-	bool			isAlwaysOnTop() const { return mAlwaysOnTop; }
-	void			setAlwaysOnTop( bool alwaysOnTop );
+	// void			enableMultiTouch();
+	// bool			isBorderless() const { return mBorderless; }
+	// void			setBorderless( bool borderless );
+	// bool			isAlwaysOnTop() const { return mAlwaysOnTop; }
+	// void			setAlwaysOnTop( bool alwaysOnTop );
     void            updateWindowSize();
 
 	AppAndroid*				getAppImpl() { return mAppImpl; }
 	WindowRef				getWindow() { return mWindowRef; }
-	virtual void			keyDown( const KeyEvent &event );
-	virtual void			draw();
-	virtual void			redraw();
-	virtual void			resize();
+	// virtual void			keyDown( const KeyEvent &event );
+	// virtual void			draw();
+	// virtual void			redraw();
+	// virtual void			resize();
 
-	void			privateClose();
+	// void			privateClose();
   protected:
 // 	void			createWindow( const Vec2i &windowSize, const std::string &title, RendererRef sharedRenderer );
 // 	void			completeCreation();

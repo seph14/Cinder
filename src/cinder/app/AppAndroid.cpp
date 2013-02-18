@@ -480,6 +480,18 @@ namespace cinder { namespace app {
 ///////////////////////////////////////////////////////////////////////////////
 // WindowImplAndroid
 
+WindowImplAndroid::WindowImplAndroid( const Window::Format &format, RendererRef sharedRenderer, AppAndroid *appImpl )
+    : mAppImpl( appImpl )
+{
+	mFullScreen = format.isFullScreen();
+	mDisplay = format.getDisplay();
+	mRenderer = format.getRenderer();
+	mResizable = format.isResizable();
+	mAlwaysOnTop = format.isAlwaysOnTop();
+	mBorderless = format.isBorderless();
+	// mWindowedSize = format.getSize();
+}
+
 void WindowImplAndroid::updateWindowSize()
 {
     if (mNativeWindow) {
@@ -630,7 +642,7 @@ WindowRef AppAndroid::createWindow( Window::Format format )
 	// if ( mSetupHasBeenCalled )
 	// 	mWindows.back()->getWindow()->emitResize();
 
-	return mWindows.back()->getWindow();
+	return mWindows.front()->getWindow();
 }
 
 
@@ -790,6 +802,23 @@ Orientation_t AppAndroid::orientationFromConfig()
     return ret;
 }
 
+WindowRef AppAndroid::getWindow() const
+{
+    return mWindows.front()->getWindow();
+}
+
+size_t AppAndroid::getNumWindows() const
+{
+    return 1;
+}
+
+WindowRef AppAndroid::getWindowIndex( size_t index ) const
+{
+    if (index != 0 || mWindows.empty())
+        throw ExcInvalidWindow();
+
+    return mWindows.front()->getWindow();
+}
 
 #if defined( CINDER_AASSET )
 
@@ -932,5 +961,10 @@ jobject AppAndroid::getActivity()
 }
 
 #endif
+
+fs::path AppAndroid::getAppPath() const
+{
+    return fs::path();
+}
 
 } } // namespace cinder::app
