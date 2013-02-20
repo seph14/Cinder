@@ -27,6 +27,8 @@
 
 #if defined( CINDER_MSW )
 	#include "cinder/app/AppImplMsw.h"
+#elif defined( CINDER_ANDROID )
+    #include "cinder/app/AppAndroid.h"
 #endif
 
 namespace cinder { namespace app {
@@ -236,7 +238,7 @@ RendererRef Window::getRenderer() const
 	
 #if defined( CINDER_COCOA )
 	return [mImpl getRenderer];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	return mImpl->getRenderer();
 #endif
 }

@@ -234,6 +234,9 @@ void Display::enumerateDisplays()
 	if( sDisplaysInitialized )
 		return;
 
+    DisplayRef newDisplay = DisplayRef( new Display );
+    sDisplays.push_back( newDisplay );
+
 	sDisplaysInitialized = true;
 }
 

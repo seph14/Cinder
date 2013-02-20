@@ -483,12 +483,12 @@ namespace cinder { namespace app {
 WindowImplAndroid::WindowImplAndroid( const Window::Format &format, RendererRef sharedRenderer, AppAndroid *appImpl )
     : mAppImpl( appImpl )
 {
-	mFullScreen = format.isFullScreen();
-	mDisplay = format.getDisplay();
-	mRenderer = format.getRenderer();
-	mResizable = format.isResizable();
+	mFullScreen  = format.isFullScreen();
+	mDisplay     = format.getDisplay();
+	mRenderer    = format.getRenderer();
+	mResizable   = format.isResizable();
 	mAlwaysOnTop = format.isAlwaysOnTop();
-	mBorderless = format.isBorderless();
+	mBorderless  = format.isBorderless();
 	// mWindowedSize = format.getSize();
 }
 
@@ -630,18 +630,22 @@ void AppAndroid::updateWindowSizes()
 WindowRef AppAndroid::createWindow( Window::Format format )
 {
     //  Single window support on Android
+    CI_LOGD("createWindow 1");
     if( ! mWindows.empty() )
         return getWindow();
 
+    CI_LOGD("createWindow 2");
 	if( ! format.getRenderer() )
 		format.setRenderer( getDefaultRenderer()->clone() );
 
+    CI_LOGD("createWindow 3");
 	mWindows.push_back( new WindowImplAndroid( format, findSharedRenderer( format.getRenderer() ), this ) );
 
 	// XXX ??? emit initial resize if we have fired setup
 	// if ( mSetupHasBeenCalled )
 	// 	mWindows.back()->getWindow()->emitResize();
 
+    CI_LOGD("createWindow 4");
 	return mWindows.front()->getWindow();
 }
 
