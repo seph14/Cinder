@@ -40,14 +40,20 @@ class MotionImplCoreMotion;
  */
 class MotionManager {
   public:
+	enum SensorMode { Accelerometer, Gyroscope };
+
 	//! Enable motion updates with the target \a updateFrequency in hertz.
-	static void 	enable( float updateFrequency = 60.0f, bool showsCalibrationDisplay = false );
+	static void 	enable( float updateFrequency = 60.0f, SensorMode mode = Gyroscope, bool showsCalibrationDisplay = false );
 	//! Disable motion updates.
 	static void		disable();
 	//! Returns whether motion detection is enabled.
 	static bool		isEnabled();
+	//! Returns the current mode of the MotionManager.
+	static SensorMode	getSensorMode();
 	//! Returns whether motion data is currently available for polling.
 	static bool		isDataAvailable();
+	//! Returns whether a gyroscope is available on the device.
+	static bool		isGyroAvailable();
 	//! Returns whether you can depend on the -Z axis pointing towards north with getRotation and getRotationMatrix
 	static bool		isNorthReliable();
 	//! Enables the system calibration view which will appear when the device needs some motion to recalibrate.
@@ -70,18 +76,31 @@ class MotionManager {
 	//! The amount the device is currently shaking. \note This is only calculated when isShaking() has been called.
 	static float    getShakeDelta() { return get()->mShakeDelta; }
 
+	//! Only applies in accelerometer-only mode. Returns the amount the accelerometer data is filtered, in the range [0-1). \c 0 means unfiltered, \c 0.99 is very smoothed (but less responsive). Default is \c 0.3.
+	static float	getAccelerometerFilter() { return get()->getAccelerometerFilterImpl(); }	
+	//! Only applies in accelerometer-only mode. Returns the amount the accelerometer data is filtered, in the range [0-1). \c 0 means unfiltered, \c 0.99 is very smoothed (but less responsive). Default is \c 0.3.
+	static void		setAccelerometerFilter( float filtering ) { get()->setAccelerometerFilterImpl( filtering ); }
+
   protected:
 	MotionManager() : mShakeDelta( 0.0f ) {}
 	static MotionManager*		get();
 
   private:
-    bool isShakingImpl( float minShakeDeltaThreshold );
+    bool	isShakingImpl( float minShakeDeltaThreshold );
+	float	getAccelerometerFilterImpl();
+	void	setAccelerometerFilterImpl( float filtering );
+
 
 	std::shared_ptr<MotionImplCoreMotion>	mImpl;
 	float mShakeDelta;
 	Vec3f mPrevAcceleration;
 
 	static std::mutex sMutex;
+};
+
+//! Thrown when the necessary sensors cannot be found
+class ExcNoSensors : public cinder::Exception {
+	virtual const char * what() const throw() { return "No available sensors"; }
 };
 
 } // namespace cinder

@@ -23,14 +23,16 @@
 
 #include "MotionManager.h"
 #include "MotionImplCoreMotion.h"
+#include "cinder/CinderMath.h"
 
 namespace cinder {
 
 std::mutex MotionManager::sMutex;
 
-void MotionManager::enable( float updateFrequency, bool showsCalibrationDisplay )
+void MotionManager::enable( float updateFrequency, SensorMode mode, bool showsCalibrationDisplay )
 {
 	auto impl = get()->mImpl;
+	impl->setSensorMode( mode );
 	impl->setUpdateFrequency( updateFrequency );
 	impl->setShowsCalibrationView( showsCalibrationDisplay );
     impl->startMotionUpdates();
@@ -46,9 +48,19 @@ bool MotionManager::isEnabled()
 	return get()->mImpl->isMotionUpdatesActive();
 }
 
+MotionManager::SensorMode MotionManager::getSensorMode()
+{
+	return get()->mImpl->getSensorMode();
+}
+
 bool MotionManager::isDataAvailable()
 {
 	return get()->mImpl->isMotionDataAvailable();
+}
+
+bool MotionManager::isGyroAvailable()
+{
+	return get()->mImpl->isGyroAvailable();
 }
 
 bool MotionManager::isNorthReliable()
@@ -109,6 +121,16 @@ bool MotionManager::isShakingImpl( float minShakeDeltaThreshold )
     }
     mPrevAcceleration = accel;
     return isShaking;
+}
+
+float MotionManager::getAccelerometerFilterImpl()
+{
+	return mImpl->getAccelFilter();
+}
+
+void MotionManager::setAccelerometerFilterImpl( float filtering )
+{
+	mImpl->setAccelFilter( math<float>::clamp( filtering, 0, 0.999f ) );
 }
 
 } // namespace cinder

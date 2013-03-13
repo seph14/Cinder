@@ -56,15 +56,16 @@ void BasicApp::prepareSettings( Settings *settings )
 {
 	settings->enablePowerManagement( false );
 	settings->enableQuitOnLastWindowClose( false );
-	settings->setFullScreen( false );
-	settings->setWindowSize( 100, 500 );
+//	settings->setFullScreen( false );
+	settings->setWindowSize( 800, 500 );
 //	settings->prepareWindow( Window::Format().resizable( false ).renderer( RendererGl::create() ).fullScreen( true ) );
+//	settings->prepareWindow( Window::Format().fullScreen().fullScreenButton() );
 }
 
 void BasicApp::setup()
 {
-	for( auto& display : Display::getDisplays() )
-		console() << "Resolution: " << display->getSize() << std::endl;
+	for( auto displayIt = Display::getDisplays().begin(); displayIt != Display::getDisplays().end(); ++displayIt )
+		console() << "Resolution: " << (*displayIt)->getBounds() << std::endl;
 
 	getWindow()->setUserData( new WindowData );
 
@@ -87,7 +88,6 @@ bool BasicApp::shouldQuit()
 
 void BasicApp::update()
 {
-	console() << getMousePos() << " ";
 }
 
 void BasicApp::anotherTest( MouseEvent event )
@@ -150,9 +150,26 @@ void BasicApp::windowMouseDown( MouseEvent &mouseEvt )
 
 void BasicApp::keyDown( KeyEvent event )
 {
+	if( event.getCode() == KeyEvent::KEY_RSHIFT ) {
+		console() << "Right shift down" << std::endl;
+	}
+	else if( event.getCode() == KeyEvent::KEY_LCTRL ) {
+		console() << "Left control down" << std::endl;
+	}
 	if( event.getChar() == 'f' ) {
 		console() << "Toggling from fullscreen: " << getWindow()->isFullScreen() << std::endl;
-		getWindow()->setFullScreen( ! getWindow()->isFullScreen() );
+		getWindow()->setFullScreen( ! getWindow()->isFullScreen(), FullScreenOptions().display( Display::getDisplays()[1] ) );
+	}
+	else if( event.getChar() == 'o' ) {
+		console() << "(kiosk) Toggling from fullscreen: " << getWindow()->isFullScreen() << std::endl;
+		FullScreenOptions fullScreenOptions = FullScreenOptions().kioskMode();
+		if( event.isControlDown() )
+			fullScreenOptions.secondaryDisplayBlanking( false );
+		else
+			fullScreenOptions.secondaryDisplayBlanking( true );
+		//if( event.isControlDown() )
+		//	fullScreenOptions.exclusive();
+		getWindow()->setFullScreen( ! getWindow()->isFullScreen(), fullScreenOptions );
 	}
 	else if( event.getCode() == KeyEvent::KEY_LEFT )
 		getWindow()->setPos( getWindow()->getPos().x - 1, getWindow()->getPos().y );
@@ -187,6 +204,15 @@ void BasicApp::keyDown( KeyEvent event )
 	else if( event.getChar() == 't' ) {
 		getWindow()->setAlwaysOnTop( ! getWindow()->isAlwaysOnTop() );
 	}
+	else if( event.getChar() == 's' ) {
+		getWindow()->setBorderless();
+		getWindow()->spanAllDisplays();
+		console() << "Spanning Area: " << Display::getSpanningArea() << std::endl;
+		console() << "Bounds: " << getWindow()->getBounds() << std::endl;
+		//getWindow()->setPos( Vec2i( -1680 + 1, 0 + 1 ) );
+//		getWindow()->setSize( 1440, 900 );
+//		getWindow()->setPos( 0, 0 );
+	}
 }
 
 void BasicApp::fileDrop( FileDropEvent event )
@@ -217,7 +243,7 @@ void BasicApp::windowDraw()
 	glBegin( GL_LINE_STRIP );
 	const vector<Vec2f> &points = getWindow()->getUserData<WindowData>()->mPoints;
 	for( auto pointIter = points.begin(); pointIter != points.end(); ++pointIter ) {
-		gl::vertex( *pointIter + Vec2f( 0, getElapsedSeconds() ) );
+		gl::vertex( *pointIter /*+ Vec2f( 0, getElapsedSeconds() )*/ );
 	}
 	glEnd();
 	

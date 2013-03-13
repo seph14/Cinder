@@ -262,14 +262,19 @@ void App::prepareAssetLoading()
 #endif		
 
 		// first search the local directory, then its parent, up to 5 levels up
-		fs::path curPath = appPath;
-		for( int parentCt = 0; parentCt <= 5; ++parentCt ) {
-			fs::path curAssetPath = curPath / "assets";
+		int parentCt = 0;
+		for( fs::path curPath = appPath; 
+			curPath.has_parent_path() || ( curPath == appPath ); //check at least the app path, even if it has no parent directory
+			curPath = curPath.parent_path(), ++parentCt ) 
+		{   
+			if( parentCt >= 5 )
+				break;
+    
+			const fs::path curAssetPath = curPath / "assets";
 			if( fs::exists( curAssetPath ) && fs::is_directory( curAssetPath ) ) {
 				mAssetDirectories.push_back( curAssetPath );
 				break;
 			}
-			curPath = curPath.parent_path();
 		}
 				
 		mAssetDirectoriesInitialized = true;
@@ -516,7 +521,8 @@ RendererRef App::findSharedRenderer( RendererRef searchRenderer ) const
 		return RendererRef();
 
 	for( size_t winIdx = 0; winIdx < getNumWindows(); ++winIdx ) {
-		if( typeid( *(getWindowIndex( winIdx )->getRenderer()) ) == typeid(*searchRenderer) )
+		RendererRef thisRenderer = getWindowIndex( winIdx )->getRenderer();
+		if( thisRenderer && (typeid( *thisRenderer ) == typeid(*searchRenderer)) )
 			return getWindowIndex( winIdx )->getRenderer();
 	}
 	

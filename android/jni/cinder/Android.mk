@@ -86,8 +86,6 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(CINDER_SRC)/Triangulate.cpp \
                     $(CINDER_SRC)/TriMesh.cpp \
                     $(CINDER_SRC)/Tween.cpp \
-                    $(CINDER_SRC)/Url.cpp \
-                    $(CINDER_SRC)/UrlImplAndroid.cpp \
                     $(CINDER_SRC)/Utilities.cpp \
                     $(CINDER_SRC)/Xml.cpp \
                     $(TESS_SRC)/bucketalloc.c \
@@ -101,7 +99,10 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(JSONCPP_SRC)/json_value.cpp \
                     $(JSONCPP_SRC)/json_writer.cpp
 
+# Disabled for now
 #                    $(CINDER_SRC)/cairo/Cairo.cpp 
+#                    $(CINDER_SRC)/Url.cpp 
+#                    $(CINDER_SRC)/UrlImplAndroid.cpp
 
 # OSC block
 OSC_BLOCK = blocks/osc

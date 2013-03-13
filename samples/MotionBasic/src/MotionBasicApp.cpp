@@ -19,7 +19,9 @@ class MotionBasicApp : public AppCocoaTouch {
 
 void MotionBasicApp::setup()
 {
-	MotionManager::enable( 60.0f );
+	console() << "gyro available: " << MotionManager::isGyroAvailable() << std::endl;
+	
+	MotionManager::enable( 60.0f/*, MotionManager::SensorMode::Accelerometer*/ );
 
 	mCam.setPerspective( 60, getWindowAspectRatio(), 1, 1000 );
 	mCam.lookAt( Vec3f( 0, 0, 3 ), Vec3f::zero() );
@@ -28,7 +30,6 @@ void MotionBasicApp::setup()
 void MotionBasicApp::update()
 {
 	mModelView = MotionManager::getRotationMatrix().inverted();
-	mCam.lookAt( Vec3f( 0, 0, 3 ), Vec3f::zero() );
 
     if( MotionManager::isShaking( 1.5f ) ) {
 		std::cout << "isShaking!\n";
@@ -45,7 +46,8 @@ void MotionBasicApp::draw()
 	gl::setMatrices( mCam );
 	gl::multModelView( mModelView );
 
-	gl::drawColorCube( Vec3f::zero(), Vec3f( 1, 1, 1 ) );
+//	gl::drawColorCube( Vec3f::zero(), Vec3f( 1, 1, 1 ) );
+	gl::drawCoordinateFrame();
 }
 
 CINDER_APP_COCOA_TOUCH( MotionBasicApp, RendererGl )

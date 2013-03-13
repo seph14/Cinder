@@ -27,6 +27,8 @@
 #include "cinder/Quaternion.h"
 #include "cinder/app/AppCocoaTouch.h"
 
+#include "MotionManager.h"
+
 #if defined( __OBJC__ )
 	@class CMMotionManager;
 	@class NSOperationQueue;
@@ -44,20 +46,31 @@ class MotionImplCoreMotion {
 
     bool isMotionUpdatesActive();
 	bool isMotionDataAvailable();
+	bool isGyroAvailable();
+	bool isAccelAvailable();
 	bool isNorthReliable();
     void startMotionUpdates();
     void stopMotionUpdates();
-
+	void setSensorMode( MotionManager::SensorMode mode );
+	MotionManager::SensorMode	getSensorMode() { return mSensorMode; }
+	
 	void setUpdateFrequency( float updateFrequency );
 	void setShowsCalibrationView( bool shouldShow );
 
-	ci::Vec3f getGravityDirection( app::InterfaceOrientation orientation );
-    ci::Quatf getRotation( app::InterfaceOrientation orientation );
-	ci::Vec3f getRotationRate( app::InterfaceOrientation orientation );
-	ci::Vec3f getAcceleration( app::InterfaceOrientation orientation );
+	ci::Vec3f	getGravityDirection( app::InterfaceOrientation orientation );
+    ci::Quatf	getRotation( app::InterfaceOrientation orientation );
+	ci::Vec3f	getRotationRate( app::InterfaceOrientation orientation );
+	ci::Vec3f	getAcceleration( app::InterfaceOrientation orientation );
+
+	float		getAccelFilter() const { return mAccelFilter; }
+	void		setAccelFilter( float filtering ) { mAccelFilter = filtering; }
 
   private:
-	CMMotionManager *mMotionManager;
+	CMMotionManager				*mMotionManager;
+	MotionManager::SensorMode	mSensorMode;
+
+	ci::Vec3f					mLastAccel;
+	float						mAccelFilter;
 };
 
 } // namespace cinder

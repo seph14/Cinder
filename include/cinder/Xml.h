@@ -33,7 +33,6 @@
 
 #include <string>
 #include <vector>
-#include "boost/container/cinder_fixed_list.hpp"
 
 //! \cond
 namespace rapidxml {

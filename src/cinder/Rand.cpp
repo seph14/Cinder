@@ -32,31 +32,30 @@
 
 namespace cinder {
 	
-boost::mt19937 Rand::sBase( 310u );
-boost::variate_generator<boost::mt19937&, boost::uniform_real<float> > Rand::sFloatGen( sBase, boost::uniform_real<float>( 0.0f, 1.0f ) );
-boost::variate_generator<boost::mt19937&, boost::uniform_int<> > Rand::sIntGen( sBase, boost::uniform_int<>( 0, std::numeric_limits<int32_t>::max() ) );
+std::mt19937 Rand::sBase( 310u );
+std::uniform_real_distribution<float> Rand::sFloatGen;
 
 void Rand::randomize()
 {
 #if defined( CINDER_COCOA )
-	sBase = boost::mt19937( mach_absolute_time() );
+	sBase = std::mt19937( mach_absolute_time() );
 #elif defined( CINDER_MSW )
-	sBase = boost::mt19937( ::GetTickCount() );
+	sBase = std::mt19937( ::GetTickCount() );
 #elif defined( CINDER_LINUX )
 	struct timespec time;
 	clock_gettime( CLOCK_MONOTONIC, &time );
-	sBase = boost::mt19937( time.tv_sec * 1e3 + time.tv_nsec / 1e6);
+	sBase = std::mt19937( time.tv_sec * 1e3 + time.tv_nsec / 1e6);
 #endif
 }
 
-void Rand::randSeed( uint32_t seed )
+void Rand::randSeed( unsigned long seed )
 {
-	sBase = boost::mt19937( seed );
+	sBase = std::mt19937( seed );
 }
 
-void Rand::seed( uint32_t seedValue )
+void Rand::seed( unsigned long seedValue )
 {
-	mBase = boost::mt19937( seedValue );
+	mBase = std::mt19937( seedValue );
 }
 
 } // ci

@@ -1,7 +1,7 @@
 LOCAL_PATH = $(call my-dir)/..
 include $(LOCAL_PATH)/Configure.mk
 
-APP_ABI      := armeabi
+APP_ABI      := 
 APP_PLATFORM := android-9
 APP_MODULES  := cinder
 APP_CPPFLAGS := -fexceptions -frtti -Wno-format-security
@@ -13,7 +13,11 @@ else
 endif
 
 ifdef USE_CPP_11
-APP_CPPFLAGS += -std=c++11 -D_LIBCPP_VERSION
+APP_CPPFLAGS += -std=c++11 -D_LIBCPP_VERSION -D_GLIBCXX_USE_C99_MATH=1
+endif
+
+ifdef USE_ARMEABI_V5A
+APP_ABI += armeabi
 endif
 
 ifdef USE_ARMEABI_V7A
