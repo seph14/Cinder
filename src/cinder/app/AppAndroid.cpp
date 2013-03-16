@@ -305,6 +305,7 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
                     cinderApp->privateSetup__();
                 }
                 // engine->cinderApp->privateResize__(ci::Vec2i( cinderApp->mWidth, cinderApp->mHeight ));
+                CI_LOGD("XXX APP_CMD_GAINED_FOCUS");
                 engine->cinderApp->getWindow()->emitResize();
                 engine->setupCompleted = true;
                 engine->renewContext   = false;
@@ -380,6 +381,7 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
     struct engine engine;
     memset(&engine, 0, sizeof(engine));
 
+    cinderApp->preSetup();
     engine.androidApp     = androidApp;
     engine.cinderApp      = cinderApp;
     engine.cinderRenderer = cinderApp->getRenderer();
@@ -477,6 +479,8 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
 
 namespace cinder { namespace app {
 
+AppAndroid* AppAndroid::sInstance;
+
 ///////////////////////////////////////////////////////////////////////////////
 // WindowImplAndroid
 
@@ -515,9 +519,6 @@ AppAndroid::AppAndroid()
     : App()
 {
     mLastAccel = mLastRawAccel = Vec3f::zero();
-
-    // Only single window support on Android 
-    mActiveWindow = createWindow(getSettings().getDefaultWindowFormat());
 }
 
 AppAndroid::~AppAndroid()
@@ -627,25 +628,40 @@ void AppAndroid::updateWindowSizes()
         window->updateWindowSize();
 }
 
+void AppAndroid::preSetup()
+{
+    // Only single window support on Android 
+    mActiveWindow = createWindow(getSettings().getDefaultWindowFormat());
+}
+
 WindowRef AppAndroid::createWindow( Window::Format format )
 {
     //  Single window support on Android
-    CI_LOGD("createWindow 1");
+    CI_LOGD("XXX createWindow 1");
     if( ! mWindows.empty() )
         return getWindow();
 
-    CI_LOGD("createWindow 2");
-	if( ! format.getRenderer() )
-		format.setRenderer( getDefaultRenderer()->clone() );
+    CI_LOGD("XXX createWindow 2");
+	if( ! format.getRenderer() ) {
+        CI_LOGD("XXX createWindow 2.5");
+        RendererRef defRenderer = getDefaultRenderer();
+        CI_LOGD("XXX DEFAULT renderer %p ??? %s", defRenderer.get(), defRenderer ? "true" : "false");
+        RendererRef renderer = getDefaultRenderer()->clone();
+        CI_LOGD("XXX Default renderer %p clone %p", getDefaultRenderer().get(), renderer.get());
+        format.setRenderer( renderer );
+		// format.setRenderer( getDefaultRenderer()->clone() );
+    }
 
-    CI_LOGD("createWindow 3");
-	mWindows.push_back( new WindowImplAndroid( format, findSharedRenderer( format.getRenderer() ), this ) );
+    CI_LOGD("XXX createWindow 3");
+    // XXX ???
+	// mWindows.push_back( new WindowImplAndroid( format, findSharedRenderer( format.getRenderer() ), this ) );
+	mWindows.push_back( new WindowImplAndroid( format, format.getRenderer(), this ) );
 
 	// XXX ??? emit initial resize if we have fired setup
 	// if ( mSetupHasBeenCalled )
 	// 	mWindows.back()->getWindow()->emitResize();
 
-    CI_LOGD("createWindow 4");
+    CI_LOGD("XXX createWindow 4");
 	return mWindows.front()->getWindow();
 }
 

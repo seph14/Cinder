@@ -162,7 +162,17 @@ class AppAndroid : public App
 	//! \cond
 	// These are called by application instantation macros and are only used in the launch process
 	static void		prepareLaunch() { App::prepareLaunch(); }
-	static void		executeLaunch( AppAndroid* app, RendererRef renderer, const char *title, struct android_app* androidApp ) { app->setAndroidImpl(androidApp); App::executeLaunch(app, renderer, title, 0, NULL ); }
+    // XXX unify with App.h executeLaunch implementation
+	static void		executeLaunch( AppAndroid* app, RendererRef defaultRenderer, const char *title )
+    {
+        App::sInstance = sInstance = app;
+        App::executeLaunch(app, defaultRenderer, title, 0, NULL);
+
+        // app->mDefaultRenderer = defaultRenderer;
+        // CI_LOGD("Execute launch, renderer %p", defaultRenderer.get());
+        // app->setAndroidImpl(androidApp);
+        // App::executeLaunch(app, defaultRenderer, title, 0, NULL );
+    }
 	static void		cleanupLaunch() { App::cleanupLaunch(); }
 	
 	virtual void	launch( const char *title, int argc, char * const argv[] );
@@ -210,9 +220,12 @@ class AppAndroid : public App
 	
 	Orientation_t orientationFromConfig();
 
+    //  XXX creates and sets up single active window, consolidate with setup code
+    void                preSetup();
+
   private:
 	
-	// static AppAndroid		*sInstance;
+	static AppAndroid		*sInstance;
 	Settings				 mSettings;
 	
 	std::vector<TouchEvent::Touch>	mActiveTouches;
@@ -314,11 +327,10 @@ class WindowImplAndroid
 extern "C" {                                                                \
   void android_main( struct android_app* state ) {                          \
     cinder::app::AppAndroid *app = new APP;                                 \
-    cinder::app::AppAndroid::prepareLaunch();                               \
+    app->setAndroidImpl(state);                                             \
     cinder::app::RendererRef ren( new RENDERER );                           \
-    cinder::app::AppAndroid::executeLaunch( app, ren, #APP, state );        \
+    cinder::app::AppAndroid::executeLaunch( app, ren, #APP );               \
     cinder::app::AppAndroid::cleanupLaunch();                               \
-    /* exit(0); */                                                          \
   }                                                                         \
 }
 
