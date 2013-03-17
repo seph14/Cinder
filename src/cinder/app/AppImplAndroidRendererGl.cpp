@@ -52,6 +52,7 @@ AppImplAndroidRendererGl::AppImplAndroidRendererGl( App *aApp, struct android_ap
 
 void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
 {
+    CI_LOGD("AppImplAndroidRendererGl::initialize() 1");
     //  Create GL context and surface
     const EGLint attribs[] = {
             EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -69,15 +70,18 @@ void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
     EGLint     numConfigs;
     EGLConfig  config;
 
+    CI_LOGD("AppImplAndroidRendererGl::initialize() 2");
     mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
     eglInitialize(mDisplay, 0, 0);
 
+    CI_LOGD("AppImplAndroidRendererGl::initialize() 3");
     eglChooseConfig(mDisplay, attribs, &config, 1, &numConfigs);
 
     eglGetConfigAttrib(mDisplay, config, EGL_NATIVE_VISUAL_ID, &format);
     ANativeWindow_setBuffersGeometry(mAndroidApp->window, 0, 0, format);
 
+    CI_LOGD("AppImplAndroidRendererGl::initialize() 4");
     mSurface = eglCreateWindowSurface(mDisplay, config, mAndroidApp->window, NULL);
     if (mSurface == EGL_NO_SURFACE) {
         CI_LOGE("Error in eglCreateWindowSurface, %s", EGLErrorString());
@@ -97,6 +101,7 @@ void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
         CI_LOGD("eglCreateContext succeeded, returned %p", mContext);
     }
 
+    CI_LOGD("AppImplAndroidRendererGl::initialize() 5");
     makeCurrentContext();
 
     //  Query and save surface dimensions
@@ -105,6 +110,7 @@ void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
 
     *width = w; *height = h;
 
+    CI_LOGD("AppImplAndroidRendererGl::initialize() 6");
     // Initialize GL state
     glDisable(GL_DITHER);
     glDisable(GL_DEPTH_TEST);

@@ -268,6 +268,9 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             // log_engine_state(engine);
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
+                cinderApp->preSetup();
+                engine->cinderRenderer = cinderApp->getRenderer();
+
                 engine->orientation = cinderApp->orientationFromConfig();
                 engine->cinderRenderer->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
                 cinderApp->updateWindowSizes();
@@ -381,10 +384,8 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
     struct engine engine;
     memset(&engine, 0, sizeof(engine));
 
-    cinderApp->preSetup();
     engine.androidApp     = androidApp;
     engine.cinderApp      = cinderApp;
-    engine.cinderRenderer = cinderApp->getRenderer();
     engine.touchState     = new TouchState;
     engine.accelEnabled   = false;
     engine.vm             = androidApp->activity->vm;
@@ -403,7 +404,8 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
     engine.renewContext   = true;
 
     //  XXX Used by accelerometer, move to cinder app?
-    cinderApp->mEngine = &engine;
+    cinderApp->mEngine     = &engine;
+    cinderApp->mAndroidApp = androidApp;
 
     androidApp->userData     = &engine;
     androidApp->onAppCmd     = engine_handle_cmd;
@@ -461,7 +463,9 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
             // Check if we are exiting.
             if (androidApp->destroyRequested != 0) {
                 engine.animating = 0;
-                engine.cinderRenderer->teardown();
+                if (engine.cinderRenderer) {
+                    engine.cinderRenderer->teardown();
+                }
                 return;
             }
         }
@@ -485,15 +489,17 @@ AppAndroid* AppAndroid::sInstance;
 // WindowImplAndroid
 
 WindowImplAndroid::WindowImplAndroid( const Window::Format &format, RendererRef sharedRenderer, AppAndroid *appImpl )
-    : mAppImpl( appImpl )
+    : mAppImpl( appImpl ), mNativeWindow( NULL )
 {
-	mFullScreen  = format.isFullScreen();
-	mDisplay     = format.getDisplay();
-	mRenderer    = format.getRenderer();
-	mResizable   = format.isResizable();
-	mAlwaysOnTop = format.isAlwaysOnTop();
-	mBorderless  = format.isBorderless();
+	mFullScreen   = format.isFullScreen();
+	mDisplay      = format.getDisplay();
+	mRenderer     = format.getRenderer();
+	mResizable    = format.isResizable();
+	mAlwaysOnTop  = format.isAlwaysOnTop();
+	mBorderless   = format.isBorderless();
 	// mWindowedSize = format.getSize();
+    mWindowRef    = Window::privateCreate__( this, mAppImpl );
+    mNativeWindow = appImpl->mAndroidApp->window;
 }
 
 void WindowImplAndroid::updateWindowSize()
