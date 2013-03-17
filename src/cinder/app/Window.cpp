@@ -50,7 +50,7 @@ void Window::setFullScreen( bool fullScreen, const FullScreenOptions &options )
 	
 #if defined( CINDER_COCOA )
 	[mImpl setFullScreen:fullScreen options:&options];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	mImpl->setFullScreen( fullScreen, options );
 #endif
 }
@@ -61,7 +61,7 @@ Vec2i Window::getSize() const
 	
 #if defined( CINDER_COCOA )
 	return [mImpl getSize];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	return mImpl->getSize();
 #endif
 }
@@ -72,7 +72,7 @@ void Window::setSize( const Vec2i &size )
 	
 #if defined( CINDER_COCOA )
 	[mImpl setSize:size];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	mImpl->setSize( size );
 #endif
 }
@@ -83,7 +83,7 @@ Vec2i Window::getPos() const
 	
 #if defined( CINDER_COCOA )
 	return [mImpl getPos];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	return mImpl->getPos();
 #endif
 }
@@ -94,7 +94,7 @@ void Window::setPos( const Vec2i &pos ) const
 	
 #if defined( CINDER_COCOA )
 	[mImpl setPos:pos];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	mImpl->setPos( pos );
 #endif
 }
@@ -124,7 +124,7 @@ void Window::close()
 	
 #if defined( CINDER_COCOA )
 	[mImpl close];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	mImpl->close();
 #endif
 }
@@ -158,7 +158,7 @@ bool Window::isBorderless() const
 	
 #if defined( CINDER_COCOA )
 	return [mImpl isBorderless];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	return mImpl->isBorderless();
 #endif
 }
@@ -202,7 +202,7 @@ void Window::hide()
 	
 #if defined( CINDER_COCOA )
 	[mImpl hide];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	mImpl->hide();
 #endif
 }
@@ -213,7 +213,7 @@ void Window::show()
 	
 #if defined( CINDER_COCOA )
 	[mImpl show];
-#elif defined( CINDER_MSW )
+#elif defined( CINDER_MSW ) || defined( CINDER_ANDROID )
 	mImpl->show();
 #endif
 }

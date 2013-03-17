@@ -111,15 +111,16 @@ class AppAndroid : public App
 
 	
 	//! Returns the width of the App's window measured in pixels, or the screen when in full-screen mode.	
-	virtual int		getWindowWidth() const;
+	// virtual int		getWindowWidth() const;
 	//! Returns the height of the App's window measured in pixels, or the screen when in full-screen mode.	
-	virtual int		getWindowHeight() const;
+	// virtual int		getWindowHeight() const;
+
 	//! Returns the logical density of the App's window measured in dpi (dots per inch)
 	virtual int		getWindowDensity() const;
 
-	void			setWindowWidth( int windowWidth );
-	void			setWindowHeight( int windowHeight );
-	void			setWindowSize( int windowWidth, int windowHeight );
+	// void			setWindowWidth( int windowWidth );
+	// void			setWindowHeight( int windowHeight );
+	// void			setWindowSize( int windowWidth, int windowHeight );
     void            updateWindowSizes();
 
 	//! Enables the device's accelerometer and modifies its filtering. \a updateFrequency represents the frequency with which accelerated() is called, measured in Hz. \a filterFactor represents the amount to weight the current value relative to the previous.
@@ -261,16 +262,16 @@ class WindowImplAndroid
 	WindowImplAndroid( const Window::Format &format, RendererRef sharedRenderer, AppAndroid *appImpl );
 
 	virtual bool		isFullScreen() { return mFullScreen; }
-	// virtual void		setFullScreen( bool fullScreen );
+	virtual void		setFullScreen( bool fullScreen, const FullScreenOptions &options ) { }
 	virtual Vec2i		getSize() const { return Vec2i( mWindowWidth, mWindowHeight ); }
-	// virtual void		setSize( const Vec2i &size );
+	virtual void		setSize( const Vec2i &size ) { mWindowWidth = size.x; mWindowHeight = size.y; }
 	virtual Vec2i		getPos() const { return mWindowOffset; }
-	// virtual void		setPos( const Vec2i &pos );
-	// virtual void		close();
+	virtual void		setPos( const Vec2i &pos ) { }
+	virtual void		close() { }
 	// virtual std::string	getTitle() const;
 	// virtual void		setTitle( const std::string &title );
-	// virtual void		hide();
-	// virtual void		show();
+	virtual void		hide() { }
+	virtual void		show() { }
 	// virtual bool		isHidden() const;
 	virtual DisplayRef	getDisplay() const { return mDisplay; }
 	virtual RendererRef	getRenderer() const { return mRenderer; }
@@ -278,7 +279,7 @@ class WindowImplAndroid
 	virtual void*		getNative() { return mNativeWindow; }
 
 	// void			enableMultiTouch();
-	// bool			isBorderless() const { return mBorderless; }
+	bool			isBorderless() const { return mBorderless; }
 	// void			setBorderless( bool borderless );
 	// bool			isAlwaysOnTop() const { return mAlwaysOnTop; }
 	// void			setAlwaysOnTop( bool alwaysOnTop );
@@ -303,8 +304,6 @@ class WindowImplAndroid
  	AppAndroid				*mAppImpl;
  	WindowRef				mWindowRef;
   	ANativeWindow			*mNativeWindow;
-// 	HDC						mDC;
-// 	DWORD					mWindowStyle, mWindowExStyle;
  	Vec2i					mWindowOffset;
 // 	bool					mHidden;
  	int						mWindowWidth, mWindowHeight;
@@ -316,7 +315,7 @@ class WindowImplAndroid
  	std::vector<TouchEvent::Touch>	mActiveTouches;
 // 	bool					mIsDragging;
 // 
-// 	friend AppAndroid;
+ 	friend class AppAndroid;
 // 	friend LRESULT CALLBACK WndProc( HWND, UINT, WPARAM, LPARAM );
 };
 

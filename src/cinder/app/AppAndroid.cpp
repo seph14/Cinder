@@ -47,7 +47,7 @@ struct engine {
     int animating;
 
     ci::app::AppAndroid* cinderApp;
-    ci::app::RendererRef cinderRenderer;
+    // ci::app::RendererRef cinderRenderer;
 
     TouchState* touchState;
 
@@ -67,9 +67,10 @@ struct engine {
 
 static void engine_draw_frame(struct engine* engine) {
     ci::app::AppAndroid& app      = *(engine->cinderApp);
-    ci::app::Renderer&   renderer = *(engine->cinderRenderer);
+    // ci::app::Renderer&   renderer = *(engine->cinderRenderer);
+    ci::app::RendererRef renderer = engine->cinderApp->getRenderer();
 
-    if (!renderer.isValidDisplay()) {
+    if (!renderer || !renderer->isValidDisplay()) {
         CI_LOGW("XXX NO VALID DISPLAY, SKIPPING RENDER");
         // No display.
         return;
@@ -82,7 +83,7 @@ static void engine_draw_frame(struct engine* engine) {
     // renderer.startDraw();
     app.privateUpdate__();
     app.draw();
-    renderer.finishDraw();
+    renderer->finishDraw();
 }
 
 /**
@@ -269,10 +270,13 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             // The window is being shown, get it ready.
             if (engine->androidApp->window != NULL) {
                 cinderApp->preSetup();
-                engine->cinderRenderer = cinderApp->getRenderer();
+                // cinderApp->getRenderer()->defaultResize();
+                // engine->cinderRenderer = cinderApp->getRenderer();
+                // engine->cinderRenderer->defaultResize();
 
                 engine->orientation = cinderApp->orientationFromConfig();
-                engine->cinderRenderer->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
+                // engine->cinderRenderer->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
+                cinderApp->getRenderer()->setup(cinderApp, engine->androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
                 cinderApp->updateWindowSizes();
                 cinderApp->privatePrepareSettings__();
                 engine->animating = 0;
@@ -287,7 +291,11 @@ static void engine_handle_cmd(struct android_app* app, int32_t cmd) {
             // log_engine_state(engine);
             // The window is being hidden or closed, clean it up.
             engine->animating = 0;
-            engine->cinderRenderer->teardown();
+            // engine->cinderRenderer->teardown();
+            if (cinderApp->getRenderer()) {
+                cinderApp->getRenderer()->teardown();
+            }
+            // engine->cinderRenderer->teardown();
             break;
 
         case APP_CMD_GAINED_FOCUS:
@@ -463,9 +471,12 @@ static void android_run(ci::app::AppAndroid* cinderApp, struct android_app* andr
             // Check if we are exiting.
             if (androidApp->destroyRequested != 0) {
                 engine.animating = 0;
-                if (engine.cinderRenderer) {
-                    engine.cinderRenderer->teardown();
+                if (cinderApp->getRenderer()) {
+                    cinderApp->getRenderer()->teardown();
                 }
+                // if (engine.cinderRenderer) {
+                //     engine.cinderRenderer->teardown();
+                // }
                 return;
             }
         }
@@ -489,7 +500,7 @@ AppAndroid* AppAndroid::sInstance;
 // WindowImplAndroid
 
 WindowImplAndroid::WindowImplAndroid( const Window::Format &format, RendererRef sharedRenderer, AppAndroid *appImpl )
-    : mAppImpl( appImpl ), mNativeWindow( NULL )
+    : mAppImpl( appImpl ), mNativeWindow( NULL ), mWindowWidth(0), mWindowHeight(0)
 {
 	mFullScreen   = format.isFullScreen();
 	mDisplay      = format.getDisplay();
@@ -593,15 +604,15 @@ void AppAndroid::launch( const char *title, int argc, char * const argv[] )
     android_run(this, mAndroidApp);
 }
 
-int AppAndroid::getWindowWidth() const
-{
-    return mWidth;
-}
-
-int AppAndroid::getWindowHeight() const
-{
-    return mHeight;
-}
+// int AppAndroid::getWindowWidth() const
+// {
+//     return mWidth;
+// }
+// 
+// int AppAndroid::getWindowHeight() const
+// {
+//     return mHeight;
+// }
 
 int AppAndroid::getWindowDensity() const
 {
@@ -612,21 +623,21 @@ int AppAndroid::getWindowDensity() const
     return density;
 }
 
-void AppAndroid::setWindowWidth( int windowWidth )
-{
-    mWidth = windowWidth;
-}
+// void AppAndroid::setWindowWidth( int windowWidth )
+// {
+//     mWidth = windowWidth;
+// }
+// 
+// void AppAndroid::setWindowHeight( int windowHeight )
+// {
+//     mHeight = windowHeight;
+// }
 
-void AppAndroid::setWindowHeight( int windowHeight )
-{
-    mHeight = windowHeight;
-}
-
-void AppAndroid::setWindowSize( int windowWidth, int windowHeight )
-{
-    setWindowWidth(windowWidth);
-    setWindowHeight(windowHeight);
-}
+// void AppAndroid::setWindowSize( int windowWidth, int windowHeight )
+// {
+//     setWindowWidth(windowWidth);
+//     setWindowHeight(windowHeight);
+// }
 
 void AppAndroid::updateWindowSizes()
 {
