@@ -36,6 +36,7 @@ samples/*/android/assets
 samples/*/android/bin
 samples/*/android/libs
 samples/*/android/obj
+tags
 
 build.xml
 local.properties
