@@ -604,16 +604,6 @@ void AppAndroid::launch( const char *title, int argc, char * const argv[] )
     android_run(this, mAndroidApp);
 }
 
-// int AppAndroid::getWindowWidth() const
-// {
-//     return mWidth;
-// }
-// 
-// int AppAndroid::getWindowHeight() const
-// {
-//     return mHeight;
-// }
-
 int AppAndroid::getWindowDensity() const
 {
     int density = AConfiguration_getDensity(mAndroidApp->config);
@@ -654,22 +644,16 @@ void AppAndroid::preSetup()
 WindowRef AppAndroid::createWindow( Window::Format format )
 {
     //  Single window support on Android
-    CI_LOGD("XXX createWindow 1");
     if( ! mWindows.empty() )
         return getWindow();
 
-    CI_LOGD("XXX createWindow 2");
 	if( ! format.getRenderer() ) {
-        CI_LOGD("XXX createWindow 2.5");
         RendererRef defRenderer = getDefaultRenderer();
-        CI_LOGD("XXX DEFAULT renderer %p ??? %s", defRenderer.get(), defRenderer ? "true" : "false");
         RendererRef renderer = getDefaultRenderer()->clone();
-        CI_LOGD("XXX Default renderer %p clone %p", getDefaultRenderer().get(), renderer.get());
         format.setRenderer( renderer );
 		// format.setRenderer( getDefaultRenderer()->clone() );
     }
 
-    CI_LOGD("XXX createWindow 3");
     // XXX ???
 	// mWindows.push_back( new WindowImplAndroid( format, findSharedRenderer( format.getRenderer() ), this ) );
 	mWindows.push_back( new WindowImplAndroid( format, format.getRenderer(), this ) );
@@ -678,7 +662,6 @@ WindowRef AppAndroid::createWindow( Window::Format format )
 	// if ( mSetupHasBeenCalled )
 	// 	mWindows.back()->getWindow()->emitResize();
 
-    CI_LOGD("XXX createWindow 4");
 	return mWindows.front()->getWindow();
 }
 
@@ -777,8 +760,8 @@ void AppAndroid::privateDestroy__()
 void AppAndroid::privateTouchesBegan__( const TouchEvent &event )
 {
     bool handled = false;
-    for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesBegan.begin(); ( cbIter != mCallbacksTouchesBegan.end() ) && ( ! handled ); ++cbIter )
-        handled = (cbIter->second)( event );		
+    // for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesBegan.begin(); ( cbIter != mCallbacksTouchesBegan.end() ) && ( ! handled ); ++cbIter )
+    //     handled = (cbIter->second)( event );		
     if( ! handled )	
         touchesBegan( event );
 }
@@ -786,8 +769,8 @@ void AppAndroid::privateTouchesBegan__( const TouchEvent &event )
 void AppAndroid::privateTouchesMoved__( const TouchEvent &event )
 {	
     bool handled = false;
-    for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesMoved.begin(); ( cbIter != mCallbacksTouchesMoved.end() ) && ( ! handled ); ++cbIter )
-        handled = (cbIter->second)( event );		
+    // for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesMoved.begin(); ( cbIter != mCallbacksTouchesMoved.end() ) && ( ! handled ); ++cbIter )
+    //     handled = (cbIter->second)( event );		
     if( ! handled )	
         touchesMoved( event );
 }
@@ -795,8 +778,8 @@ void AppAndroid::privateTouchesMoved__( const TouchEvent &event )
 void AppAndroid::privateTouchesEnded__( const TouchEvent &event )
 {	
     bool handled = false;
-    for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesEnded.begin(); ( cbIter != mCallbacksTouchesEnded.end() ) && ( ! handled ); ++cbIter )
-        handled = (cbIter->second)( event );		
+    // for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesEnded.begin(); ( cbIter != mCallbacksTouchesEnded.end() ) && ( ! handled ); ++cbIter )
+    //     handled = (cbIter->second)( event );		
     if( ! handled )	
         touchesEnded( event );
 }

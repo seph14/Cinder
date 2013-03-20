@@ -110,11 +110,6 @@ class AppAndroid : public App
 	// void			unregisterAccelerated( CallbackId id ) { mCallbacksAccelerated.unregisterCb( id ); }
 
 	
-	//! Returns the width of the App's window measured in pixels, or the screen when in full-screen mode.	
-	// virtual int		getWindowWidth() const;
-	//! Returns the height of the App's window measured in pixels, or the screen when in full-screen mode.	
-	// virtual int		getWindowHeight() const;
-
 	//! Returns the logical density of the App's window measured in dpi (dots per inch)
 	virtual int		getWindowDensity() const;
 
@@ -231,7 +226,7 @@ class AppAndroid : public App
 	
 	std::vector<TouchEvent::Touch>	mActiveTouches;
 
-	CallbackMgr<bool (TouchEvent)>		mCallbacksTouchesBegan, mCallbacksTouchesMoved, mCallbacksTouchesEnded;
+	// CallbackMgr<bool (TouchEvent)>		mCallbacksTouchesBegan, mCallbacksTouchesMoved, mCallbacksTouchesEnded;
 	// CallbackMgr<bool (AccelEvent)>		mCallbacksAccelerated;
 
 	float					mAccelFilterFactor;
