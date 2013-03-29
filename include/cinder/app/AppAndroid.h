@@ -77,6 +77,7 @@ class AppAndroid : public App
 	//! Returns a Vec3d of the acceleration direction
 	// virtual void		accelerated( AccelEvent event ) {}
 
+    /*
 	//! Registers a callback for touchesBegan events. Returns a unique identifier which can be used as a parameter to unregisterTouchesBegan().
 	CallbackId		registerTouchesBegan( std::function<bool (TouchEvent)> callback ) { return mCallbacksTouchesBegan.registerCb( callback ); }
 	//! Registers a callback for touchesBegan events. Returns a unique identifier which can be used as a parameter to unregisterTouchesBegan().
@@ -108,6 +109,7 @@ class AppAndroid : public App
 	// CallbackId		registerAccelerated( T *obj, bool (T::*callback)(AccelEvent) ) { return mCallbacksAccelerated.registerCb( std::bind1st( std::mem_fun( callback ), obj ) ); }
 	// //! Unregisters a callback for touchesEnded events.
 	// void			unregisterAccelerated( CallbackId id ) { mCallbacksAccelerated.unregisterCb( id ); }
+    */
 
 	
 	//! Returns the logical density of the App's window measured in dpi (dots per inch)
