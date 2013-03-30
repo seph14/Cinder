@@ -259,6 +259,7 @@ class WindowImplAndroid
 
     AppAndroid*				getAppImpl() { return mAppImpl; }
     WindowRef				getWindow() { return mWindowRef; }
+
     // virtual void			keyDown( const KeyEvent &event );
     // virtual void			draw();
     // virtual void			redraw();
@@ -273,19 +274,16 @@ class WindowImplAndroid
     // 	void			onTouch( HWND hWnd, WPARAM wParam, LPARAM lParam );
     // 	void			toggleFullScreen();
     // 
-    AppAndroid				*mAppImpl;
-    WindowRef				mWindowRef;
-    ANativeWindow			*mNativeWindow;
-    Vec2i					mWindowOffset;
-    // 	bool					mHidden;
-    int						mWindowWidth, mWindowHeight;
-    bool					mFullScreen, mBorderless, mAlwaysOnTop, mResizable;
-    // 	Vec2i					mWindowedPos, mWindowedSize;
-    DisplayRef				mDisplay;
-    RendererRef				mRenderer;
-    // 	std::map<DWORD,Vec2f>			mMultiTouchPrev;
-    std::vector<TouchEvent::Touch>	mActiveTouches;
-    // 	bool					mIsDragging;
+    AppAndroid                    *mAppImpl;
+    WindowRef                      mWindowRef;
+    ANativeWindow                 *mNativeWindow;
+    Vec2i                          mWindowOffset;
+    int                            mWindowWidth, mWindowHeight;
+    bool                           mFullScreen, mBorderless, mAlwaysOnTop, mResizable;
+    DisplayRef                     mDisplay;
+    RendererRef                    mRenderer;
+    std::vector<TouchEvent::Touch> mActiveTouches;
+    bool                           mHidden;
     // 
     friend class AppAndroid;
     // 	friend LRESULT CALLBACK WndProc( HWND, UINT, WPARAM, LPARAM );

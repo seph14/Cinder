@@ -17,7 +17,9 @@ using ci::app::Orientation_t;
 
 namespace cinder { namespace app {
 
-static const char* actionNames[] = {
+namespace {
+
+const char* actionNames[] = {
     "AMOTION_EVENT_ACTION_DOWN",
     "AMOTION_EVENT_ACTION_UP",
     "AMOTION_EVENT_ACTION_MOVE",
@@ -26,6 +28,174 @@ static const char* actionNames[] = {
     "AMOTION_EVENT_ACTION_POINTER_DOWN",
     "AMOTION_EVENT_ACTION_POINTER_UP",
 };
+
+struct InputState
+{
+    AppAndroid*               cinderApp;
+    vector<TouchEvent::Touch> touchesBegan;
+    vector<TouchEvent::Touch> touchesMoved;
+    vector<TouchEvent::Touch> touchesEnded;
+
+    map<int32_t, TouchEvent::Touch> activeTouches;
+
+    int32_t handleInput(AInputEvent* event)
+    {
+        int32_t eventType = AInputEvent_getType(event);
+
+        if (eventType == AINPUT_EVENT_TYPE_MOTION) {
+            int32_t actionCode = AMotionEvent_getAction(event);
+            int action = actionCode & AMOTION_EVENT_ACTION_MASK;
+            int index  = (actionCode & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+            const char* actionName = (action >= 0 && action <= 6) ? actionNames[action] : "UNKNOWN";
+            // CI_LOGI("Received touch action %s pointer index %d", actionName, index);
+
+            double timestamp = cinderApp->getElapsedSeconds();
+            if (action == AMOTION_EVENT_ACTION_DOWN || action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
+                int pointerId = AMotionEvent_getPointerId(event, index);
+                float x = AMotionEvent_getX(event, index);
+                float y = AMotionEvent_getY(event, index);
+                TouchEvent::Touch touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL);
+                touchesBegan.push_back(touch);
+                activeTouches.insert(std::make_pair(pointerId, touch));
+
+                // CI_LOGI("Pointer id %d down x %f y %f", pointerId, x, y);
+            }
+            else if (action == AMOTION_EVENT_ACTION_MOVE) {
+                int pointerCount = AMotionEvent_getPointerCount(event);
+
+                for (int i=0; i < pointerCount; ++i) {
+                    int pointerId = AMotionEvent_getPointerId(event, i);
+                    float x = AMotionEvent_getX(event, i);
+                    float y = AMotionEvent_getY(event, i);
+                    map<int, TouchEvent::Touch>::iterator it = activeTouches.find(pointerId);
+                    if (it != activeTouches.end()) {
+                        TouchEvent::Touch& prevTouch = it->second;
+                        TouchEvent::Touch touch(ci::Vec2f(x, y), prevTouch.getPos(), pointerId, timestamp, NULL);
+                        touchesMoved.push_back(touch);
+                        activeTouches.erase(pointerId);
+                        activeTouches.insert(std::make_pair(pointerId, touch));
+                        // CI_LOGI("Pointer id %d move x %f y %f", pointerId, x, y);
+                    }
+                }
+            }
+            else if (action == AMOTION_EVENT_ACTION_UP || action == AMOTION_EVENT_ACTION_POINTER_UP) {
+                int pointerId = AMotionEvent_getPointerId(event, index);
+                float x = AMotionEvent_getX(event, index);
+                float y = AMotionEvent_getY(event, index);
+                touchesEnded.push_back(TouchEvent::Touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL));
+                activeTouches.erase(pointerId);
+                // CI_LOGI("Pointer id %d up x %f y %f", pointerId, x, y);
+            }
+
+            return 1;
+        }
+        else if (eventType == AINPUT_EVENT_TYPE_KEY) {
+            int32_t actionCode     = AKeyEvent_getAction(event);
+            int32_t keyCode        = AKeyEvent_getKeyCode(event);
+            int32_t metaState      = AKeyEvent_getMetaState(event);
+            unsigned int modifiers = 0;
+
+            if (metaState & AMETA_SHIFT_ON)
+                modifiers |= KeyEvent::SHIFT_DOWN;
+            if (metaState & AMETA_SYM_ON) {
+                modifiers |= KeyEvent::CTRL_DOWN;
+                modifiers |= KeyEvent::META_DOWN;
+            }
+            if (metaState & AMETA_ALT_ON) {
+                modifiers |= KeyEvent::ALT_DOWN;
+            }
+
+            WindowRef window = cinderApp->getWindow();
+            KeyEvent kevent(window, keyCode, keyCode, (char) keyCode, modifiers, 0);
+
+            if (actionCode == AKEY_EVENT_ACTION_DOWN) {
+                window->emitKeyDown(&kevent);
+            }
+            else if (actionCode == AKEY_STATE_UP) {
+                window->emitKeyUp(&kevent);
+            }
+        }
+
+        return 0;
+    }
+
+    void updateInput() 
+    {
+        if (cinderApp->getSettings().isMultiTouchEnabled()) {
+            updateMultiTouches();
+        }
+        else {
+            updateSingleTouch();
+        }
+    }
+
+    void updateMultiTouches() 
+    {
+        AppAndroid& app = *cinderApp;
+        WindowRef window = app.getWindow();
+
+        if ( ! touchesBegan.empty() ) {
+            TouchEvent event(window, touchesBegan);
+            window->emitTouchesBegan(&event);
+            touchesBegan.clear();
+        }
+        if ( ! touchesMoved.empty() ) {
+            TouchEvent event(window, touchesMoved);
+            window->emitTouchesMoved(&event);
+            touchesMoved.clear();
+        }
+        if ( ! touchesEnded.empty() ) {
+            TouchEvent event(window, touchesEnded);
+            window->emitTouchesEnded(&event);
+            touchesEnded.clear();
+        }
+
+        //  set active touches
+        vector<ci::app::TouchEvent::Touch> activeList;
+        auto& activeMap = activeTouches;
+        for (auto it = activeMap.begin(); it != activeMap.end(); ++it) {
+           activeList.push_back(it->second);
+        }
+        app.privateSetActiveTouches__(activeList);
+    }
+
+    void updateSingleTouch() 
+    {
+        const float contentScale = 1.0f;
+
+        using cinder::app::MouseEvent;
+
+        //  Mouse emulation if multi-touch is disabled
+        AppAndroid& app = *cinderApp;
+        for ( TouchEvent::Touch& touch : touchesBegan ) {
+            ci::Vec2f pt = touch.getPos();
+            uint32_t mods = 0;
+            mods |= cinder::app::MouseEvent::LEFT_DOWN;
+            MouseEvent event( app.getWindow(), MouseEvent::LEFT_DOWN, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
+            app.getWindow()->emitMouseDown( &event );
+        }
+        touchesBegan.clear();
+        for ( TouchEvent::Touch& touch : touchesMoved ) {
+            ci::Vec2f pt = touch.getPos();
+            uint32_t mods = 0;
+            mods |= cinder::app::MouseEvent::LEFT_DOWN;
+            MouseEvent event( app.getWindow(), 0, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
+            app.getWindow()->emitMouseDrag( &event );
+        }
+        touchesMoved.clear();
+        for ( TouchEvent::Touch& touch : touchesEnded ) {
+            ci::Vec2f pt = touch.getPos();
+            int mods = 0;
+            mods |= cinder::app::MouseEvent::LEFT_DOWN;
+            MouseEvent event( app.getWindow(), MouseEvent::LEFT_DOWN, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
+            app.getWindow()->emitMouseUp( &event );
+        }
+        touchesEnded.clear();
+    }
+};
+
+}  // anonymous namespace
+
 
 /**
  * Shared state for our app, platform specifics
@@ -55,23 +225,14 @@ class AppAndroidImpl
         ACTIVITY_DESTROY
     };
 
-    struct TouchState {
-        vector<TouchEvent::Touch> touchesBegan;
-        vector<TouchEvent::Touch> touchesMoved;
-        vector<TouchEvent::Touch> touchesEnded;
-
-        map<int32_t, TouchEvent::Touch> activeTouches;
-    };
-
     ci::app::AppAndroid* cinderApp;
     struct android_app*  androidApp;
+    InputState           inputState;
 
     ASensorManager*    sensorManager;
     ASensorEventQueue* sensorEventQueue;
 
     int animating;
-
-    TouchState* touchState;
 
     ActivityState activityState;
 
@@ -83,7 +244,7 @@ class AppAndroidImpl
     static int32_t onInput(struct android_app* app, AInputEvent* event)
     {
         AppAndroidImpl *impl = static_cast<AppAndroidImpl *>(app->userData);
-        return impl->handleInput(event);
+        return impl->inputState.handleInput(event);
     }
 
     static void onCmd(struct android_app* app, int32_t cmd)
@@ -103,11 +264,14 @@ class AppAndroidImpl
 
   public:
     AppAndroidImpl(ci::app::AppAndroid* cinderApp, struct android_app* androidApp)
-        : cinderApp(cinderApp), androidApp(androidApp)
+        : cinderApp(cinderApp), androidApp(androidApp),
+          renewContext(true), setupCompleted(false), resumed(false)
     {
-        touchState   = new TouchState;
-        accelEnabled = false;
-        vm           = androidApp->activity->vm;
+        inputState.cinderApp = cinderApp;
+
+        accelEnabled   = false;
+        vm             = androidApp->activity->vm;
+        savedState     = NULL;
 
         JNIEnv* env;
         vm->AttachCurrentThread(&env, NULL);
@@ -115,11 +279,6 @@ class AppAndroidImpl
         pthread_key_t key;
         pthread_key_create(&key, AppAndroidImpl::onThreadEnded);
         pthread_setspecific(key, vm);
-
-        savedState     = NULL;
-        setupCompleted = false;
-        resumed        = false;
-        renewContext   = true;
 
         androidApp->userData     = this;
         androidApp->onAppCmd     = AppAndroidImpl::onCmd;
@@ -175,15 +334,15 @@ class AppAndroidImpl
             // Check if we are exiting.
             if (androidApp->destroyRequested != 0) {
                 animating = 0;
-                if (cinderApp->getRenderer()) {
-                    cinderApp->getRenderer()->teardown();
+                if (auto renderer = cinderApp->getRenderer()) {
+                    renderer->teardown();
                 }
                 return false;
             }
         }
 
         //  Update engine touch state
-        updateTouches();
+        inputState.updateInput();
 
         if (animating) {
             // Drawing is throttled to the screen update rate, so there
@@ -192,18 +351,6 @@ class AppAndroidImpl
         }
 
         return true;
-    }
-
-    void logState()
-    {
-        static const char* activityStates[] = {
-            "Start",
-            "Resume",
-            "Pause",
-            "Stop",
-            "Destroy"
-        };
-        CI_LOGD("Engine activity state: %s", activityStates[activityState]);
     }
 
     void drawFrame()
@@ -227,140 +374,6 @@ class AppAndroidImpl
         renderer->finishDraw();
     }
 
-    int32_t handleInput(AInputEvent* event)
-    {
-        int32_t eventType = AInputEvent_getType(event);
-
-        if (eventType == AINPUT_EVENT_TYPE_MOTION) {
-            int32_t actionCode = AMotionEvent_getAction(event);
-            int action = actionCode & AMOTION_EVENT_ACTION_MASK;
-            int index  = (actionCode & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK) >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-            const char* actionName = (action >= 0 && action <= 6) ? actionNames[action] : "UNKNOWN";
-            // CI_LOGI("Received touch action %s pointer index %d", actionName, index);
-
-            double timestamp = cinderApp->getElapsedSeconds();
-            if (action == AMOTION_EVENT_ACTION_DOWN || action == AMOTION_EVENT_ACTION_POINTER_DOWN) {
-                int pointerId = AMotionEvent_getPointerId(event, index);
-                float x = AMotionEvent_getX(event, index);
-                float y = AMotionEvent_getY(event, index);
-                TouchEvent::Touch touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL);
-                touchState->touchesBegan.push_back(touch);
-                touchState->activeTouches.insert(std::make_pair(pointerId, touch));
-
-                // CI_LOGI("Pointer id %d down x %f y %f", pointerId, x, y);
-            }
-            else if (action == AMOTION_EVENT_ACTION_MOVE) {
-                int pointerCount = AMotionEvent_getPointerCount(event);
-
-                for (int i=0; i < pointerCount; ++i) {
-                    int pointerId = AMotionEvent_getPointerId(event, i);
-                    float x = AMotionEvent_getX(event, i);
-                    float y = AMotionEvent_getY(event, i);
-                    map<int, TouchEvent::Touch>::iterator it = touchState->activeTouches.find(pointerId);
-                    if (it != touchState->activeTouches.end()) {
-                        TouchEvent::Touch& prevTouch = it->second;
-                        TouchEvent::Touch touch(ci::Vec2f(x, y), prevTouch.getPos(), pointerId, timestamp, NULL);
-                        touchState->touchesMoved.push_back(touch);
-                        touchState->activeTouches.erase(pointerId);
-                        touchState->activeTouches.insert(std::make_pair(pointerId, touch));
-                        // CI_LOGI("Pointer id %d move x %f y %f", pointerId, x, y);
-                    }
-                }
-            }
-            else if (action == AMOTION_EVENT_ACTION_UP || action == AMOTION_EVENT_ACTION_POINTER_UP) {
-                int pointerId = AMotionEvent_getPointerId(event, index);
-                float x = AMotionEvent_getX(event, index);
-                float y = AMotionEvent_getY(event, index);
-                touchState->touchesEnded.push_back(TouchEvent::Touch(ci::Vec2f(x, y), ci::Vec2f(x, y), pointerId, timestamp, NULL));
-                touchState->activeTouches.erase(pointerId);
-                // CI_LOGI("Pointer id %d up x %f y %f", pointerId, x, y);
-            }
-
-            return 1;
-        }
-        else if (eventType == AINPUT_EVENT_TYPE_KEY) {
-            int32_t actionCode = AKeyEvent_getAction(event);
-            int32_t keyCode = AKeyEvent_getKeyCode(event);
-        }
-
-        return 0;
-    }
-
-    void updateTouches() 
-    {
-        if (cinderApp->getSettings().isMultiTouchEnabled()) {
-            updateMultiTouches();
-        }
-        else {
-            updateSingleTouch();
-        }
-    }
-
-    void updateMultiTouches() 
-    {
-        AppAndroid& app = *cinderApp;
-        if ( ! touchState->touchesBegan.empty() ) {
-            app.privateTouchesBegan__( ci::app::TouchEvent( app.getWindow(), touchState->touchesBegan ) );
-            touchState->touchesBegan.clear();
-        }
-        if ( ! touchState->touchesMoved.empty() ) {
-            app.privateTouchesMoved__( ci::app::TouchEvent( app.getWindow(), touchState->touchesMoved ) );
-            touchState->touchesMoved.clear();
-        }
-        if ( ! touchState->touchesEnded.empty() ) {
-            app.privateTouchesEnded__( ci::app::TouchEvent( app.getWindow(), touchState->touchesEnded ) );
-            touchState->touchesEnded.clear();
-        }
-
-        //  set active touches
-        vector<ci::app::TouchEvent::Touch> activeList;
-        auto& activeMap = touchState->activeTouches;
-        for (auto it = activeMap.begin(); it != activeMap.end(); ++it) {
-           activeList.push_back(it->second);
-        }
-        app.privateSetActiveTouches__(activeList);
-    }
-
-    void updateSingleTouch() 
-    {
-        const float contentScale = 1.0f;
-
-        using cinder::app::MouseEvent;
-
-        //  Mouse emulation if multi-touch is disabled
-        AppAndroid& app = *cinderApp;
-        if ( ! touchState->touchesBegan.empty() ) {
-            for (vector<TouchEvent::Touch>::iterator it = touchState->touchesBegan.begin(); it != touchState->touchesBegan.end(); ++it) {
-                ci::Vec2f pt = it->getPos();
-                uint32_t mods = 0;
-                mods |= cinder::app::MouseEvent::LEFT_DOWN;
-                MouseEvent event( app.getWindow(), MouseEvent::LEFT_DOWN, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
-                app.getWindow()->emitMouseDown( &event );
-            }
-            touchState->touchesBegan.clear();
-        }
-        if ( ! touchState->touchesMoved.empty() ) {
-            for (vector<TouchEvent::Touch>::iterator it = touchState->touchesMoved.begin(); it != touchState->touchesMoved.end(); ++it) {
-                ci::Vec2f pt = it->getPos();
-                uint32_t mods = 0;
-                mods |= cinder::app::MouseEvent::LEFT_DOWN;
-                MouseEvent event( app.getWindow(), 0, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
-                app.getWindow()->emitMouseDrag( &event );
-            }
-            touchState->touchesMoved.clear();
-        }
-        if ( ! touchState->touchesEnded.empty() ) {
-            for (vector<TouchEvent::Touch>::iterator it = touchState->touchesEnded.begin(); it != touchState->touchesEnded.end(); ++it) {
-                ci::Vec2f pt = it->getPos();
-                int mods = 0;
-                mods |= cinder::app::MouseEvent::LEFT_DOWN;
-                MouseEvent event( app.getWindow(), MouseEvent::LEFT_DOWN, int(pt.x * contentScale), int(pt.y * contentScale), mods, 0.0f, 0 );
-                app.getWindow()->emitMouseUp( &event );
-            }
-            touchState->touchesEnded.clear();
-        }
-    }
-
     void enableAccelerometer()
     {
         if (accelerometerSensor != NULL) {
@@ -377,17 +390,23 @@ class AppAndroidImpl
         }
     }
 
+#if defined( NDEBUG )
+    #define LOG_STATE 
+#else
+    #define LOG_STATE logState()
+#endif
+
     void handleCmd(int32_t cmd)
     {
         switch (cmd) {
 
         case APP_CMD_SAVE_STATE:
-            // logState();
+            LOG_STATE
             cinderApp->setSavedState(&(androidApp->savedState), &(androidApp->savedStateSize));
             break;
 
         case APP_CMD_INIT_WINDOW:
-            // logState();
+            LOG_STATE
             // The window is being shown, get it ready.
             if (androidApp->window != NULL) {
                 //  Create default window & renderer
@@ -410,16 +429,16 @@ class AppAndroidImpl
             break;
 
         case APP_CMD_TERM_WINDOW:
-            // logState();
+            LOG_STATE
             // The window is being hidden or closed, clean it up.
             animating = 0;
-            if (cinderApp->getRenderer()) {
-                cinderApp->getRenderer()->teardown();
+            if (auto renderer = cinderApp->getRenderer()) {
+                renderer->teardown();
             }
             break;
 
         case APP_CMD_GAINED_FOCUS:
-            // logState();
+            LOG_STATE
 
             // Start monitoring the accelerometer.
             // if (accelerometerSensor != NULL && accelEnabled) {
@@ -448,7 +467,7 @@ class AppAndroidImpl
             break;
 
         case APP_CMD_LOST_FOCUS:
-            // logState();
+            LOG_STATE
             //  Disable accelerometer (saves power)
             disableAccelerometer();
             animating = 0;
@@ -457,12 +476,12 @@ class AppAndroidImpl
 
         case APP_CMD_RESUME:
             activityState = ACTIVITY_RESUME;
-            // logState();
+            LOG_STATE
             break;
         
         case APP_CMD_START:
             activityState = ACTIVITY_START;
-            // logState();
+            LOG_STATE
             break;
 
         case APP_CMD_PAUSE:
@@ -471,25 +490,37 @@ class AppAndroidImpl
             animating = 0;
             resumed = true;
             drawFrame();
-            // logState();
+            LOG_STATE
             break;
 
         case APP_CMD_STOP:
             activityState = ACTIVITY_STOP;
-            // logState();
+            LOG_STATE
             break;
 
         case APP_CMD_DESTROY:
             //  app has been destroyed, will crash if we attempt to do anything else
             activityState = ACTIVITY_DESTROY;
             cinderApp->privateDestroy__();
-            // logState();
+            LOG_STATE
             break;
 
         case APP_CMD_CONFIG_CHANGED:
             orientation = cinderApp->orientationFromConfig();
             break;
         }
+    }
+
+    void logState()
+    {
+        static const char* activityStates[] = {
+            "Start",
+            "Resume",
+            "Pause",
+            "Stop",
+            "Destroy"
+        };
+        CI_LOGD("Engine activity state: %s", activityStates[activityState]);
     }
 };
 
@@ -637,9 +668,6 @@ WindowRef AppAndroid::createWindow( Window::Format format )
         return getWindow();
 
     if( ! format.getRenderer() ) {
-        // RendererRef defRenderer = getDefaultRenderer();
-        // RendererRef renderer = getDefaultRenderer()->clone();
-        // format.setRenderer( renderer );
         format.setRenderer( getDefaultRenderer()->clone() );
     }
 
@@ -649,7 +677,7 @@ WindowRef AppAndroid::createWindow( Window::Format format )
 
     // XXX ??? emit initial resize if we have fired setup
     // if ( mSetupHasBeenCalled )
-    // mWindows.back()->getWindow()->emitResize();
+    //     mWindows.back()->getWindow()->emitResize();
 
     return mWindows.front()->getWindow();
 }

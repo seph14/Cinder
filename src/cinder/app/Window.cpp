@@ -379,6 +379,8 @@ const std::vector<TouchEvent::Touch>& Window::getActiveTouches() const
 	return [mImpl getActiveTouches];
 #elif defined( CINDER_MSW )
 	return mImpl->getActiveTouches();
+#elif defined( CINDER_ANDROID )
+    return mImpl->getActiveTouches();
 #endif
 }
 
