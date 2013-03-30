@@ -127,7 +127,6 @@ class AppAndroidImpl
 
         if (androidApp->savedState != NULL) {
             // We are starting with a previous saved state; restore from it.
-            CI_LOGW("XXX android_run RESTORING SAVED STATE");
             savedState = androidApp->savedState;
             // XXX currently restores via setup(), possibly better to use resume()?
             // engine.resumed = true;
@@ -213,7 +212,7 @@ class AppAndroidImpl
         ci::app::RendererRef renderer = cinderApp->getRenderer();
 
         if (!renderer || !renderer->isValidDisplay()) {
-            CI_LOGE("XXX NO VALID DISPLAY, SKIPPING RENDER");
+            CI_LOGW("No valid display, skipping render");
             // No display.
             return;
         }
@@ -400,7 +399,6 @@ class AppAndroidImpl
 
                 orientation = cinderApp->orientationFromConfig();
                 // cinderRenderer->setup(cinderApp, androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
-                CI_LOGD("XXX setup renderer");
                 cinderApp->getRenderer()->setup(cinderApp, androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
                 cinderApp->updateWindowSizes();
                 cinderApp->privatePrepareSettings__();
@@ -430,25 +428,22 @@ class AppAndroidImpl
 
             if (!setupCompleted) {
                 if (resumed) {
-                    CI_LOGD("XXXXXX RESUMING privateResume__ renew context %s", renewContext ? "true" : "false");
+                    // CI_LOGD("XXXXXX RESUMING privateResume__ renew context %s", renewContext ? "true" : "false");
                     cinderApp->privateResume__(renewContext);
                 }
                 else {
-                    CI_LOGD("XXXXXX SETUP privateSetup__");
+                    // CI_LOGD("XXXXXX SETUP privateSetup__");
                     cinderApp->privateSetup__();
                 }
                 // cinderApp->privateResize__(ci::Vec2i( cinderApp->mWidth, cinderApp->mHeight ));
-                CI_LOGD("XXX APP_CMD_GAINED_FOCUS");
                 cinderApp->getWindow()->emitResize();
                 setupCompleted = true;
                 renewContext   = false;
                 resumed        = false;
 
-                CI_LOGD("XXX APP_CMD_GAINED_FOCUS drawFrame");
                 drawFrame();
             }
 
-            CI_LOGD("XXX APP_CMD_GAINED_FOCUS DONE");
             animating = 1;
             break;
 
@@ -544,7 +539,7 @@ AppAndroid::AppAndroid()
 
 AppAndroid::~AppAndroid()
 {
-    CI_LOGW("~AppAndroid()");
+    CI_LOGD("~AppAndroid()");
     JNIEnv* env = getJNIEnv();
     env->DeleteGlobalRef(mClassLoader);
 }
@@ -834,9 +829,7 @@ WindowRef AppAndroid::getWindowIndex( size_t index ) const
 DataSourceAssetRef AppAndroid::loadResource(const std::string &resourcePath)
 {
     AppAndroid* cinderApp = AppAndroid::get();
-    CI_LOGW("cinderApp %p", cinderApp);
     if (cinderApp) {
-        CI_LOGW("loading via manager");
         AAssetManager* mgr = cinderApp->mAndroidApp->activity->assetManager;
         return DataSourceAsset::create(mgr, resourcePath);
     }
