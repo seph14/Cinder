@@ -140,11 +140,6 @@ class AppAndroid : public App
     {
         App::sInstance = sInstance = app;
         App::executeLaunch(app, defaultRenderer, title, 0, NULL);
-
-        // app->mDefaultRenderer = defaultRenderer;
-        // CI_LOGD("Execute launch, renderer %p", defaultRenderer.get());
-        // app->setAndroidImpl(androidApp);
-        // App::executeLaunch(app, defaultRenderer, title, 0, NULL );
     }
     static void		cleanupLaunch() { App::cleanupLaunch(); }
 
