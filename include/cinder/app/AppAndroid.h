@@ -166,7 +166,7 @@ class AppAndroid : public App
     //! \endcond
     //
 
-    public:
+  public:
     //  JNI helpers for calling Java methods
     JavaVM* getJavaVM();
     JNIEnv* getJNIEnv();
@@ -174,12 +174,13 @@ class AppAndroid : public App
     jclass  findClass(const char* className);
     jobject getActivity();
 
-    protected:
+  protected:
+    //  Move these into AppAndroidImpl
     void initJNI();
     jobject   mClassLoader;
     jmethodID mFindClassMID;
 
-    protected:
+  protected:
     //  shared with internal classes
     friend class AppAndroidImpl;
     friend class WindowImplAndroid;
@@ -196,7 +197,7 @@ class AppAndroid : public App
     //  XXX creates and sets up single active window, consolidate with setup code
     void                preSetup();
 
-    private:
+  private:
     AppAndroidImpl* mImpl;
 
     static AppAndroid *sInstance;
@@ -214,7 +215,7 @@ class AppAndroid : public App
     std::list<class WindowImplAndroid*>	mWindows;
     WindowRef mActiveWindow;
 
-    public:
+  public:
     static DataSourceAssetRef loadResource(const std::string &resourcePath);
 
     //! Return true if a given resource is found
