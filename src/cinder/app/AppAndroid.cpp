@@ -38,8 +38,9 @@ class AppAndroidImpl
     //  accelerometer
     bool  accelEnabled;
     float accelUpdateFrequency;
-    const ASensor*     accelerometerSensor;
+    const ASensor* accelerometerSensor;
 
+    //  orientation
     Orientation_t orientation;
 
     //  JNI access helpers
@@ -79,19 +80,19 @@ class AppAndroidImpl
     bool resumed;
 
   public:
-    static int32_t engine_handle_input(struct android_app* app, AInputEvent* event)
+    static int32_t onInput(struct android_app* app, AInputEvent* event)
     {
         AppAndroidImpl *impl = static_cast<AppAndroidImpl *>(app->userData);
         return impl->handleInput(event);
     }
 
-    static void engine_handle_cmd(struct android_app* app, int32_t cmd)
+    static void onCmd(struct android_app* app, int32_t cmd)
     {
         AppAndroidImpl *impl = static_cast<AppAndroidImpl *>(app->userData);
         impl->handleCmd(cmd);
     }
 
-    static void android_ended(void* ptr)
+    static void onThreadEnded(void* ptr)
     {
         if (ptr) {
             // CI_LOGD("XXX Detach native thread");
@@ -99,17 +100,6 @@ class AppAndroidImpl
             vm->DetachCurrentThread();
         }
     }
-
-// void log_engine_state(struct engine* engine) {
-//     static const char* activityStates[] = {
-//         "Start",
-//         "Resume",
-//         "Pause",
-//         "Stop",
-//         "Destroy"
-//     };
-//     CI_LOGD("Engine activity state: %s", activityStates[engine->activityState]);
-// }
 
   public:
     AppAndroidImpl(ci::app::AppAndroid* cinderApp, struct android_app* androidApp)
@@ -123,7 +113,7 @@ class AppAndroidImpl
         vm->AttachCurrentThread(&env, NULL);
 
         pthread_key_t key;
-        pthread_key_create(&key, AppAndroidImpl::android_ended);
+        pthread_key_create(&key, AppAndroidImpl::onThreadEnded);
         pthread_setspecific(key, vm);
 
         savedState     = NULL;
@@ -132,8 +122,8 @@ class AppAndroidImpl
         renewContext   = true;
 
         androidApp->userData     = this;
-        androidApp->onAppCmd     = AppAndroidImpl::engine_handle_cmd;
-        androidApp->onInputEvent = AppAndroidImpl::engine_handle_input;
+        androidApp->onAppCmd     = AppAndroidImpl::onCmd;
+        androidApp->onInputEvent = AppAndroidImpl::onInput;
 
         if (androidApp->savedState != NULL) {
             // We are starting with a previous saved state; restore from it.
@@ -153,7 +143,7 @@ class AppAndroidImpl
         animating = 0;
     }
 
-    int32_t eventLoop()
+    bool eventLoop()
     {
         // Read all pending events.
         int ident;
@@ -189,7 +179,7 @@ class AppAndroidImpl
                 if (cinderApp->getRenderer()) {
                     cinderApp->getRenderer()->teardown();
                 }
-                return 0;
+                return false;
             }
         }
 
@@ -202,7 +192,19 @@ class AppAndroidImpl
             drawFrame();
         }
 
-        return 1;
+        return true;
+    }
+
+    void logState()
+    {
+        static const char* activityStates[] = {
+            "Start",
+            "Resume",
+            "Pause",
+            "Stop",
+            "Destroy"
+        };
+        CI_LOGD("Engine activity state: %s", activityStates[activityState]);
     }
 
     void drawFrame()
@@ -381,12 +383,12 @@ class AppAndroidImpl
         switch (cmd) {
 
         case APP_CMD_SAVE_STATE:
-            // log_engine_state(engine);
+            // logState();
             cinderApp->setSavedState(&(androidApp->savedState), &(androidApp->savedStateSize));
             break;
 
         case APP_CMD_INIT_WINDOW:
-            // log_engine_state(engine);
+            // logState();
             // The window is being shown, get it ready.
             if (androidApp->window != NULL) {
                 //  Create default window & renderer
@@ -410,7 +412,7 @@ class AppAndroidImpl
             break;
 
         case APP_CMD_TERM_WINDOW:
-            // log_engine_state(engine);
+            // logState();
             // The window is being hidden or closed, clean it up.
             animating = 0;
             if (cinderApp->getRenderer()) {
@@ -419,7 +421,7 @@ class AppAndroidImpl
             break;
 
         case APP_CMD_GAINED_FOCUS:
-            // log_engine_state(engine);
+            // logState();
 
             // Start monitoring the accelerometer.
             // if (accelerometerSensor != NULL && accelEnabled) {
@@ -451,7 +453,7 @@ class AppAndroidImpl
             break;
 
         case APP_CMD_LOST_FOCUS:
-            // log_engine_state(engine);
+            // logState();
             //  Disable accelerometer (saves power)
             disableAccelerometer();
             animating = 0;
@@ -460,12 +462,12 @@ class AppAndroidImpl
 
         case APP_CMD_RESUME:
             activityState = ACTIVITY_RESUME;
-            // log_engine_state(engine);
+            // logState();
             break;
         
         case APP_CMD_START:
             activityState = ACTIVITY_START;
-            // log_engine_state(engine);
+            // logState();
             break;
 
         case APP_CMD_PAUSE:
@@ -474,19 +476,19 @@ class AppAndroidImpl
             animating = 0;
             resumed = true;
             drawFrame();
-            // log_engine_state(engine);
+            // logState();
             break;
 
         case APP_CMD_STOP:
             activityState = ACTIVITY_STOP;
-            // log_engine_state(engine);
+            // logState();
             break;
 
         case APP_CMD_DESTROY:
             //  app has been destroyed, will crash if we attempt to do anything else
             activityState = ACTIVITY_DESTROY;
             cinderApp->privateDestroy__();
-            // log_engine_state(engine);
+            // logState();
             break;
 
         case APP_CMD_CONFIG_CHANGED:
@@ -504,13 +506,13 @@ AppAndroid* AppAndroid::sInstance;
 WindowImplAndroid::WindowImplAndroid( const Window::Format &format, RendererRef sharedRenderer, AppAndroid *appImpl )
     : mAppImpl( appImpl ), mNativeWindow( NULL ), mWindowWidth(0), mWindowHeight(0)
 {
-	mFullScreen   = format.isFullScreen();
-	mDisplay      = format.getDisplay();
-	mRenderer     = format.getRenderer();
-	mResizable    = format.isResizable();
-	mAlwaysOnTop  = format.isAlwaysOnTop();
-	mBorderless   = format.isBorderless();
-	// mWindowedSize = format.getSize();
+    mFullScreen   = format.isFullScreen();
+    mDisplay      = format.getDisplay();
+    mRenderer     = format.getRenderer();
+    mResizable    = format.isResizable();
+    mAlwaysOnTop  = format.isAlwaysOnTop();
+    mBorderless   = format.isBorderless();
+    // mWindowedSize = format.getSize();
     mWindowRef    = Window::privateCreate__( this, mAppImpl );
     mNativeWindow = appImpl->mAndroidApp->window;
 }
@@ -639,22 +641,22 @@ WindowRef AppAndroid::createWindow( Window::Format format )
     if( ! mWindows.empty() )
         return getWindow();
 
-	if( ! format.getRenderer() ) {
+    if( ! format.getRenderer() ) {
         // RendererRef defRenderer = getDefaultRenderer();
         // RendererRef renderer = getDefaultRenderer()->clone();
         // format.setRenderer( renderer );
-		format.setRenderer( getDefaultRenderer()->clone() );
+        format.setRenderer( getDefaultRenderer()->clone() );
     }
 
     // XXX ???
-	// mWindows.push_back( new WindowImplAndroid( format, findSharedRenderer( format.getRenderer() ), this ) );
-	mWindows.push_back( new WindowImplAndroid( format, format.getRenderer(), this ) );
+    // mWindows.push_back( new WindowImplAndroid( format, findSharedRenderer( format.getRenderer() ), this ) );
+    mWindows.push_back( new WindowImplAndroid( format, format.getRenderer(), this ) );
 
-	// XXX ??? emit initial resize if we have fired setup
-	// if ( mSetupHasBeenCalled )
-	// 	mWindows.back()->getWindow()->emitResize();
+    // XXX ??? emit initial resize if we have fired setup
+    // if ( mSetupHasBeenCalled )
+    // mWindows.back()->getWindow()->emitResize();
 
-	return mWindows.front()->getWindow();
+    return mWindows.front()->getWindow();
 }
 
 
@@ -752,21 +754,21 @@ void AppAndroid::privateDestroy__()
 void AppAndroid::privateTouchesBegan__( const TouchEvent &event )
 {
     bool handled = false;
-    if( ! handled )	
+    if( ! handled )
         touchesBegan( event );
 }
 
 void AppAndroid::privateTouchesMoved__( const TouchEvent &event )
-{	
+{
     bool handled = false;
-    if( ! handled )	
+    if( ! handled )
         touchesMoved( event );
 }
 
 void AppAndroid::privateTouchesEnded__( const TouchEvent &event )
-{	
+{
     bool handled = false;
-    if( ! handled )	
+    if( ! handled )
         touchesEnded( event );
 }
 
@@ -778,8 +780,8 @@ void AppAndroid::privateTouchesEnded__( const TouchEvent &event )
 // 
 //     bool handled = false;
 //     for( CallbackMgr<bool (AccelEvent)>::iterator cbIter = mCallbacksAccelerated.begin(); ( cbIter != mCallbacksAccelerated.end() ) && ( ! handled ); ++cbIter )
-//         handled = (cbIter->second)( event );		
-//     if( ! handled )	
+//         handled = (cbIter->second)( event );
+//     if( ! handled )
 //         accelerated( event );
 // 
 //     mLastAccel = filtered;
