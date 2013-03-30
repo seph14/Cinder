@@ -48,6 +48,7 @@ const char* EGLErrorString()
 AppImplAndroidRendererGl::AppImplAndroidRendererGl( App *aApp, struct android_app *androidApp )
 	: mApp(aApp), mAndroidApp(androidApp)
 {
+    CI_LOGD("XXX AppImplAndroidRendererGl ctor");
 }
 
 void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
@@ -73,11 +74,13 @@ void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
     CI_LOGD("AppImplAndroidRendererGl::initialize() 2");
     mDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 
+    CI_LOGD("AppImplAndroidRendererGl::initialize() 2b %d", mDisplay);
     eglInitialize(mDisplay, 0, 0);
 
     CI_LOGD("AppImplAndroidRendererGl::initialize() 3");
     eglChooseConfig(mDisplay, attribs, &config, 1, &numConfigs);
 
+    CI_LOGD("AppImplAndroidRendererGl::initialize() 3b %d, %p / %p", mDisplay, mAndroidApp, mAndroidApp->window);
     eglGetConfigAttrib(mDisplay, config, EGL_NATIVE_VISUAL_ID, &format);
     ANativeWindow_setBuffersGeometry(mAndroidApp->window, 0, 0, format);
 
@@ -123,6 +126,7 @@ void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
 
 void AppImplAndroidRendererGl::makeCurrentContext()
 {
+    CI_LOGD("XXX makeCurrentContext()");
     if (eglMakeCurrent(mDisplay, mSurface, mSurface, mContext) == EGL_FALSE) {
         CI_LOGE("makeCurrentContext(): Unable to eglMakeCurrent");
     }

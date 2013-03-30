@@ -76,6 +76,8 @@ RendererGl::RendererGl( const RendererGl &renderer )
 #elif defined( CINDER_MSW )
 	mImpl = 0;
 	mWnd = renderer.mWnd;
+#elif defined( CINDER_ANDROID )
+    mImpl = 0;
 #endif
 }
 
@@ -287,8 +289,12 @@ void RendererGl::setup( App *aApp, struct android_app *androidApp, int32_t* widt
     CI_LOGW("RendererGl::setup()");
     mApp = aApp;
 
-    if ( !mImpl )
+    if ( !mImpl ) {
         mImpl = new AppImplAndroidRendererGl(mApp, androidApp);
+    }
+    else {
+        CI_LOGW("Skipping renderer creation");
+    }
 
     CI_LOGD("Initializing with ANativeWindow %p", androidApp->window);
     mImpl->initialize( width, height );

@@ -10,11 +10,12 @@
 #include <time.h>
 
 struct android_app;
-struct engine;
+// struct engine;
 
 namespace cinder { namespace app {
 
 class AppAndroid;
+class AppAndroidImpl;
 
 enum Orientation_t
 {
@@ -140,7 +141,7 @@ class AppAndroid : public App
 	//! Returns the path to the application on disk
 	virtual fs::path	getAppPath();
 
-	//! Ceases execution of the application. Not implemented yet on iPhone
+	//! Ceases execution of the application. Not implemented yet on Android
 	virtual void	quit();
 
 	//! Returns a pointer to the current global AppAndroid
@@ -155,7 +156,7 @@ class AppAndroid : public App
     virtual size_t getNumWindows() const;
 	virtual WindowRef getWindowIndex( size_t index ) const;
 
-    void setAndroidImpl( struct android_app* androidApp );
+    void setNativeAndroidState( struct android_app* androidApp );
 
 	//! \cond
 	// These are called by application instantation macros and are only used in the launch process
@@ -214,7 +215,8 @@ class AppAndroid : public App
     int32_t mWidth;
     int32_t mHeight;
 
-	struct engine* mEngine;
+	// struct engine* mEngine;
+    AppAndroidImpl* mEngine;
 	
 	Orientation_t orientationFromConfig();
 
@@ -323,7 +325,7 @@ class WindowImplAndroid
 extern "C" {                                                                \
   void android_main( struct android_app* state ) {                          \
     cinder::app::AppAndroid *app = new APP;                                 \
-    app->setAndroidImpl(state);                                             \
+    app->setNativeAndroidState(state);                                      \
     cinder::app::RendererRef ren( new RENDERER );                           \
     cinder::app::AppAndroid::executeLaunch( app, ren, #APP );               \
     cinder::app::AppAndroid::cleanupLaunch();                               \
