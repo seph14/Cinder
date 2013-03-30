@@ -79,30 +79,6 @@ class AppAndroid : public App
 	// virtual void		accelerated( AccelEvent event ) {}
 
     /*
-	//! Registers a callback for touchesBegan events. Returns a unique identifier which can be used as a parameter to unregisterTouchesBegan().
-	CallbackId		registerTouchesBegan( std::function<bool (TouchEvent)> callback ) { return mCallbacksTouchesBegan.registerCb( callback ); }
-	//! Registers a callback for touchesBegan events. Returns a unique identifier which can be used as a parameter to unregisterTouchesBegan().
-	template<typename T>
-	CallbackId		registerTouchesBegan( T *obj, bool (T::*callback)(TouchEvent) ) { return mCallbacksTouchesBegan.registerCb( std::bind1st( std::mem_fun( callback ), obj ) ); }
-	//! Unregisters a callback for touchesBegan events.
-	void			unregisterTouchesBegan( CallbackId id ) { mCallbacksTouchesBegan.unregisterCb( id ); }
-
-	//! Registers a callback for touchesMoved events. Returns a unique identifier which can be used as a parameter to unregisterTouchesMoved().
-	CallbackId		registerTouchesMoved( std::function<bool (TouchEvent)> callback ) { return mCallbacksTouchesMoved.registerCb( callback ); }
-	//! Registers a callback for touchesMoved events. Returns a unique identifier which can be used as a parameter to unregisterTouchesMoved().
-	template<typename T>
-	CallbackId		registerTouchesMoved( T *obj, bool (T::*callback)(TouchEvent) ) { return mCallbacksTouchesMoved.registerCb( std::bind1st( std::mem_fun( callback ), obj ) ); }
-	//! Unregisters a callback for touchesMoved events.
-	void			unregisterTouchesMoved( CallbackId id ) { mCallbacksTouchesMoved.unregisterCb( id ); }
-
-	//! Registers a callback for touchesEnded events. Returns a unique identifier which can be used as a parameter to unregisterTouchesEnded().
-	CallbackId		registerTouchesEnded( std::function<bool (TouchEvent)> callback ) { return mCallbacksTouchesEnded.registerCb( callback ); }
-	//! Registers a callback for touchesEnded events. Returns a unique identifier which can be used as a parameter to unregisterTouchesEnded().
-	template<typename T>
-	CallbackId		registerTouchesEnded( T *obj, bool (T::*callback)(TouchEvent) ) { return mCallbacksTouchesEnded.registerCb( std::bind1st( std::mem_fun( callback ), obj ) ); }
-	//! Unregisters a callback for touchesEnded events.
-	void			unregisterTouchesEnded( CallbackId id ) { mCallbacksTouchesEnded.unregisterCb( id ); }
-
 	//! Registers a callback for accelerated events. Returns a unique identifier which can be used as a parameter to unregisterAccelerated().
 	// CallbackId		registerAccelerated( std::function<bool (AccelEvent)> callback ) { return mCallbacksAccelerated.registerCb( callback ); }
 	// //! Registers a callback for touchesEnded events. Returns a unique identifier which can be used as a parameter to unregisterTouchesEnded().
@@ -205,25 +181,25 @@ class AppAndroid : public App
 	jobject   mClassLoader;
 	jmethodID mFindClassMID;
     
-  public:
-    //  XXX not really public - shared with internal engine static methods
+  protected:
+    //  shared with internal classes
+    friend class AppAndroidImpl;
+    friend class WindowImplAndroid;
 
 	//  Android Native Activity state
-	struct android_app*      mAndroidApp;
+	struct android_app* mAndroidApp;
 
     //  Window width, height
     int32_t mWidth;
     int32_t mHeight;
 
-	// struct engine* mEngine;
-    AppAndroidImpl* mEngine;
-	
 	Orientation_t orientationFromConfig();
 
     //  XXX creates and sets up single active window, consolidate with setup code
     void                preSetup();
 
   private:
+    AppAndroidImpl* mImpl;
 	
 	static AppAndroid		*sInstance;
 	Settings				 mSettings;

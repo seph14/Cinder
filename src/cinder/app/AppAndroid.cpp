@@ -28,7 +28,7 @@ static const char* actionNames[] = {
 };
 
 /**
- * Shared state for our app.
+ * Shared state for our app, platform specifics
  */
 class AppAndroidImpl
 {
@@ -81,7 +81,6 @@ class AppAndroidImpl
   public:
     static int32_t engine_handle_input(struct android_app* app, AInputEvent* event)
     {
-        CI_LOGD("XXX engine_handle_input");
         AppAndroidImpl *impl = static_cast<AppAndroidImpl *>(app->userData);
         return impl->handleInput(event);
     }
@@ -190,16 +189,12 @@ class AppAndroidImpl
                 if (cinderApp->getRenderer()) {
                     cinderApp->getRenderer()->teardown();
                 }
-                // if (engine.cinderRenderer) {
-                //     engine.cinderRenderer->teardown();
-                // }
                 return 0;
             }
         }
 
         //  Update engine touch state
         updateTouches();
-        // engine_update_touches(*cinderApp, engine.touchState);
 
         if (animating) {
             // Drawing is throttled to the screen update rate, so there
@@ -235,7 +230,6 @@ class AppAndroidImpl
     {
         int32_t eventType = AInputEvent_getType(event);
 
-        CI_LOGD("XXX handleInput()");
         if (eventType == AINPUT_EVENT_TYPE_MOTION) {
             int32_t actionCode = AMotionEvent_getAction(event);
             int action = actionCode & AMOTION_EVENT_ACTION_MASK;
@@ -419,11 +413,9 @@ class AppAndroidImpl
             // log_engine_state(engine);
             // The window is being hidden or closed, clean it up.
             animating = 0;
-            // cinderRenderer->teardown();
             if (cinderApp->getRenderer()) {
                 cinderApp->getRenderer()->teardown();
             }
-            // cinderRenderer->teardown();
             break;
 
         case APP_CMD_GAINED_FOCUS:
@@ -580,7 +572,7 @@ void AppAndroid::setSavedState(void** state, size_t* size)
 
 void* AppAndroid::getSavedState()
 {
-    return mEngine->savedState;
+    return mImpl->savedState;
 }
 
 fs::path AppAndroid::getInternalDataPath() const
@@ -611,15 +603,13 @@ void AppAndroid::setNativeAndroidState( struct android_app* androidApp )
 void AppAndroid::launch( const char *title, int argc, char * const argv[] )
 {
     clock_gettime(CLOCK_MONOTONIC, &mStartTime);
-    // android_run(this, mAndroidApp);
 
     app_dummy();
-    mEngine = new AppAndroidImpl(this, mAndroidApp);
-    CI_LOGD("Created AppAndroidImpl with AppAndroid %p AndroidApp %p engine %p", this, mAndroidApp, mEngine);
-    // mEngine = &engine;
-    // mAndroidApp = androidApp;
+    mImpl = new AppAndroidImpl(this, mAndroidApp);
 
-    while (mEngine->eventLoop()) ;
+    while (mImpl->eventLoop()) ;
+
+    //  delete mImpl;
 }
 
 int AppAndroid::getWindowDensity() const
@@ -650,10 +640,10 @@ WindowRef AppAndroid::createWindow( Window::Format format )
         return getWindow();
 
 	if( ! format.getRenderer() ) {
-        RendererRef defRenderer = getDefaultRenderer();
-        RendererRef renderer = getDefaultRenderer()->clone();
-        format.setRenderer( renderer );
-		// format.setRenderer( getDefaultRenderer()->clone() );
+        // RendererRef defRenderer = getDefaultRenderer();
+        // RendererRef renderer = getDefaultRenderer()->clone();
+        // format.setRenderer( renderer );
+		format.setRenderer( getDefaultRenderer()->clone() );
     }
 
     // XXX ???
@@ -671,25 +661,25 @@ WindowRef AppAndroid::createWindow( Window::Format format )
 //! Enables the accelerometer
 void AppAndroid::enableAccelerometer( float updateFrequency, float filterFactor )
 {
-    if ( mEngine->accelerometerSensor != NULL ) {
+    if ( mImpl->accelerometerSensor != NULL ) {
         mAccelFilterFactor = filterFactor;
 
         if( updateFrequency <= 0 )
             updateFrequency = 30.0f;
 
-        mEngine->accelUpdateFrequency = updateFrequency;
+        mImpl->accelUpdateFrequency = updateFrequency;
 
-        if ( !mEngine->accelEnabled )
-            mEngine->enableAccelerometer();
+        if ( !mImpl->accelEnabled )
+            mImpl->enableAccelerometer();
 
-        mEngine->accelEnabled = true;
+        mImpl->accelEnabled = true;
     }
 }
 
 void AppAndroid::disableAccelerometer() {
-    if ( mEngine->accelerometerSensor != NULL && mEngine->accelEnabled ) {
-        mEngine->accelEnabled = false;
-        mEngine->disableAccelerometer();
+    if ( mImpl->accelerometerSensor != NULL && mImpl->accelEnabled ) {
+        mImpl->accelEnabled = false;
+        mImpl->disableAccelerometer();
     }
 }
 
@@ -736,7 +726,7 @@ void AppAndroid::quit()
 
 Orientation_t AppAndroid::orientation()
 {
-    return mEngine->orientation;
+    return mImpl->orientation;
 }
 
 void AppAndroid::privatePrepareSettings__()
@@ -762,8 +752,6 @@ void AppAndroid::privateDestroy__()
 void AppAndroid::privateTouchesBegan__( const TouchEvent &event )
 {
     bool handled = false;
-    // for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesBegan.begin(); ( cbIter != mCallbacksTouchesBegan.end() ) && ( ! handled ); ++cbIter )
-    //     handled = (cbIter->second)( event );		
     if( ! handled )	
         touchesBegan( event );
 }
@@ -771,8 +759,6 @@ void AppAndroid::privateTouchesBegan__( const TouchEvent &event )
 void AppAndroid::privateTouchesMoved__( const TouchEvent &event )
 {	
     bool handled = false;
-    // for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesMoved.begin(); ( cbIter != mCallbacksTouchesMoved.end() ) && ( ! handled ); ++cbIter )
-    //     handled = (cbIter->second)( event );		
     if( ! handled )	
         touchesMoved( event );
 }
@@ -780,8 +766,6 @@ void AppAndroid::privateTouchesMoved__( const TouchEvent &event )
 void AppAndroid::privateTouchesEnded__( const TouchEvent &event )
 {	
     bool handled = false;
-    // for( CallbackMgr<bool (TouchEvent)>::iterator cbIter = mCallbacksTouchesEnded.begin(); ( cbIter != mCallbacksTouchesEnded.end() ) && ( ! handled ); ++cbIter )
-    //     handled = (cbIter->second)( event );		
     if( ! handled )	
         touchesEnded( event );
 }
@@ -935,13 +919,13 @@ void AppAndroid::copyResourceDir(const fs::path& assetPath, const fs::path& dest
 
 JavaVM* AppAndroid::getJavaVM()
 {
-    return mEngine->vm;
+    return mImpl->vm;
 }
 
 JNIEnv* AppAndroid::getJNIEnv()
 {
     JNIEnv* env = 0;
-    int err = mEngine->vm->GetEnv((void**) &env, JNI_VERSION_1_4);
+    int err = mImpl->vm->GetEnv((void**) &env, JNI_VERSION_1_4);
     if (err == JNI_EDETACHED) {
         CI_LOGE("getJNIEnv error: current thread not attached to Java VM");
     }
