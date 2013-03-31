@@ -43,6 +43,10 @@ class MotionImplAndroid
     void      setAccelFilter( float filtering ) { mAccelFilter = filtering; }
 
   private:
+    bool  accelEnabled;
+    //  accelerometer
+    // float accelUpdateFrequency;
+
 	MotionManager::SensorMode mSensorMode;
     app::AppAndroid*          mAppAndroid;
 

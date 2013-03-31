@@ -205,11 +205,6 @@ class AppAndroidImpl
   public:
     void* savedState;
 
-    //  accelerometer
-    bool  accelEnabled;
-    float accelUpdateFrequency;
-    const ASensor* accelerometerSensor;
-
     //  orientation
     Orientation_t orientation;
 
@@ -269,7 +264,6 @@ class AppAndroidImpl
     {
         inputState.cinderApp = cinderApp;
 
-        accelEnabled   = false;
         vm             = androidApp->activity->vm;
         savedState     = NULL;
 
@@ -291,13 +285,6 @@ class AppAndroidImpl
             // engine.resumed = true;
         }
 
-        // Prepare to monitor accelerometer
-        sensorManager = ASensorManager_getInstance();
-        accelerometerSensor = ASensorManager_getDefaultSensor(sensorManager,
-               ASENSOR_TYPE_ACCELEROMETER);
-        sensorEventQueue = ASensorManager_createEventQueue(sensorManager,
-                androidApp->looper, LOOPER_ID_USER, NULL, NULL);
-
         animating = 0;
     }
 
@@ -317,19 +304,7 @@ class AppAndroidImpl
                 source->process(androidApp, source);
             }
 
-            // If a sensor has data, process it now.
-            // if (ident == LOOPER_ID_USER) {
-            //     if (accelerometerSensor != NULL) {
-            //         ASensorEvent event;
-            //         while (ASensorEventQueue_getEvents(sensorEventQueue,
-            //                 &event, 1) > 0) {
-            //             const float kGravity = 1.0f / 9.80665f;
-            //             // cinderApp->privateAccelerated__(ci::Vec3f(-event.acceleration.x * kGravity, 
-            //             //                                            event.acceleration.y * kGravity, 
-            //             //                                            event.acceleration.z * kGravity));
-            //         }
-            //     }
-            // }
+            // XXX Emit event signal 
 
             // Check if we are exiting.
             if (androidApp->destroyRequested != 0) {
@@ -372,22 +347,6 @@ class AppAndroidImpl
         app.privateUpdate__();
         app.draw();
         renderer->finishDraw();
-    }
-
-    void enableAccelerometer()
-    {
-        if (accelerometerSensor != NULL) {
-            ASensorEventQueue_enableSensor(sensorEventQueue, accelerometerSensor);
-            ASensorEventQueue_setEventRate(sensorEventQueue,
-                accelerometerSensor, (1000L/accelUpdateFrequency)*1000);
-        }
-    }
-
-    void disableAccelerometer()
-    {
-        if (accelerometerSensor != NULL) {
-            ASensorEventQueue_disableSensor(sensorEventQueue, accelerometerSensor);
-        }
     }
 
 #if defined( NDEBUG )
@@ -440,10 +399,7 @@ class AppAndroidImpl
         case APP_CMD_GAINED_FOCUS:
             LOG_STATE
 
-            // Start monitoring the accelerometer.
-            // if (accelerometerSensor != NULL && accelEnabled) {
-            //     enableAccelerometer();
-            // }
+            // Emit gained focus
 
             if (!setupCompleted) {
                 if (resumed) {
@@ -468,8 +424,6 @@ class AppAndroidImpl
 
         case APP_CMD_LOST_FOCUS:
             LOG_STATE
-            //  Disable accelerometer (saves power)
-            disableAccelerometer();
             animating = 0;
             drawFrame();
             break;
@@ -565,7 +519,6 @@ void WindowImplAndroid::updateWindowSize()
 AppAndroid::AppAndroid()
     : App(), mAndroidApp(0)
 {
-    mLastAccel = mLastRawAccel = Vec3f::zero();
 }
 
 AppAndroid::~AppAndroid()
@@ -683,31 +636,6 @@ WindowRef AppAndroid::createWindow( Window::Format format )
 }
 
 
-//! Enables the accelerometer
-void AppAndroid::enableAccelerometer( float updateFrequency, float filterFactor )
-{
-    if ( mImpl->accelerometerSensor != NULL ) {
-        mAccelFilterFactor = filterFactor;
-
-        if( updateFrequency <= 0 )
-            updateFrequency = 30.0f;
-
-        mImpl->accelUpdateFrequency = updateFrequency;
-
-        if ( !mImpl->accelEnabled )
-            mImpl->enableAccelerometer();
-
-        mImpl->accelEnabled = true;
-    }
-}
-
-void AppAndroid::disableAccelerometer() {
-    if ( mImpl->accelerometerSensor != NULL && mImpl->accelEnabled ) {
-        mImpl->accelEnabled = false;
-        mImpl->disableAccelerometer();
-    }
-}
-
 //! Returns the maximum frame-rate the App will attempt to maintain.
 float AppAndroid::getFrameRate() const
 {
@@ -794,22 +722,6 @@ void AppAndroid::privateTouchesEnded__( const TouchEvent &event )
     if( ! handled )
         touchesEnded( event );
 }
-
-// void AppAndroid::privateAccelerated__( const Vec3f &direction )
-// {
-//     Vec3f filtered = mLastAccel * (1.0f - mAccelFilterFactor) + direction * mAccelFilterFactor;
-// 
-//     AccelEvent event( filtered, direction, mLastAccel, mLastRawAccel );
-// 
-//     bool handled = false;
-//     for( CallbackMgr<bool (AccelEvent)>::iterator cbIter = mCallbacksAccelerated.begin(); ( cbIter != mCallbacksAccelerated.end() ) && ( ! handled ); ++cbIter )
-//         handled = (cbIter->second)( event );
-//     if( ! handled )
-//         accelerated( event );
-// 
-//     mLastAccel = filtered;
-//     mLastRawAccel = direction;
-// }
 
 Orientation_t AppAndroid::orientationFromConfig()
 {

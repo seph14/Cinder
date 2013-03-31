@@ -74,18 +74,6 @@ class AppAndroid : public App
     virtual void		touchesEnded( TouchEvent event ) {}
     //! Returns a std::vector of all active touches
     const std::vector<TouchEvent::Touch>&	getActiveTouches() const { return mActiveTouches; }	
-    //! Returns a Vec3d of the acceleration direction
-    // virtual void		accelerated( AccelEvent event ) {}
-
-    /*
-    //! Registers a callback for accelerated events. Returns a unique identifier which can be used as a parameter to unregisterAccelerated().
-    // CallbackId		registerAccelerated( std::function<bool (AccelEvent)> callback ) { return mCallbacksAccelerated.registerCb( callback ); }
-    // //! Registers a callback for touchesEnded events. Returns a unique identifier which can be used as a parameter to unregisterTouchesEnded().
-    // template<typename T>
-    // CallbackId		registerAccelerated( T *obj, bool (T::*callback)(AccelEvent) ) { return mCallbacksAccelerated.registerCb( std::bind1st( std::mem_fun( callback ), obj ) ); }
-    // //! Unregisters a callback for touchesEnded events.
-    // void			unregisterAccelerated( CallbackId id ) { mCallbacksAccelerated.unregisterCb( id ); }
-    */
 
     //! Returns the logical density of the App's window measured in dpi (dots per inch)
     virtual int		getWindowDensity() const;
@@ -94,11 +82,6 @@ class AppAndroid : public App
     // void			setWindowHeight( int windowHeight );
     // void			setWindowSize( int windowWidth, int windowHeight );
     void            updateWindowSizes();
-
-    //! Enables the device's accelerometer and modifies its filtering. \a updateFrequency represents the frequency with which accelerated() is called, measured in Hz. \a filterFactor represents the amount to weight the current value relative to the previous.
-    void enableAccelerometer( float updateFrequency = 30.0f, float filterFactor = 0.1f );
-    //! Turns off the accelerometer
-    void disableAccelerometer();
 
     //! Returns the maximum frame-rate the App will attempt to maintain.
     virtual float		getFrameRate() const;
@@ -157,7 +140,6 @@ class AppAndroid : public App
     void		privateTouchesMoved__( const TouchEvent &event );
     void		privateTouchesEnded__( const TouchEvent &event );
     void		privateSetActiveTouches__( const std::vector<TouchEvent::Touch> &touches ) { mActiveTouches = touches; }
-    // void		privateAccelerated__( const Vec3f &direction );
     //! \endcond
     //
 
@@ -199,10 +181,6 @@ class AppAndroid : public App
     Settings           mSettings;
 
     std::vector<TouchEvent::Touch>	  mActiveTouches;
-    // CallbackMgr<bool (AccelEvent)> mCallbacksAccelerated;
-
-    float mAccelFilterFactor;
-    Vec3f mLastAccel, mLastRawAccel;
 
     struct timespec mStartTime;
 
