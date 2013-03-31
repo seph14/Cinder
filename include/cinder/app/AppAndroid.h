@@ -3,7 +3,6 @@
 #include "cinder/app/App.h"
 #include "cinder/app/TouchEvent.h"
 #include "cinder/app/Window.h"
-// #include "cinder/app/AccelEvent.h"
 #include "cinder/Filesystem.h"
 
 #include <jni.h>
