@@ -27,6 +27,7 @@
 #include "cinder/Thread.h"
 #include "cinder/Quaternion.h"
 #include "cinder/Matrix44.h"
+#include "cinder/Exception.h"
 
 #include "cinder/app/InterfaceOrientation.h" 
 

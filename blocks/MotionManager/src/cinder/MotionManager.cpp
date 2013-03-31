@@ -22,8 +22,10 @@
  */
 
 #include "MotionManager.h"
-#if defined(CINDER_COCOA_TOUCH)
+#if defined( CINDER_COCOA_TOUCH )
   #include "MotionImplCoreMotion.h"
+#elif defined( CINDER_ANDROID )
+  #include "MotionImplAndroid.h"
 #endif
 #include "cinder/CinderMath.h"
 
@@ -109,7 +111,7 @@ MotionManager* MotionManager::get()
 #if defined(CINDER_COCOA_TOUCH)
         sInst->mImpl = std::shared_ptr<MotionImplCoreMotion>( new MotionImplCoreMotion() );
 #elif defined(CINDER_ANDROID)
-        sInst->mImpl = std::shared_ptr<MotionImplCoreMotion>( new MotionImplAndroid() );
+        sInst->mImpl = std::shared_ptr<MotionImplAndroid>( new MotionImplAndroid() );
 #endif
 	}
 	return sInst;

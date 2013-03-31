@@ -9,7 +9,8 @@ MOTION_MANAGER_PATH = ../../blocks/MotionManager
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(MOTION_MANAGER_PATH)/src
 LOCAL_SRC_FILES := \
 	src/MotionBasicApp.cpp \
-	$(MOTION_MANAGER_PATH)/src/cinder/MotionManager.cpp
+	$(MOTION_MANAGER_PATH)/src/cinder/MotionManager.cpp \
+	$(MOTION_MANAGER_PATH)/src/cinder/MotionImplAndroid.cpp
 
 LOCAL_LDLIBS    := -landroid
 LOCAL_STATIC_LIBRARIES := cinder boost_system boost_filesystem android_native_app_glue 

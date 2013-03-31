@@ -229,8 +229,8 @@ class AppAndroidImpl
     struct android_app*  androidApp;
     InputState           inputState;
 
-    ASensorManager*    sensorManager;
-    ASensorEventQueue* sensorEventQueue;
+    // ASensorManager*    sensorManager;
+    // ASensorEventQueue* sensorEventQueue;
 
     int animating;
 
