@@ -28,7 +28,7 @@
 #include "cinder/Quaternion.h"
 #include "cinder/Matrix44.h"
 
-#include "cinder/app/AppCocoaTouch.h" // this is only for app::InterfaceOrientation, since it currently lives there
+#include "cinder/app/InterfaceOrientation.h" 
 
 namespace cinder {
 
@@ -91,7 +91,11 @@ class MotionManager {
 	void	setAccelerometerFilterImpl( float filtering );
 
 
+#if defined(CINDER_COCOA_TOUCH)
 	std::shared_ptr<MotionImplCoreMotion>	mImpl;
+#elif defined(CINDER_ANDROID)
+	std::shared_ptr<class MotionImplAndroid> mImpl;
+#endif
 	float mShakeDelta;
 	Vec3f mPrevAcceleration;
 

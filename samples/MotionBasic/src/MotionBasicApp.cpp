@@ -1,4 +1,4 @@
-#include "cinder/app/AppCocoaTouch.h"
+#include "cinder/app/AppNative.h"
 #include "cinder/Camera.h"
 #include "cinder/Timeline.h"
 #include "cinder/MotionManager.h"
@@ -6,7 +6,7 @@
 using namespace ci;
 using namespace ci::app;
 
-class MotionBasicApp : public AppCocoaTouch {
+class MotionBasicApp : public AppNative {
   public:
 	virtual void	setup();
 	virtual void	update();
@@ -50,4 +50,4 @@ void MotionBasicApp::draw()
 	gl::drawCoordinateFrame();
 }
 
-CINDER_APP_COCOA_TOUCH( MotionBasicApp, RendererGl )
+CINDER_APP_NATIVE( MotionBasicApp, RendererGl )

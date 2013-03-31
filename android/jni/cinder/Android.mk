@@ -10,7 +10,11 @@ STBIMAGE_SRC = src/stb_image
 UTF8_CPP_SRC = include/utf8-cpp
 JSONCPP_SRC  = src/jsoncpp
 
-LOCAL_MODULE := cinder
+ifdef USE_GLES2
+  LOCAL_MODULE := cinder-es2
+else
+  LOCAL_MODULE := cinder
+endif
 
 # required for wchar_t support, used by boost::filesystem
 LOCAL_CFLAGS := -D_GLIBCPP_USE_WCHAR_T -D__LITTLE_ENDIAN__

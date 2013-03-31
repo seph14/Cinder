@@ -3,8 +3,15 @@ include $(LOCAL_PATH)/Configure.mk
 
 APP_ABI      := 
 APP_PLATFORM := android-9
-APP_MODULES  := cinder
 APP_CPPFLAGS := -fexceptions -frtti -Wno-format-security
+
+ifndef USE_GLES2_ONLY
+  APP_MODULES := cinder
+endif
+
+ifdef USE_GLES2
+  APP_MODULES += cinder-es2
+endif
 
 ifdef USE_STL_SHARED
   APP_STL := gnustl_shared

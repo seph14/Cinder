@@ -13,12 +13,12 @@ LOCAL_SRC_FILES := ../../src/basicAudioApp.cpp \
 
 LOCAL_LDFLAGS := -Wl,--as-needed
 LOCAL_LDLIBS  := -landroid -lOpenSLES
-LOCAL_STATIC_LIBRARIES := cinder boost_system boost_filesystem boost_thread freeimage ft2 android_native_app_glue 
+LOCAL_STATIC_LIBRARIES := cinder-es2 boost_system boost_filesystem boost_thread freeimage ft2 android_native_app_glue 
 
 include $(BUILD_SHARED_LIBRARY)
 
 $(call import-module,android/native_app_glue)
-$(call import-module,cinder)
+$(call import-module,cinder-es2)
 $(call import-module,boost)
 $(call import-module,libpd)
 

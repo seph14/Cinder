@@ -10,5 +10,7 @@ ifdef USE_OCV_CAPTURE
   include $(TOP_PATH)/ocvcapture/Android.mk
 endif
 
+USE_GLES2 =
 include $(TOP_PATH)/cinder/Android.mk
-
+USE_GLES2 = yes
+include $(TOP_PATH)/cinder/Android.mk

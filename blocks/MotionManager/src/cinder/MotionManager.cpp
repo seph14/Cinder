@@ -22,7 +22,9 @@
  */
 
 #include "MotionManager.h"
-#include "MotionImplCoreMotion.h"
+#if defined(CINDER_COCOA_TOUCH)
+  #include "MotionImplCoreMotion.h"
+#endif
 #include "cinder/CinderMath.h"
 
 namespace cinder {
@@ -104,7 +106,11 @@ MotionManager* MotionManager::get()
 	std::unique_lock<std::mutex> lock( sMutex );
 	if( ! sInst ) {
 		sInst = new MotionManager;
+#if defined(CINDER_COCOA_TOUCH)
         sInst->mImpl = std::shared_ptr<MotionImplCoreMotion>( new MotionImplCoreMotion() );
+#elif defined(CINDER_ANDROID)
+        sInst->mImpl = std::shared_ptr<MotionImplCoreMotion>( new MotionImplAndroid() );
+#endif
 	}
 	return sInst;
 }
