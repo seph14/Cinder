@@ -1629,8 +1629,6 @@ void Context::appendPath( const cinder::Path2d &path )
 			case Path2d::CLOSE:
 				closePath();
 			break;
-			case Path2d::MOVETO:
-			break;
 		}
 	}
 }

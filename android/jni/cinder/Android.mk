@@ -101,10 +101,9 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
                     $(TESS_SRC)/tess.c \
                     $(JSONCPP_SRC)/json_reader.cpp \
                     $(JSONCPP_SRC)/json_value.cpp \
-                    $(JSONCPP_SRC)/json_writer.cpp
+                    $(JSONCPP_SRC)/json_writer.cpp 
 
 # Disabled for now
-#                    $(CINDER_SRC)/cairo/Cairo.cpp 
 #                    $(CINDER_SRC)/Url.cpp 
 #                    $(CINDER_SRC)/UrlImplAndroid.cpp
 
@@ -116,6 +115,12 @@ LOCAL_SRC_FILES  += $(OSC_SRC)/OscBundle.cpp \
                     $(OSC_SRC)/OscListener.cpp \
                     $(OSC_SRC)/OscMessage.cpp \
                     $(OSC_SRC)/OscSender.cpp
+
+# Cairo block
+CAIRO_BLOCK = blocks/cairo
+CAIRO_SRC = $(CAIRO_BLOCK)/src
+LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(CAIRO_BLOCK)/include
+LOCAL_SRC_FILES  += $(CAIRO_SRC)/Cairo.cpp 
 
 ifdef USE_GLES2
   # Propipe block
