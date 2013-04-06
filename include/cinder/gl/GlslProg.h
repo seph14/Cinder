@@ -57,7 +57,7 @@ class GlslProg {
               bool linkProg = true );
 
 #if defined( CINDER_GLES2 )
-    GlslProg( DataSourceRef vertexShader, DataSourceRef fragmentShader, 
+//  XXX add vertex/fragment only constructors
 #endif
     
 
