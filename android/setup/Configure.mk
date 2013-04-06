@@ -22,7 +22,7 @@ USE_CPP_11 = yes
 USE_STBIMAGE = yes
 USE_FREETYPE = yes
 
-# Build with GLES2 support (disables GLES1)
+# Build with GLES2 support (builds libcinder-es2.a)
 # USE_GLES2 = yes
 
 # Enable access to Android assets from native activities only
