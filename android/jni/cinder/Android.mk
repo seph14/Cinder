@@ -123,16 +123,6 @@ LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(CAIRO_BLOCK)/include
 LOCAL_SRC_FILES  += $(CAIRO_SRC)/Cairo.cpp 
 
 ifdef USE_GLES2
-  # Propipe block
-  PROPIPE_SRC  = blocks/propipe/src
-  # Built-in propipe block
-  LOCAL_SRC_FILES  += $(PROPIPE_SRC)/propipe/Context.cpp \
-                      $(PROPIPE_SRC)/propipe/Draw.cpp \
-                      $(PROPIPE_SRC)/propipe/DrawShader.cpp \
-                      $(PROPIPE_SRC)/propipe/Matrices.cpp \
-                      $(PROPIPE_SRC)/propipe/TextureFont.cpp
-  LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(PROPIPE_SRC)
-  
   LOCAL_SRC_FILES  += $(CINDER_SRC)/gl/GlslProg.cpp \
                       $(CINDER_SRC)/gl/Vbo.cpp
   LOCAL_CFLAGS += -DCINDER_GLES2
