@@ -430,13 +430,13 @@ Surface renderStringPow2( const string &str, const FontRef font, const ColorA &c
 		Surface temp( 1, 1, true, SurfaceChannelOrder::RGBA );
 		::CGContextRef cgContext = cocoa::createCgBitmapContext( temp );
 
-		::CGContextSelectFont( cgContext, font.getName().c_str(), font.getSize(), kCGEncodingMacRoman );
+		::CGContextSelectFont( cgContext, font->getName().c_str(), font->getSize(), kCGEncodingMacRoman );
 		::CGContextSetTextDrawingMode( cgContext, kCGTextInvisible );
 		
 		::CGPoint startPoint = ::CGContextGetTextPosition( cgContext );
 		::CGContextShowText( cgContext, str.c_str(), str.length() );
 		::CGPoint endPoint = ::CGContextGetTextPosition( cgContext );
-		pixelSize = Vec2i( math<float>::ceil( endPoint.x - startPoint.x ), math<float>::ceil( font.getAscent() + font.getDescent() ) );
+		pixelSize = Vec2i( math<float>::ceil( endPoint.x - startPoint.x ), math<float>::ceil( font->getAscent() + font->getDescent() ) );
 		::CGContextRelease( cgContext );
 	}
 
@@ -444,14 +444,14 @@ Surface renderStringPow2( const string &str, const FontRef font, const ColorA &c
 	Surface result( pow2PixelSize.x, pow2PixelSize.y, true );
 	::CGContextRef cgContext = cocoa::createCgBitmapContext( result );
 	ip::fill( &result, ColorA( 0, 0, 0, 0 ) );
-	::CGContextSelectFont( cgContext, font.getName().c_str(), font.getSize(), kCGEncodingMacRoman );
+	::CGContextSelectFont( cgContext, font->getName().c_str(), font->getSize(), kCGEncodingMacRoman );
 	::CGContextSetTextDrawingMode( cgContext, kCGTextFill );
 	::CGContextSetRGBFillColor( cgContext, color.r, color.g, color.b, color.a );
-	::CGContextSetTextPosition( cgContext, 0, font.getDescent() + 1 );
+	::CGContextSetTextPosition( cgContext, 0, font->getDescent() + 1 );
 	::CGContextShowText( cgContext, str.c_str(), str.length() );
 	
 	if( baselineOffset )
-		*baselineOffset = font.getAscent() - pixelSize.y;
+		*baselineOffset = font->getAscent() - pixelSize.y;
 	if( actualSize )
 		*actualSize = pixelSize;
 	
