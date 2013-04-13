@@ -263,6 +263,11 @@ void Display::enumerateDisplays()
 
 #endif 
 
+Vec2i Display::getSystemCoordinate( const Vec2i &displayRelativeCoordinate ) const
+{
+	return mArea.getUL() + displayRelativeCoordinate;
+}
+
 DisplayRef Display::getMainDisplay()
 {
 	enumerateDisplays();
