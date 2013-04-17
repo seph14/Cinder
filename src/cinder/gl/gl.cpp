@@ -1414,6 +1414,7 @@ void drawRange( const VboMesh &vbo, size_t startIndex, size_t indexCount, int ve
 	gl::VboMesh::unbindBuffers();
 	vbo.disableClientStates();
 }
+#endif
 
 void drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
 {
@@ -1424,7 +1425,6 @@ void drawArrays( const VboMesh &vbo, GLint first, GLsizei count )
 	gl::VboMesh::unbindBuffers();
 	vbo.disableClientStates();
 }
-#endif
 
 void drawBillboard( const Vec3f &pos, const Vec2f &scale, float rotationDegrees, const Vec3f &bbRight, const Vec3f &bbUp )
 {
