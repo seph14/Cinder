@@ -2786,6 +2786,7 @@
 					../lib/macosx/libz.a,
 					../lib/macosx/libboost_system.a,
 					../lib/macosx/libboost_date_time.a,
+					../lib/macosx/libfreetype.a,
 				);
 				PRODUCT_NAME = cinder_d;
 				SDKROOT = macosx;
@@ -2828,6 +2829,7 @@
 					../lib/macosx/libz.a,
 					../lib/macosx/libboost_system.a,
 					../lib/macosx/libboost_date_time.a,
+					../lib/macosx/libfreetype.a,
 				);
 				PRODUCT_NAME = cinder;
 				SDKROOT = macosx;
