@@ -111,7 +111,14 @@ void GlslProg::loadShader( Buffer shaderSourceBuffer, GLint shaderType )
 void GlslProg::loadShader( const char *shaderSource, GLint shaderType )
 {
 	GLuint handle = glCreateShader( shaderType );
-	glShaderSource( handle, 1, reinterpret_cast<const GLchar**>( &shaderSource ), NULL );
+    
+#if defined( CINDER_GLES )
+    const GLchar* shaderSources[] = { "#define CINDER_GLES\n", shaderSource };
+#else
+    const GLchar* shaderSources[] = { shaderSource };
+#endif
+
+	glShaderSource( handle, sizeof(shaderSources) / sizeof(GLchar*), shaderSources, NULL );
 	glCompileShader( handle );
 	
 	GLint status;
