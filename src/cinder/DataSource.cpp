@@ -151,6 +151,7 @@ DataSourceRef loadUrl( const Url &url, const UrlOptions &options )
 {
 	return DataSourceUrl::create( url, options );
 }
+#endif  // ! defined( CINDER_ANDROID )
 
 /////////////////////////////////////////////////////////////////////////////
 // DataSourceBuffer
@@ -176,7 +177,5 @@ IStreamRef DataSourceBuffer::createStream()
 {
 	return IStreamMem::create( mBuffer.getData(), mBuffer.getDataSize() );
 }
-
-#endif  // ! defined( CINDER_ANDROID )
 
 } // namespace cinder
