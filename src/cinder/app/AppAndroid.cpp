@@ -352,7 +352,7 @@ class AppAndroidImpl
 #if defined( NDEBUG )
     #define LOG_STATE 
 #else
-    #define LOG_STATE logState()
+    #define LOG_STATE logState();
 #endif
 
     void handleCmd(int32_t cmd)
