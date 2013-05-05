@@ -342,8 +342,7 @@ class AppAndroidImpl
         //  XXX handles delayed window size updates from orientation changes
         app.updateWindowSizes();
 
-        // XXX startDraw not necessary?
-        // renderer.startDraw();
+        // renderer->startDraw();
         app.privateUpdate__();
         app.draw();
         renderer->finishDraw();
@@ -371,12 +370,7 @@ class AppAndroidImpl
                 //  Create default window & renderer
                 cinderApp->preSetup();
                 animating = 0;
-                // cinderApp->getRenderer()->defaultResize();
-                // cinderRenderer = cinderApp->getRenderer();
-                // cinderRenderer->defaultResize();
-
                 orientation = cinderApp->orientationFromConfig();
-                // cinderRenderer->setup(cinderApp, androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
                 cinderApp->getRenderer()->setup(cinderApp, androidApp, &(cinderApp->mWidth), &(cinderApp->mHeight));
                 cinderApp->updateWindowSizes();
                 cinderApp->privatePrepareSettings__();
