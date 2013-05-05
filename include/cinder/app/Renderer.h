@@ -128,13 +128,13 @@ typedef std::shared_ptr<class RendererGl>	RendererGlRef;
 class RendererGl : public Renderer {
   public:
 #if defined( CINDER_COCOA_TOUCH )
-	RendererGl( int aAntiAliasing = AA_MSAA_4 );
+	RendererGl( int aAntiAliasing = AA_MSAA_4, int colorDepth = COLOR_DEPTH_DEFAULT );
 #else
-	RendererGl( int aAntiAliasing = AA_MSAA_16 );
+	RendererGl( int aAntiAliasing = AA_MSAA_16, int colorDepth = COLOR_DEPTH_DEFAULT );
 #endif
 	~RendererGl();
 
-	static RendererGlRef	create( int antiAliasing = AA_MSAA_16 ) { return RendererGlRef( new RendererGl( antiAliasing ) ); }
+	static RendererGlRef	create( int antiAliasing = AA_MSAA_16, int colorDepth = COLOR_DEPTH_DEFAULT ) { return RendererGlRef( new RendererGl( antiAliasing, colorDepth ) ); }
 	virtual RendererRef		clone() const { return RendererGlRef( new RendererGl( *this ) ); }
  
 #if defined( CINDER_COCOA )
@@ -162,6 +162,7 @@ class RendererGl : public Renderer {
 #endif
 
 	enum	{ AA_NONE = 0, AA_MSAA_2, AA_MSAA_4, AA_MSAA_6, AA_MSAA_8, AA_MSAA_16, AA_MSAA_32 };
+	enum	{ COLOR_DEPTH_32=0, COLOR_DEPTH_16, COLOR_DEPTH_DEFAULT };
 	static const int	sAntiAliasingSamples[];
 	void				setAntiAliasing( int aAntiAliasing );
 	int					getAntiAliasing() const { return mAntiAliasing; }
@@ -176,6 +177,7 @@ class RendererGl : public Renderer {
 	RendererGl( const RendererGl &renderer );
 
 	int			mAntiAliasing;
+    int mColorDepth;
 #if defined( CINDER_MAC )
 	AppImplCocoaRendererGl		*mImpl;
 #elif defined( CINDER_COCOA_TOUCH )

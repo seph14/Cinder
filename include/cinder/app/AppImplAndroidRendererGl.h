@@ -15,7 +15,7 @@ class RendererGl;
 class AppImplAndroidRendererGl 
 {
  public:
-	AppImplAndroidRendererGl( App *aApp, struct android_app *androidApp );
+	AppImplAndroidRendererGl( App *aApp, struct android_app *androidApp, int mColorDepth );
 
     void initialize( int32_t* width, int32_t* height );
     void makeCurrentContext();
@@ -28,6 +28,7 @@ class AppImplAndroidRendererGl
  protected:
 	App         *mApp;
     android_app *mAndroidApp;
+    int          mColorDepth;
 
     EGLSurface mSurface;
     EGLContext mContext;

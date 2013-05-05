@@ -45,20 +45,27 @@ const char* EGLErrorString()
    }
 }
 
-AppImplAndroidRendererGl::AppImplAndroidRendererGl( App *aApp, struct android_app *androidApp )
-	: mApp(aApp), mAndroidApp(androidApp)
+AppImplAndroidRendererGl::AppImplAndroidRendererGl( App *aApp, struct android_app *androidApp, int colorDepth )
+	: mApp(aApp), mAndroidApp(androidApp), mColorDepth( colorDepth )
 {
 }
 
 void AppImplAndroidRendererGl::initialize( int32_t* width, int32_t* height )
 {
+    const EGLint rgbDepths[][3] = {
+        { 8, 8, 8 },
+        { 5, 6, 5 },
+        { 5, 6, 5 },
+    };
+    const int *rgbDepth = rgbDepths[mColorDepth];
+
     //  Create GL context and surface
     const EGLint attribs[] = {
-            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-            EGL_BLUE_SIZE, 5,
-            EGL_GREEN_SIZE, 6,
-            EGL_RED_SIZE, 5,
-            EGL_DEPTH_SIZE, 16,
+            EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
+            EGL_RED_SIZE,        rgbDepth[0],
+            EGL_GREEN_SIZE,      rgbDepth[1],
+            EGL_BLUE_SIZE,       rgbDepth[2],
+            EGL_DEPTH_SIZE,      16,
 #if defined( CINDER_GLES2 )
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
 #endif

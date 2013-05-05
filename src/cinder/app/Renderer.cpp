@@ -64,12 +64,12 @@ Renderer::Renderer( const Renderer &renderer )
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RendererGl
-RendererGl::RendererGl( int aAntiAliasing )
-	: Renderer(), mImpl( 0 ), mAntiAliasing( aAntiAliasing )
+RendererGl::RendererGl( int aAntiAliasing, int colorDepth )
+	: Renderer(), mImpl( 0 ), mAntiAliasing( aAntiAliasing ), mColorDepth( colorDepth )
 {}
 
 RendererGl::RendererGl( const RendererGl &renderer )
-	: Renderer( renderer ), mAntiAliasing( renderer.mAntiAliasing )
+	: Renderer( renderer ), mAntiAliasing( renderer.mAntiAliasing ), mColorDepth( renderer.mColorDepth )
 {
 #if defined( CINDER_COCOA )
 	mImpl = 0;
@@ -290,7 +290,7 @@ void RendererGl::setup( App *aApp, struct android_app *androidApp, int32_t* widt
     mApp = aApp;
 
     if ( !mImpl ) {
-        mImpl = new AppImplAndroidRendererGl(mApp, androidApp);
+        mImpl = new AppImplAndroidRendererGl(mApp, androidApp, mColorDepth);
     }
     else {
         CI_LOGW("Skipping renderer creation");
