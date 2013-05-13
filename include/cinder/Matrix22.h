@@ -28,6 +28,7 @@
 #include "cinder/Vector.h"
 
 #include <iomanip>
+#include <cfloat>
 
 namespace cinder {
 
