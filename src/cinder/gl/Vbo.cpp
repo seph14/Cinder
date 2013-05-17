@@ -460,7 +460,7 @@ void VboMesh::initializeBuffers( bool staticDataPlanar )
 		mObj->mCustomDynamicLocations = vector<GLint>( mObj->mLayout.mCustomDynamic.size(), -1 );
 }
 
-#if ! defined(CINDER_GLES)
+#if ! defined(CINDER_GLES2)
 void VboMesh::enableClientStates() const
 {
 	if( mObj->mLayout.hasPositions() )

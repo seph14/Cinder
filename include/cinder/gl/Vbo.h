@@ -189,9 +189,11 @@ class VboMesh {
 	const Layout&	getLayout() const { return mObj->mLayout; }
 
 	void			bindIndexBuffer() const;
+#if ! defined( CINDER_GLES2 )
 	void			enableClientStates() const;
 	void			disableClientStates() const;
 	void			bindAllData() const;
+#endif
 	static void		unbindBuffers();
 
 	void						bufferIndices( const std::vector<uint32_t> &indices );
