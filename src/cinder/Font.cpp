@@ -746,10 +746,17 @@ vector<Font::Glyph> FontFreeType::getGlyphs( const string &utf8String ) const
 {
 	vector<int> utf32String;
 	vector<Font::Glyph> result;
-	utf8::utf8to32(utf8String.begin(), utf8String.end(), std::back_inserter(utf32String));
-	for (vector<int>::iterator it = utf32String.begin(); it != utf32String.end(); ++it) {
-		result.push_back(FT_Get_Char_Index(getFTFace(), *it));
-	}
+
+    try {
+	    utf8::utf8to32(utf8String.begin(), utf8String.end(), std::back_inserter(utf32String));
+	    for (vector<int>::iterator it = utf32String.begin(); it != utf32String.end(); ++it) {
+		    result.push_back(FT_Get_Char_Index(getFTFace(), *it));
+	    }
+    }
+    catch (utf8::invalid_utf8& ex) {
+        //  log error, proceed
+        // ex.what();
+    }
 	return result;
 }
 

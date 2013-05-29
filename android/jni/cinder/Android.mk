@@ -131,7 +131,8 @@ else
   LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(TWEAKBAR_SRC)
   LOCAL_SRC_FILES += $(CINDER_SRC)/gl/Light.cpp \
                      $(CINDER_SRC)/gl/Material.cpp \
-                     $(CINDER_SRC)/gl/TileRender.cpp
+                     $(CINDER_SRC)/gl/TileRender.cpp \
+                     $(CINDER_SRC)/gl/Vbo.cpp
   LOCAL_CFLAGS += -DCINDER_GLES1
   GLES_LDLIB = -lGLESv1_CM
 endif

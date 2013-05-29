@@ -25,7 +25,7 @@
 
 using namespace std;
 
-#if defined(CINDER_ANDROID) && defined( CINDER_GLES2 )
+#if defined(CINDER_ANDROID) && defined( CINDER_GLES )
 
 //  Android GLES2 compatible functions and constants
 #define glBufferDataARB    glBufferData
@@ -34,6 +34,10 @@ using namespace std;
 #define glUnmapBuffer      glUnmapBufferOES
 
 #define GL_WRITE_ONLY  GL_WRITE_ONLY_OES
+
+#if defined( CINDER_GLES1 )
+#define GL_STREAM_DRAW GL_DYNAMIC_DRAW
+#endif
 
 #endif
 
@@ -460,7 +464,7 @@ void VboMesh::initializeBuffers( bool staticDataPlanar )
 		mObj->mCustomDynamicLocations = vector<GLint>( mObj->mLayout.mCustomDynamic.size(), -1 );
 }
 
-#if ! defined(CINDER_GLES2)
+#if ! defined( CINDER_GLES2 )
 void VboMesh::enableClientStates() const
 {
 	if( mObj->mLayout.hasPositions() )
@@ -483,6 +487,7 @@ void VboMesh::enableClientStates() const
 		}
 	}	
 	
+#if ! defined( CINDER_GLES1 )
 	for( size_t a = 0; a < mObj->mCustomStaticLocations.size(); ++a ) {
 		if( mObj->mCustomStaticLocations[a] < 0 )
 			throw;
@@ -494,6 +499,7 @@ void VboMesh::enableClientStates() const
 			throw;
 		glEnableVertexAttribArray( mObj->mCustomDynamicLocations[a] );
 	}
+#endif
 }
 
 void VboMesh::disableClientStates() const
@@ -508,6 +514,7 @@ void VboMesh::disableClientStates() const
 		}
 	}	
 	
+#if ! defined( CINDER_GLES1 )
 	for( size_t a = 0; a < mObj->mCustomStaticLocations.size(); ++a ) {
 		if( mObj->mCustomStaticLocations[a] < 0 )
 			throw;
@@ -519,6 +526,7 @@ void VboMesh::disableClientStates() const
 			throw;
 		glDisableVertexAttribArray( mObj->mCustomDynamicLocations[a] );
 	}
+#endif
 }
 
 void VboMesh::bindAllData() const
@@ -569,10 +577,12 @@ void VboMesh::bindAllData() const
 		
 		mObj->mBuffers[buffer].bind();
 		
+#if ! defined( CINDER_GLES1 )
 		for( size_t a = 0; a < attributes.size(); ++a ) {
 			const GLvoid *offset = reinterpret_cast<const GLvoid*>( attributes[a].second );
 			glVertexAttribPointer( locations[a], Layout::sCustomAttrNumComponents[attributes[a].first], Layout::sCustomAttrTypes[attributes[a].first], GL_FALSE, stride, offset );
 		}	
+#endif
 	}
 }
 
