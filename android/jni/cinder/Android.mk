@@ -108,7 +108,7 @@ LOCAL_SRC_FILES  := $(CINDER_SRC)/app/App.cpp \
 #                    $(CINDER_SRC)/UrlImplAndroid.cpp
 
 # OSC block
-OSC_BLOCK = blocks/osc
+OSC_BLOCK = blocks/OSC
 OSC_SRC   = $(OSC_BLOCK)/src
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(OSC_BLOCK)/include
 LOCAL_SRC_FILES  += $(OSC_SRC)/OscBundle.cpp \
@@ -117,7 +117,7 @@ LOCAL_SRC_FILES  += $(OSC_SRC)/OscBundle.cpp \
                     $(OSC_SRC)/OscSender.cpp
 
 # Cairo block
-CAIRO_BLOCK = blocks/cairo
+CAIRO_BLOCK = blocks/Cairo
 CAIRO_SRC = $(CAIRO_BLOCK)/src
 LOCAL_C_INCLUDES += $(LOCAL_PATH)/$(CAIRO_BLOCK)/include
 LOCAL_SRC_FILES  += $(CAIRO_SRC)/Cairo.cpp 
