@@ -32,7 +32,7 @@ protected:
 template<>
 inline void basic_debugbuf<char>::output_debug_string(const char *text)
 {
-    CI_LOGD(text);
+    __android_log_write(ANDROID_LOG_DEBUG, "cinder", text);
 }
 
 template<class CharT, class TraitsT = std::char_traits<CharT> >
