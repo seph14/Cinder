@@ -33,8 +33,8 @@
     //  Android and iOS
 	#define CINDER_GLES
     #if ! defined( CINDER_GLES1 ) && ! defined( CINDER_GLES2 )
-        //  Use CINDER_GLES1 by default
-        #define CINDER_GLES1
+        //  Use CINDER_GLES2 by default
+        #define CINDER_GLES2
     #endif
 #endif
 
