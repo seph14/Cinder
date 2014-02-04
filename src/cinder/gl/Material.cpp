@@ -35,6 +35,7 @@ Material::Material( const ColorA &aAmbient, const ColorA &aDiffuse, const ColorA
 {
 }
 
+#if ! defined(CINDER_GLES)
 void Material::apply() const
 {
 	glMaterialfv( mFace, GL_AMBIENT, mAmbient );
@@ -43,5 +44,6 @@ void Material::apply() const
 	glMaterialfv( mFace, GL_EMISSION, mEmission );
 	glMaterialf( mFace, GL_SHININESS, mShininess );
 }
+#endif
 
 } } // namespace

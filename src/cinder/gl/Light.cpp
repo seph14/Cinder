@@ -32,6 +32,7 @@ void Light::setAttenuation( float aConstantAttenuation, float aLinearAttenuation
 	mQuadraticAttenuation = aQuadraticAttenuation;
 }
 
+#if ! defined(CINDER_GLES)
 void Light::setAmbient( const Color &aAmbient )
 {
 	mAmbient = aAmbient;
@@ -124,7 +125,7 @@ void Light::enable()
 	
 	mEnabled = true;
 }
-
+	
 void Light::disable()
 {
 	glDisable( GL_LIGHT0 + mID );
@@ -163,6 +164,8 @@ void Light::setShadowRenderMatrices() const
 {
 	setMatrices( mShadowCam );
 }
+
+#endif
 
 Matrix44f Light::getShadowTransformationMatrix( const Camera &camera ) const
 {

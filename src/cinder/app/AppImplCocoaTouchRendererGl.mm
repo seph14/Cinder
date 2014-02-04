@@ -26,6 +26,26 @@
 
 #include "cinder/gl/gl.h"
 
+#if defined(CINDER_GLES2)
+#define glGenFramebuffersOES glGenFramebuffers
+#define glGenRenderbuffersOES glGenRenderbuffers
+#define glBindFramebufferOES glBindFramebuffer
+#define glBindRenderbufferOES glBindRenderbuffer
+#define GL_FRAMEBUFFER_OES GL_FRAMEBUFFER
+#define GL_RENDERBUFFER_OES GL_RENDERBUFFER
+#define GL_RENDERBUFFER_WIDTH_OES GL_RENDERBUFFER_WIDTH
+#define GL_RENDERBUFFER_HEIGHT_OES GL_RENDERBUFFER_HEIGHT
+#define GL_COLOR_ATTACHMENT0_OES GL_COLOR_ATTACHMENT0
+#define GL_DEPTH_ATTACHMENT_OES GL_DEPTH_ATTACHMENT
+#define GL_DEPTH_COMPONENT16_OES GL_DEPTH_COMPONENT16
+#define GL_RGB5_A1_OES GL_RGB5_A1
+#define glFramebufferRenderbufferOES glFramebufferRenderbuffer
+#define glRenderbufferStorageOES glRenderbufferStorage
+#define GL_FRAMEBUFFER_COMPLETE_OES GL_FRAMEBUFFER_COMPLETE
+#endif
+
+// XXX TODO
+#if ! defined(CINDER_GLES2)
 @interface AppImplCocoaTouchRendererGl ()
 
 - (void)layoutSubviews;
@@ -186,3 +206,4 @@
 }
 
 @end
+#endif

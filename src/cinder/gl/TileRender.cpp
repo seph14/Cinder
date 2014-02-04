@@ -27,6 +27,8 @@
 #include <algorithm>
 #include <sstream>
 
+#if ! defined(CINDER_GLES2)
+
 namespace cinder { namespace gl {
 
 TileRender::TileRender( int32_t imageWidth, int32_t imageHeight, int32_t tileWidth, int32_t tileHeight )
@@ -158,3 +160,5 @@ void TileRender::updateFrustum()
 }
 
 } } // namespace cinder::gl
+
+#endif
