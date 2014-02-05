@@ -44,8 +44,6 @@
 #define GL_FRAMEBUFFER_COMPLETE_OES GL_FRAMEBUFFER_COMPLETE
 #endif
 
-// XXX TODO
-#if ! defined(CINDER_GLES2)
 @interface AppImplCocoaTouchRendererGl ()
 
 - (void)layoutSubviews;
@@ -79,6 +77,8 @@
 
 	return self;	
 }
+
+#if ! defined(CINDER_GLES2)
 
 - (void)allocateGraphics:(cinder::app::RendererGlRef)sharedRenderer
 {
@@ -200,10 +200,11 @@
 	ci::gl::setMatricesWindowPersp( mCinderView.bounds.size.width, mCinderView.bounds.size.height );
 }
 
+#endif
+
 - (BOOL)needsDrawRect
 {
 	return NO;
 }
 
 @end
-#endif

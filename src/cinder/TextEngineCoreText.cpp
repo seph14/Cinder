@@ -27,13 +27,17 @@ namespace cinder {
 
 TextEngineCoreText::TextEngineCoreText() : TextEngine( CORETEXT ), mFontsEnumerated( false )
 {
+#if defined(CINDER_MAC)
     nsFontManager = [NSFontManager sharedFontManager];
     [nsFontManager retain];
+#endif
 }
 
 TextEngineCoreText::~TextEngineCoreText()
 {
+#if defined(CINDER_MAC)
     [nsFontManager release];
+#endif
 }
 
 FontRef TextEngineCoreText::createFont( const string& name, float size )

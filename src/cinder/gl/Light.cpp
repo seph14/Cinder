@@ -25,6 +25,8 @@
 namespace cinder {
 namespace gl {
 
+#if ! defined(CINDER_GLES)
+
 void Light::setAttenuation( float aConstantAttenuation, float aLinearAttenuation, float aQuadraticAttenuation )
 {
 	mConstantAttenuation = aConstantAttenuation;
@@ -32,7 +34,6 @@ void Light::setAttenuation( float aConstantAttenuation, float aLinearAttenuation
 	mQuadraticAttenuation = aQuadraticAttenuation;
 }
 
-#if ! defined(CINDER_GLES)
 void Light::setAmbient( const Color &aAmbient )
 {
 	mAmbient = aAmbient;
@@ -165,8 +166,6 @@ void Light::setShadowRenderMatrices() const
 	setMatrices( mShadowCam );
 }
 
-#endif
-
 Matrix44f Light::getShadowTransformationMatrix( const Camera &camera ) const
 {
 	//		Matrix44f shadowBias;
@@ -196,6 +195,8 @@ void Light::setDefaults()
 		mSpotCutoff = 1.0f;
 	mConstantAttenuation = mLinearAttenuation = mQuadraticAttenuation = 1.0f;
 }
+#endif
+
 
 } // namespace gl
 } // namespace cinder

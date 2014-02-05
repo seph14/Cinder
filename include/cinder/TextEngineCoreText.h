@@ -32,7 +32,9 @@ class TextEngineCoreText : public TextEngine
   protected:
 	friend class TextEngine;
 
+#if defined(CINDER_MAC)
 	NSFontManager*           nsFontManager;
+#endif
 	bool                     mFontsEnumerated;
 	std::vector<std::string> mFontNames;
 	mutable FontRef          mDefault;
