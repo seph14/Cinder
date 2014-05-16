@@ -385,6 +385,15 @@ void InterfaceGl::OptionsBase::setPrecision( int precVal )
 	mPrecisionSet = true;
 }
 
+void InterfaceGl::OptionsBase::setKey( const string &key )
+{
+	assert( mParent );
+
+	string optionsStr = "key=" + key;
+	mParent->setOptions( getName(), optionsStr );
+	mKey = key;
+}
+
 void InterfaceGl::OptionsBase::setKeyIncr( const string &keyIncr )
 {
 	assert( mParent );
@@ -393,7 +402,6 @@ void InterfaceGl::OptionsBase::setKeyIncr( const string &keyIncr )
 	mParent->setOptions( getName(), optionsStr );
 	mKeyIncr = keyIncr;
 }
-
 
 void InterfaceGl::OptionsBase::setGroup( const std::string &group )
 {
