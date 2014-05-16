@@ -65,6 +65,7 @@ class InterfaceGl {
 		void*				getVoidPtr() const			{ return mVoidPtr; }
 		const std::string&	getKeyIncr() const			{ return mKeyIncr; }
 		const std::string&	getKeyDecr() const			{ return mKeyDecr; }
+		const std::string&  getKey() const				{ return mKey; };
 
 	  protected:
 		OptionsBase( const std::string &name, void *targetVoidPtr, InterfaceGl *parent );
@@ -73,6 +74,7 @@ class InterfaceGl {
 		void setMax( float maxVal );
 		void setStep( float maxVal );
 		void setPrecision( int precVal );
+		void setKey( const std::string &key );
 		void setKeyIncr( const std::string &keyIncr );
 		void setKeyDecr( const std::string &keyDecr );
 		void setGroup( const std::string &group );
@@ -80,7 +82,7 @@ class InterfaceGl {
 
 		void reAddOptions();
 
-		std::string mName, mKeyIncr, mKeyDecr, mGroup, mOptionsStr;
+		std::string mName, mKey, mKeyIncr, mKeyDecr, mGroup, mOptionsStr;
 		void*		mVoidPtr;
 		float		mMin, mMax, mStep;
 		int			mPrecision;
@@ -109,6 +111,8 @@ class InterfaceGl {
 		Options&	step( float stepVal )						{ setStep( stepVal ); return *this; }
 		//! Sets the number of significant digits for floating point variables (float or double type only).
 		Options&	precision( int precVal )					{ setPrecision( precVal ); return *this; }
+		//! Sets an bool shortcut key
+		Options&	key( const std::string &key )				{ setKey( key ); return *this; }
 		//! Sets an increment shortcut key
 		Options&	keyIncr( const std::string &keyIncr )		{ setKeyIncr( keyIncr ); return *this; }
 		//! Sets a decrement shortcut key
