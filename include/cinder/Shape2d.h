@@ -87,9 +87,9 @@ class CI_API Shape2d {
 	const vec2&	getCurrentPoint() const { return mContours.back().getCurrentPoint(); }
 	
 	//! Appends the contours of \a shape to this Shape2d
-	void			append( const Shape2d &shape );
-    void			appendContour( const Path2d &contour ) { mContours.push_back( contour ); }
-	void			removeContour( size_t i ) { mContours.erase( mContours.begin() + i ); }
+	void		append( const Shape2d &shape );
+    void		appendContour( const Path2d &contour ) { mContours.push_back( contour ); }
+	void		removeContour( size_t i ) { mContours.erase( mContours.begin() + i ); }
 
 	//! Translates the Shape2d by \a offset
 	void		translate( const vec2 &offset );

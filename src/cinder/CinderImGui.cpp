@@ -174,9 +174,12 @@ namespace ImGui {
 	{
 		ImGui::PopID();
 	}
-	ScopedWindow::ScopedWindow( const char* label )
+	ScopedWindow::ScopedWindow( const char* label, bool fixed)
 	{
-		ImGui::Begin( label );
+		if (fixed)
+			ImGui::Begin(label, NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+		else 
+			ImGui::Begin(label);
 	}
 	ScopedWindow::~ScopedWindow()
 	{
@@ -350,7 +353,6 @@ namespace ImGui {
 	}
 }
 
-
 static void ImGui_ImplCinder_MouseDown( ci::app::MouseEvent& event )
 {
 	ImGuiIO& io = ImGui::GetIO();
@@ -457,7 +459,7 @@ static void ImGui_ImplCinder_NewFrameGuard( const ci::app::WindowRef& window ) {
 	IM_ASSERT( io.Fonts->IsBuilt() ); // Font atlas needs to be built, call renderer _NewFrame() function e.g. ImGui_ImplOpenGL3_NewFrame() 
 
 	// Setup display size
-	io.DisplaySize = window->toPixels( window->getSize() );
+	io.DisplaySize = ci::app::toPixels( window->getSize() );
 
 	// Setup time step
 	static double g_Time = 0.0f;
@@ -560,7 +562,7 @@ bool ImGui::Initialize( const ImGui::Options& options )
 	if( options.isKeyboardEnabled() ) io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
 	if( options.isGamepadEnabled() ) io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; // Enable Gamepad Controls	
 	ci::app::WindowRef window = options.getWindow();
-	io.DisplaySize = ci::vec2( window->toPixels( window->getSize() ) );
+	io.DisplaySize = ci::vec2( ci::app::toPixels( window->getSize() ) );
 	io.DeltaTime = 1.0f / 60.0f;
 	io.WantCaptureMouse = true;
 

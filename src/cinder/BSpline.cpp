@@ -477,8 +477,7 @@ void BSpline<D,T>::createControl( const VecT *akCtrlPoint )
 }
 
 template<int D,typename T>
-void BSpline<D,T>::setControlPoint( int i, const VecT &rkCtrl )
-{
+void BSpline<D,T>::setControlPoint( int i, const VecT &rkCtrl ) {
 	assert( i >= 0 && i < mNumCtrlPoints );
 
 	// set the control point

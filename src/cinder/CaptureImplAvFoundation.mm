@@ -129,8 +129,7 @@ static BOOL sDevicesEnumerated = false;
 	AVCaptureDevice *device = nil;
 	if( ! mDeviceUniqueId ) {
 		device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
-	}
-	else {
+	} else {
 		device = [AVCaptureDevice deviceWithUniqueID:mDeviceUniqueId];
 	}
 	
@@ -153,8 +152,19 @@ static BOOL sDevicesEnumerated = false;
 	[mSession beginConfiguration];
 	if( cinder::ivec2( mWidth, mHeight ) == cinder::ivec2( 640, 480 ) )
 		mSession.sessionPreset = AVCaptureSessionPreset640x480;
-	else if( cinder::ivec2( mWidth, mHeight ) == cinder::ivec2( 1280, 720 ) )
+	/*else if( cinder::ivec2( mWidth, mHeight ) == cinder::ivec2( 960, 540 ) )
+		mSession.sessionPreset = AVCaptureSessionPreset960x540;
+	*/else if( cinder::ivec2( mWidth, mHeight ) == cinder::ivec2( 1280, 720 ) )
 		mSession.sessionPreset = AVCaptureSessionPreset1280x720;
+	else if( cinder::ivec2( mWidth, mHeight ) == cinder::ivec2( 1920, 1080 ) )
+		if (@available(macOS 10.15, *)) {
+			mSession.sessionPreset = AVCaptureSessionPreset1920x1080;
+		} else {
+			// Fallback on earlier versions
+			mSession.sessionPreset = AVCaptureSessionPreset1280x720;
+		}
+	else if( glm::max(mWidth, mHeight) > 900 )
+		mSession.sessionPreset = AVCaptureSessionPresetHigh;
 	else
 		mSession.sessionPreset = AVCaptureSessionPresetMedium;
 	[mSession commitConfiguration];
@@ -199,7 +209,19 @@ static BOOL sDevicesEnumerated = false;
 	if( mIsCapturing )
 		return; 
 
-	@synchronized( self ) {
+	dispatch_async(dispatch_get_global_queue( QOS_CLASS_DEFAULT, 0), ^(void){
+		if( [self prepareStartCapture] ) {
+			//@synchronized( self ) {
+				mWorkingPixelBuffer = 0;
+				mHasNewFrame = false;
+				
+				[mSession startRunning];
+				mIsCapturing = true;
+			//}
+		}
+	});
+	
+	/*@synchronized( self ) {
 		if( [self prepareStartCapture] ) {
 			mWorkingPixelBuffer = 0;
 			mHasNewFrame = false;
@@ -207,7 +229,7 @@ static BOOL sDevicesEnumerated = false;
 			mIsCapturing = true;
 			[mSession startRunning];
 		}
-	}
+	}*/
 }
 
 - (void)stopCapture
@@ -215,7 +237,26 @@ static BOOL sDevicesEnumerated = false;
 	if( ! mIsCapturing )
 		return;
 
-	@synchronized( self ) {
+	dispatch_async(dispatch_get_global_queue( QOS_CLASS_DEFAULT, 0), ^(void){
+		@synchronized( self ) {
+			[mSession stopRunning];
+			
+			if( mWorkingPixelBuffer ) {
+				::CVBufferRelease( mWorkingPixelBuffer );
+				mWorkingPixelBuffer = nullptr;
+			}
+			
+			[mSession release];
+			mSession = nil;
+			
+			mIsCapturing = false;
+			mHasNewFrame = false;
+			
+			mCurrentFrame.reset();
+		}
+	});
+	
+	/*@synchronized( self ) {
 		[mSession stopRunning];
 
 		if( mWorkingPixelBuffer ) {
@@ -230,12 +271,43 @@ static BOOL sDevicesEnumerated = false;
 		mHasNewFrame = false;
 		
 		mCurrentFrame.reset();		
-	}
+	}*/
 }
 
 - (bool)isCapturing
 {
 	return mIsCapturing;
+}
+
+- (void)requirePermission:(void(^)(bool))handler
+{
+#if defined( CINDER_COCOA_TOUCH )
+#else
+	if (@available(macOS 10.14, *))
+#endif
+	{
+		AVAuthorizationStatus status = [AVCaptureDevice authorizationStatusForMediaType:AVMediaTypeVideo];
+		_completionHandler = [handler copy];
+		
+		if(status == AVAuthorizationStatusNotDetermined){ // not determined
+			[AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
+				_completionHandler(granted);
+				[_completionHandler release];
+				_completionHandler = nil;
+			}];
+		} else {
+			if(status == AVAuthorizationStatusAuthorized) { // authorized
+				_completionHandler(true);
+			} else if(status == AVAuthorizationStatusDenied){ // denied
+				_completionHandler(false);
+			} else if(status == AVAuthorizationStatusRestricted){ // restricted
+				_completionHandler(false);
+			}
+			
+			[_completionHandler release];
+			_completionHandler = nil;
+		}
+	}
 }
 
 // Called initially when the camera is instantiated and then again (hypothetically) if the resolution ever changes

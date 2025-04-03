@@ -96,6 +96,8 @@ class CI_API Capture {
 	gl::Texture2dRef	getTexture() const;
 #endif
 
+	void requirePermission( std::function<void(bool)> cb );
+	
 	//! Returns the associated Device for this instace of Capture
 	const Capture::DeviceRef getDevice() const;
 

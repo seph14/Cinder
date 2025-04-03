@@ -165,4 +165,12 @@ const Capture::DeviceRef Capture::getDevice() const {
 #endif
 }
 
+void Capture::requirePermission( std::function<void(bool)> cb ){
+#if defined( CINDER_COCOA )
+	[mImpl requirePermission:^(bool permission){
+		cb(permission);
+	}];
+#endif
+}
+
 } //namespace cinder

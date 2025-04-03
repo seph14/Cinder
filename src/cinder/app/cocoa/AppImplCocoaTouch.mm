@@ -44,7 +44,7 @@ using namespace cinder::app;
 
 	mApp->privateSetup__();
 	mAppImpl->mSetupHasFired = YES;
-
+	
 	return YES;
 }
 
@@ -93,7 +93,7 @@ using namespace cinder::app;
 	self = [super init];
 
 	mApp = app;
-	mAnimationFrameInterval = 1;
+	mAnimationFrameInterval = 60;
 	mAnimating = NO;
 	mUpdateHasFired = NO;
 	mSetupHasFired = NO;
@@ -107,7 +107,8 @@ using namespace cinder::app;
 	[center addObserver:self selector:@selector(screenDidDisconnect:) name:UIScreenDidDisconnectNotification object:nil];
 	[center addObserver:self selector:@selector(screenModeDidChange:) name:	UIScreenModeDidChangeNotification object:nil];
 
-	mAnimationFrameInterval = std::max<float>( 1.0f, floor( 60.0f / settings.getFrameRate() + 0.5f ) );
+	mAnimationFrameInterval = round(settings.getFrameRate());
+	//std::max<float>( 1.0f, floor( 60.0f / settings.getFrameRate() + 0.5f ) );
 
 	// build our list of requested formats; an empty list implies we should make the default window format
 	std::vector<Window::Format> formats( settings.getWindowFormats() );
@@ -123,7 +124,11 @@ using namespace cinder::app;
 	}
 
 	[self setActiveWindow:mWindows.front()];
-
+	
+	// iOS 13+ status bar
+	mWindows.front().modalPresentationCapturesStatusBarAppearance = true;
+	[mWindows.front() setNeedsStatusBarAppearanceUpdate];
+	
 	// lastly, ensure the first window is the currently active context
 	[mWindows.front()->mCinderView makeCurrentContext];
 
@@ -170,7 +175,8 @@ using namespace cinder::app;
 {
 	if( ! mAnimating ) {
 		mDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(displayLinkDraw:)];
-		[mDisplayLink setFrameInterval:mAnimationFrameInterval];
+		//[mDisplayLink setFrameInterval:mAnimationFrameInterval];
+		[mDisplayLink setPreferredFramesPerSecond:mAnimationFrameInterval];
 		[mDisplayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
 
 		mAnimating = TRUE;
@@ -270,9 +276,11 @@ using namespace cinder::app;
 
 - (void)setFrameRate:(float)frameRate
 {
-	mAnimationFrameInterval = std::max<float>( 1.0f, floor( 60.0f / frameRate + 0.5f ) );
+	mAnimationFrameInterval = round(frameRate);
+	//std::max<float>( 1.0f, floor( 60.0f / frameRate + 0.5f ) );
 	if( mDisplayLink )
-		[mDisplayLink setFrameInterval:mAnimationFrameInterval];
+		[mDisplayLink setPreferredFramesPerSecond:mAnimationFrameInterval];
+		//[mDisplayLink setFrameInterval:mAnimationFrameInterval];
 }
 
 - (void)showKeyboard:(const AppCocoaTouch::KeyboardOptions &)options
@@ -318,18 +326,22 @@ using namespace cinder::app;
 - (void)showStatusBar:(UIStatusBarAnimation)anim
 {
 	if( [UIApplication sharedApplication].statusBarHidden != NO ) {
-		[[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:anim];
+		//[[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:anim];
 		UIViewController *viewController = mWindows.front();
-		[viewController.view setFrame:[viewController.view bounds]];
+		mStatusBarShouldHide = false;
+		[viewController setNeedsStatusBarAppearanceUpdate];
+		//[viewController.view setFrame:[viewController.view bounds]];
 	}
 }
 
 - (void)hideStatusBar:(UIStatusBarAnimation)anim
 {
 	if( [UIApplication sharedApplication].statusBarHidden != YES ) {
-		[[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:anim];
+		//[[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:anim];
 		UIViewController *viewController = mWindows.front();
-		[viewController.view setFrame:[viewController.view bounds]];
+		mStatusBarShouldHide = true;
+		[viewController setNeedsStatusBarAppearanceUpdate];
+		//[viewController.view setFrame:[viewController.view bounds]];
 	}
 }
 
@@ -360,10 +372,10 @@ using namespace cinder::app;
 
 	self.wantsFullScreenLayout = YES;
 
-	mAppImpl = appImpl;
-	mResizeHasFired = NO;
+	mAppImpl 		 = appImpl;
+	mResizeHasFired  = NO;
 	mKeyboardVisible = NO;
-	mUiWindow = NULL; // this will be set in finishLoad
+	mUiWindow 		 = NULL; // this will be set in finishLoad
 	mRootViewController = format.getRootViewController() ? format.getRootViewController() : self;
 
 	mDisplay = format.getDisplay();
@@ -421,6 +433,15 @@ using namespace cinder::app;
 - (BOOL)prefersStatusBarHidden
 {
 	return mAppImpl->mStatusBarShouldHide;
+}
+
+- (UIStatusBarStyle)preferredStatusBarStyle
+{
+	if (@available(iOS 13.0, *)) {
+		return UIStatusBarStyleDarkContent;
+	} else {
+		return UIStatusBarStyleDefault;
+	}
 }
 
 // pre iOS 6

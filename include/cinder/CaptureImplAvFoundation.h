@@ -61,6 +61,8 @@ class CaptureImplAvFoundationDevice : public Capture::Device {
 	int32_t							mExposedFrameBytesPerRow;
 	int32_t							mExposedFrameHeight;
 	int32_t							mExposedFrameWidth;
+	
+	void (^_completionHandler)(bool permitted);
 }
 
 + (const std::vector<cinder::Capture::DeviceRef>&)getDevices:(BOOL)forceRefresh;
@@ -78,5 +80,6 @@ class CaptureImplAvFoundationDevice : public Capture::Device {
 - (int32_t)getCurrentFrameBytesPerRow;
 - (int32_t)getCurrentFrameWidth;
 - (int32_t)getCurrentFrameHeight;
+- (void)requirePermission:(void(^)(bool))handler;
 
 @end

@@ -147,7 +147,7 @@ void ImageSourceFileTinyExr::load( ImageTargetRef target )
 			blue = mExrImage->images[c];
 		else if( strcmp( mExrHeader->channels[c].name, "A" ) == 0 )
 			alpha = mExrImage->images[c];
-		else if( strcmp( mExrHeader->channels[c].name, "Y" ) == 0 )
+		else if( strcmp( mExrHeader->channels[c].name, "Y" ) == 0 || strcmp(mExrHeader->channels[c].name, "Z") == 0)
 			gray = mExrImage->images[c];
 	}
 

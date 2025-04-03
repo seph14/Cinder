@@ -416,6 +416,21 @@ void SurfaceT<T>::copyFrom( const SurfaceT<T> &srcSurface, const Area &srcArea, 
 }
 
 template<typename T>
+void SurfaceT<T>::copyFromFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& relativeOffset) 
+{
+	std::pair<Area, ivec2> srcDst = clippedSrcDst(srcSurface.getBounds(), srcArea, getBounds(), srcArea.getUL() + relativeOffset);
+
+	if (getChannelOrder() == srcSurface.getChannelOrder())
+		copyRawSameChannelOrderFlipped(srcSurface, srcDst.first, srcDst.second);
+	else if (hasAlpha() && srcSurface.hasAlpha())
+		copyRawRgbaFlipped(srcSurface, srcDst.first, srcDst.second);
+	else if (hasAlpha() && (!srcSurface.hasAlpha()))
+		copyRawRgbFullAlphaFlipped(srcSurface, srcDst.first, srcDst.second);
+	else
+		copyRawRgbFlipped(srcSurface, srcDst.first, srcDst.second);
+}
+
+template<typename T>
 void SurfaceT<T>::copyRawSameChannelOrder( const SurfaceT<T> &srcSurface, const Area &srcArea, const ivec2 &absoluteOffset )
 {
 	ptrdiff_t srcRowBytes = srcSurface.getRowBytes();
@@ -510,6 +525,106 @@ void SurfaceT<T>::copyRawRgb( const SurfaceT<T> &srcSurface, const Area &srcArea
 		const T *src = reinterpret_cast<const T*>( reinterpret_cast<const uint8_t*>( srcSurface.getData() + srcArea.x1 * srcPixelInc ) + ( srcArea.y1 + y ) * srcRowBytes );
 		T *dst = reinterpret_cast<T*>( reinterpret_cast<uint8_t*>( getData() + absoluteOffset.x * dstPixelInc ) + ( y + absoluteOffset.y ) * getRowBytes() );
 		for( int x = 0; x < width; ++x ) {
+			dst[dstRed] = src[srcRed];
+			dst[dstGreen] = src[srcGreen];
+			dst[dstBlue] = src[srcBlue];
+			src += srcPixelInc;
+			dst += dstPixelInc;
+		}
+	}
+}
+
+template<typename T>
+void SurfaceT<T>::copyRawSameChannelOrderFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& absoluteOffset) {
+	ptrdiff_t srcRowBytes = srcSurface.getRowBytes();
+	uint8_t srcPixelInc = srcSurface.getPixelInc();
+	uint8_t dstPixelInc = getPixelInc();
+	size_t copyBytes = srcArea.getWidth() * srcPixelInc * sizeof(T);
+	for (int32_t y = 0; y < srcArea.getHeight(); ++y) {
+		const T* srcPtr = reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(srcSurface.getData() + srcArea.x1 * srcPixelInc) + (srcArea.y2 - 1 - y) * srcRowBytes);
+		T* dstPtr = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(getData() + absoluteOffset.x * dstPixelInc) + (y + absoluteOffset.y) * getRowBytes());
+		memcpy(dstPtr, srcPtr, copyBytes);
+	}
+}
+
+template<typename T>
+void SurfaceT<T>::copyRawRgbaFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& absoluteOffset) {
+	const ptrdiff_t srcRowBytes = srcSurface.getRowBytes();
+	uint8_t srcRed = srcSurface.getChannelOrder().getRedOffset();
+	uint8_t srcGreen = srcSurface.getChannelOrder().getGreenOffset();
+	uint8_t srcBlue = srcSurface.getChannelOrder().getBlueOffset();
+	uint8_t srcAlpha = srcSurface.getChannelOrder().getAlphaOffset();
+
+	uint8_t dstRed = getChannelOrder().getRedOffset();
+	uint8_t dstGreen = getChannelOrder().getGreenOffset();
+	uint8_t dstBlue = getChannelOrder().getBlueOffset();
+	uint8_t dstAlpha = getChannelOrder().getAlphaOffset();
+
+	int32_t width = srcArea.getWidth();
+
+	for (int32_t y = 0; y < srcArea.getHeight(); ++y) {
+		const T* src = reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(srcSurface.getData() + srcArea.x1 * 4) + (srcArea.y2 - 1 - y) * srcRowBytes);
+		T* dst = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(getData() + absoluteOffset.x * 4) + (y + absoluteOffset.y) * getRowBytes());
+		for (int x = 0; x < width; ++x) {
+			dst[dstRed] = src[srcRed];
+			dst[dstGreen] = src[srcGreen];
+			dst[dstBlue] = src[srcBlue];
+			dst[dstAlpha] = src[srcAlpha];
+			src += 4;
+			dst += 4;
+		}
+	}
+}
+
+template<typename T>
+void SurfaceT<T>::copyRawRgbFullAlphaFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& absoluteOffset) {
+	const ptrdiff_t srcRowBytes = srcSurface.getRowBytes();
+	const uint8_t srcPixelInc = srcSurface.getPixelInc();
+	uint8_t srcRed = srcSurface.getChannelOrder().getRedOffset();
+	uint8_t srcGreen = srcSurface.getChannelOrder().getGreenOffset();
+	uint8_t srcBlue = srcSurface.getChannelOrder().getBlueOffset();
+	const T fullAlpha = CHANTRAIT<T>::max();
+
+	uint8_t dstRed = getChannelOrder().getRedOffset();
+	uint8_t dstGreen = getChannelOrder().getGreenOffset();
+	uint8_t dstBlue = getChannelOrder().getBlueOffset();
+	uint8_t dstAlpha = getChannelOrder().getAlphaOffset();
+
+	int32_t width = srcArea.getWidth();
+
+	for (int32_t y = 0; y < srcArea.getHeight(); ++y) {
+		const T* src = reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(srcSurface.getData() + srcArea.x1 * 3) + (srcArea.y2 - 1 - y) * srcRowBytes);
+		T* dst = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(getData() + absoluteOffset.x * 4) + (y + absoluteOffset.y) * getRowBytes());
+		for (int x = 0; x < width; ++x) {
+			dst[dstRed] = src[srcRed];
+			dst[dstGreen] = src[srcGreen];
+			dst[dstBlue] = src[srcBlue];
+			dst[dstAlpha] = fullAlpha;
+			src += srcPixelInc;
+			dst += 4;
+		}
+	}
+}
+
+template<typename T>
+void SurfaceT<T>::copyRawRgbFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& absoluteOffset) {
+	const ptrdiff_t srcRowBytes = srcSurface.getRowBytes();
+	const uint8_t srcPixelInc = srcSurface.getPixelInc();
+	const uint8_t srcRed = srcSurface.getChannelOrder().getRedOffset();
+	const uint8_t srcGreen = srcSurface.getChannelOrder().getGreenOffset();
+	const uint8_t srcBlue = srcSurface.getChannelOrder().getBlueOffset();
+
+	const uint8_t dstPixelInc = getPixelInc();
+	const uint8_t dstRed = getChannelOrder().getRedOffset();
+	const uint8_t dstGreen = getChannelOrder().getGreenOffset();
+	const uint8_t dstBlue = getChannelOrder().getBlueOffset();
+
+	int32_t width = srcArea.getWidth();
+
+	for (int32_t y = 0; y < srcArea.getHeight(); ++y) {
+		const T* src = reinterpret_cast<const T*>(reinterpret_cast<const uint8_t*>(srcSurface.getData() + srcArea.x1 * srcPixelInc) + (srcArea.y2 - 1 - y) * srcRowBytes);
+		T* dst = reinterpret_cast<T*>(reinterpret_cast<uint8_t*>(getData() + absoluteOffset.x * dstPixelInc) + (y + absoluteOffset.y) * getRowBytes());
+		for (int x = 0; x < width; ++x) {
 			dst[dstRed] = src[srcRed];
 			dst[dstGreen] = src[srcGreen];
 			dst[dstBlue] = src[srcBlue];

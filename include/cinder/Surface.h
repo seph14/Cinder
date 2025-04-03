@@ -254,6 +254,7 @@ class CI_API SurfaceT {
 
 	//! Copies the Area \a srcArea of the Surface \a srcSurface to \a this Surface. The destination Area is \a srcArea offset by \a relativeOffset.
 	void	copyFrom( const SurfaceT<T> &srcSurface, const Area &srcArea, const ivec2 &relativeOffset = ivec2() );
+	void	copyFromFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& relativeOffset = ivec2());
 
 	//! Returns an averaged color for the Area defined by \a area
 	ColorT<T>	areaAverage( const Area &area ) const;
@@ -264,6 +265,11 @@ class CI_API SurfaceT {
 	void	copyRawRgba( const SurfaceT<T> &srcSurface, const Area &srcArea, const ivec2 &absoluteOffset );
 	void 	copyRawRgbFullAlpha( const SurfaceT<T> &srcSurface, const Area &srcArea, const ivec2 &absoluteOffset );
 	void	copyRawRgb( const SurfaceT<T> &srcSurface, const Area &srcArea, const ivec2 &absoluteOffset );
+
+	void	copyRawSameChannelOrderFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& absoluteOffset);
+	void	copyRawRgbaFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& absoluteOffset);
+	void 	copyRawRgbFullAlphaFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& absoluteOffset);
+	void	copyRawRgbFlipped(const SurfaceT<T>& srcSurface, const Area& srcArea, const ivec2& absoluteOffset);
 
 	void	initChannels();
 
