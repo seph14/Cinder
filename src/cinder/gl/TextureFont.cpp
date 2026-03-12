@@ -716,6 +716,23 @@ void TextureFont::drawString( const std::string &str, const vec2 &baseline, cons
 #else
 	vector<pair<Font::Glyph,vec2> > glyphMeasures = tbox.measureGlyphs();
 #endif	
+	
+	if( ( options.getLetterSpacing() != 0 || options.getLineHeight() != 0 ) && glyphMeasures.size() > 1 ) {
+		uint32_t letterIdx = 0, lineIdx = 0;
+		float	 lineHeight = glyphMeasures[0].second.y;
+		for( auto& it : glyphMeasures ) {
+			if( it.second.y > lineHeight ) {
+				lineHeight = it.second.y;
+				letterIdx = 0;
+				lineIdx++;
+			}
+
+			it.second.x -= options.getLetterSpacing() * letterIdx;
+			it.second.y += options.getLineHeight() * lineIdx;
+			letterIdx++;
+		}
+	}
+
 	drawGlyphs( glyphMeasures, baseline, options );
 }
 
@@ -727,17 +744,91 @@ void TextureFont::drawString( const std::string &str, const Rectf &fitRect, cons
 #else
 	vector<pair<Font::Glyph,vec2> > glyphMeasures = tbox.measureGlyphs();
 #endif	
+	
+	if( ( options.getLetterSpacing() != 0 || options.getLineHeight() != 0 ) && glyphMeasures.size() > 1 ) {
+		uint32_t letterIdx = 0, lineIdx = 0;
+		float	 lineHeight = glyphMeasures[0].second.y;
+		for( auto& it : glyphMeasures ) {
+			if( it.second.y > lineHeight ) {
+				lineHeight = it.second.y;
+				letterIdx = 0;
+				lineIdx++;
+			}
+
+			it.second.x -= options.getLetterSpacing() * letterIdx;
+			it.second.y += options.getLineHeight() * lineIdx;
+			letterIdx++;
+		}
+	}
+
 	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
 }
 
 void TextureFont::drawStringWrapped( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
 {
-	TextBox tbox = TextBox().font( mFont ).text( str ).size( fitRect.getSize() ).ligate( options.getLigate() );
+	TextBox tbox = TextBox().font( mFont ).text( str ).size( fitRect.getSize() )
+		.ligate( options.getLigate() ).alignment(options.getTextAlignment());
+
 #if defined( CINDER_ANDROID ) || defined( CINDER_LINUX )
 	vector<pair<Font::Glyph,vec2> > glyphMeasures = tbox.measureGlyphs( getCachedGlyphMetrics() );
 #else
 	vector<pair<Font::Glyph,vec2> > glyphMeasures = tbox.measureGlyphs();
 #endif	
+	
+	if( ( options.getLetterSpacing() != 0 || options.getLineHeight() != 0 ) && glyphMeasures.size() > 1 ) {
+		uint32_t letterIdx = 0, lineIdx = 0;
+		float	 lineHeight = glyphMeasures[0].second.y;
+		for( auto& it : glyphMeasures ) {
+			if( it.second.y > lineHeight ) {
+				lineHeight = it.second.y;
+				letterIdx = 0;
+				lineIdx++;
+			}
+
+			it.second.x -= options.getLetterSpacing() * letterIdx;
+			it.second.y += options.getLineHeight() * lineIdx;
+			letterIdx++;
+		}
+	}
+
+	if( options.getTextAlignment() == TextBox::Alignment::CENTER && glyphMeasures.size() > 1 ) {
+		float		 maxWidth = 0.f, lineRight = -65535.f;
+		float		 lineHeight = glyphMeasures[0].second.y;
+		vector<vec2> lineBreaks;
+		uint32_t	 i = 0;
+		for( auto& it : glyphMeasures ) {
+			if( it.second.y > lineHeight ) {
+				maxWidth = glm::max( maxWidth, lineRight );
+				lineBreaks.push_back( vec2( i, lineRight ) );
+				lineRight = -65535.f;
+				lineHeight = it.second.y;
+			}
+
+			lineRight = glm::max( lineRight, it.second.x );
+			i++;
+		}
+
+		// fill curr line
+		lineBreaks.push_back( vec2( i, lineRight ) );
+
+		// if multiline
+		if( lineBreaks.size() > 1 ) {
+			i = 0;
+			float shift = ( maxWidth - lineBreaks[0].y - mFont.getSize() / 2.f ) / 2.f;
+			for( uint32_t s = 0; s < static_cast<uint32_t>( glyphMeasures.size() ); s++ ) {
+				auto& it = glyphMeasures[s];
+
+				// if new line
+				if( s >= static_cast<uint32_t>( lineBreaks[i].x ) ) {
+					i++;
+					shift = ( maxWidth - lineBreaks[i].y - mFont.getSize() / 2.f ) / 2.f;
+				}
+
+				it.second.x += shift;
+			}
+		}
+	}
+
 	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
 }
 
@@ -754,13 +845,29 @@ vec2 TextureFont::measureString( const std::string &str, const DrawOptions &opti
 #else
 	vector<pair<Font::Glyph,vec2> > glyphMeasures = tbox.measureGlyphs();
 #endif	
+	if( ( options.getLetterSpacing() != 0 || options.getLineHeight() != 0 ) && glyphMeasures.size() > 1 ) {
+		uint32_t letterIdx = 0, lineIdx = 0;
+		float	 lineHeight = glyphMeasures[0].second.y;
+		for( auto& it : glyphMeasures ) {
+			if( it.second.y > lineHeight ) {
+				lineHeight = it.second.y;
+				letterIdx = 0;
+				lineIdx++;
+			}
+
+			it.second.x -= options.getLetterSpacing() * letterIdx;
+			it.second.y += options.getLineHeight() * lineIdx;
+			letterIdx++;
+		}
+	}
+
 	if( ! glyphMeasures.empty() ) {
-		vec2 result = glyphMeasures.back().second;
+		vec2												  result = glyphMeasures.back().second;
 		unordered_map<Font::Glyph, GlyphInfo>::const_iterator glyphInfoIt = mGlyphMap.find( glyphMeasures.back().first );
 		if( glyphInfoIt != mGlyphMap.end() )
 			result += glyphInfoIt->second.mOriginOffset + vec2( glyphInfoIt->second.mTexCoords.getSize() );
 		return result;
-	}
+	} 
 	else {
 		return vec2();
 	}
@@ -778,11 +885,27 @@ vec2 TextureFont::measureStringWrapped( const std::string &str, const Rectf &fit
 #else
 	auto glyphMeasures = tbox.measureGlyphs();
 #endif
+	if( ( options.getLetterSpacing() != 0 || options.getLineHeight() != 0 ) && glyphMeasures.size() > 1 ) {
+		uint32_t letterIdx = 0, lineIdx = 0;
+		float	 lineHeight = glyphMeasures[0].second.y;
+		for( auto& it : glyphMeasures ) {
+			if( it.second.y > lineHeight ) {
+				lineHeight = it.second.y;
+				letterIdx = 0;
+				lineIdx++;
+			}
+
+			it.second.x -= options.getLetterSpacing() * letterIdx;
+			it.second.y += options.getLineHeight() * lineIdx;
+			letterIdx++;
+		}
+	}
+
 	if( ! glyphMeasures.empty() ) {
-		vec2 result = vec2( 0 );
-		ivec2 glyphIndices = ivec2( glyphMeasures.front().first );
+		vec2	 result = vec2( 0 );
+		ivec2	 glyphIndices = ivec2( glyphMeasures.front().first );
 		uint16_t glyphIndexVert = 0;
-		for( const auto &gm : glyphMeasures ) {
+		for( const auto& gm : glyphMeasures ) {
 			if( gm.second.x > result.x ) {
 				glyphIndices.x = gm.first;
 				result.x = gm.second.x;

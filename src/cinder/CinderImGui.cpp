@@ -183,9 +183,12 @@ ScopedId::~ScopedId()
 {
 	ImGui::PopID();
 }
-ScopedWindow::ScopedWindow( const char* label )
+ScopedWindow::ScopedWindow( const char* label, bool fixed )
 {
-	ImGui::Begin( label );
+	if( fixed )
+		ImGui::Begin( label, NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize );
+	else
+		ImGui::Begin( label );
 }
 ScopedWindow::~ScopedWindow()
 {
@@ -389,6 +392,14 @@ void Image( const ci::gl::Texture2dRef& texture, const ci::vec2& size, const ci:
 {
 	Image( (ImTextureID)(intptr_t)texture->getId(), size, uv0, uv1, tint_col, border_col );
 }
+
+bool InputText( const char* label, std::string* str, ImGuiInputTextFlags flags )
+{
+	IM_ASSERT( ( flags & ImGuiInputTextFlags_CallbackResize ) == 0 );
+	flags |= ImGuiInputTextFlags_CallbackResize;
+	return InputText( label, (char*)str->c_str(), str->capacity() + 1, flags );
+}
+
 } // namespace ImGui
 
 

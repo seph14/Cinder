@@ -68,7 +68,17 @@ class CI_API TextureFont {
 	};
 
 	struct CI_API DrawOptions {
-		DrawOptions() : mClipHorizontal( true ), mClipVertical( true ), mPixelSnap( true ), mLigate( false ), mScale( 1 ) {}
+		DrawOptions()
+			: mClipHorizontal( true )
+			, mClipVertical( true )
+			, mPixelSnap( true )
+			, mLigate( false )
+			, mAlignment( cinder::TextBox::Alignment::LEFT )
+			, mScale( 1 )
+			, mLetterSpacing( 0.f )
+			, mLineHeight( 0.f )
+		{
+		}
 
 		//! Returns whether the output clips horizontally
 		bool			getClipHorizontal() const { return mClipHorizontal; }		
@@ -95,15 +105,31 @@ class CI_API TextureFont {
 		//! Sets the scale at which the type is rendered. 2 is double size. Default \c 1
 		DrawOptions&	scale( float sc ) { mScale = sc; return *this; }
 
+		//! Returns the letter spacing shift of the text. Default \c 0
+		float getLetterSpacing() const { return mLetterSpacing; }
+		//! Sets the letter spacing shift of the text. Default \c 0
+		DrawOptions& letterSpacing( float ls ) { mLetterSpacing = ls; return *this; }
+
+		//! Returns the line height shift of the text. Default \c 0
+		float getLineHeight() const { return mLineHeight; }
+		//! Sets the line height shift of the text. Default \c 0
+		DrawOptions& lineHeight( float lh ) { mLineHeight = lh; return *this; }
+
 		//! Returns the user-specified glsl program if set. Otherwise returns nullptr.
 		const GlslProgRef& getGlslProg() const { return mGlslProg; }
 		//! Sets a custom shader to use when the type is rendered.
 		DrawOptions&	glslProg( const GlslProgRef &glslProg ) { mGlslProg = glslProg; return *this; }
 
+		//! Set text alignment mode for multi-lines. Default is disabled.
+		DrawOptions& textAlignment( cinder::TextBox::Alignment mode ) { mAlignment = mode; return *this; }
+		//! Returns whether the TextureFont texture use center alignment.
+		cinder::TextBox::Alignment getTextAlignment() const { return mAlignment; }
+
 	  protected:
-		bool		mClipHorizontal, mClipVertical, mPixelSnap, mLigate;
-		float		mScale;
-		GlslProgRef	mGlslProg;
+		bool						mClipHorizontal, mClipVertical, mPixelSnap, mLigate;
+		cinder::TextBox::Alignment	mAlignment;
+		float						mScale, mLetterSpacing, mLineHeight;
+		GlslProgRef					mGlslProg;
 	};
 
 	//! Creates a new TextureFontRef with font \a font, ensuring that glyphs necessary to render \a supportedChars are renderable, and format \a format

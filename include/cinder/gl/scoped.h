@@ -146,6 +146,19 @@ struct CI_API ScopedActiveTexture : private Noncopyable {
 	Context		*mCtx;
 };
 
+#ifdef CINDER_GL_HAS_COMPUTE_SHADER
+struct CI_API ScopedImageBind : private Noncopyable {
+	ScopedImageBind( const Texture2dRef& texture, uint8_t textureUnit, bool readOrWrite );
+	~ScopedImageBind();
+
+  private:
+	Context* mCtx;
+	GLint	 mFormat;
+	uint8_t	 mTextureUnit;
+	bool	 mRead;
+};
+#endif
+
 struct CI_API ScopedTextureBind : private Noncopyable {
 	ScopedTextureBind( GLenum target, GLuint textureId );
 	ScopedTextureBind( GLenum target, GLuint textureId, uint8_t textureUnit );

@@ -136,8 +136,10 @@ namespace ImGui {
 
 	CI_API void	Image( const ci::gl::Texture2dRef& texture, const ci::vec2& size, const ci::vec2& uv0 = ci::vec2( 0, 0 ), const ci::vec2& uv1 = ci::vec2( 1, 1 ), const ci::vec4& tint_col = ci::vec4( 1, 1, 1, 1 ), const ci::vec4& border_col = ci::vec4( 0, 0, 0, 0 ) );
 
+	CI_API bool InputText( const char* label, std::string* str, ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = nullptr, void* user_data = nullptr );
+
 	struct CI_API ScopedWindow : public ci::Noncopyable {
-		ScopedWindow( const char* label );
+		ScopedWindow( const char* label, bool fixed = false );
 		~ScopedWindow();
 	};
 

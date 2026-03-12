@@ -204,6 +204,24 @@ ScopedActiveTexture::~ScopedActiveTexture()
 	mCtx->popActiveTexture();
 }
 
+#ifdef CINDER_GL_HAS_COMPUTE_SHADER
+///////////////////////////////////////////////////////////////////////////////////////////
+// ScopedImageBind
+ScopedImageBind::ScopedImageBind( const Texture2dRef& texture, uint8_t textureUnit, bool readOrWrite )
+	: mCtx( gl::context() )
+	, mFormat( texture->getInternalFormat() )
+	, mTextureUnit( textureUnit )
+	, mRead( readOrWrite )
+{
+	glBindImageTexture( textureUnit, texture->getId(), 0, GL_FALSE, 0, readOrWrite ? GL_READ_ONLY : GL_WRITE_ONLY, texture->getInternalFormat() );
+}
+
+ScopedImageBind::~ScopedImageBind()
+{
+	glBindImageTexture( mTextureUnit, 0, 0, GL_FALSE, 0, mRead ? GL_READ_ONLY : GL_WRITE_ONLY, mFormat );
+}
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////////////////
 // ScopedTextureBind
 ScopedTextureBind::ScopedTextureBind( GLenum target, GLuint textureId )
