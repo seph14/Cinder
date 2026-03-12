@@ -558,6 +558,7 @@ bool    ImGui_ImplDX12_CreateDeviceObjects()
     if (bd->pPipelineState)
         ImGui_ImplDX12_InvalidateDeviceObjects();
 
+#ifndef CINDER_SHARED_BUILD
     HRESULT hr = ::CreateDXGIFactory1(IID_PPV_ARGS(&bd->pdxgiFactory));
     IM_ASSERT(hr == S_OK);
 
@@ -801,6 +802,9 @@ bool    ImGui_ImplDX12_CreateDeviceObjects()
     IM_ASSERT(bd->FenceEvent != nullptr);
 
     return true;
+#else
+	return false;
+#endif
 }
 
 void    ImGui_ImplDX12_InvalidateDeviceObjects()

@@ -130,6 +130,8 @@ bool RendererImplD3d12::createFactory()
 
 	// Enable debug layer if requested
 	if( mOptions.getDebugLayer() ) {
+
+#ifndef CINDER_SHARED_BUILD
 		msw::ComPtr<ID3D12Debug> debugController;
 		if( SUCCEEDED( D3D12GetDebugInterface( IID_PPV_ARGS( debugController.releaseAndGetAddressOf() ) ) ) ) {
 			debugController->EnableDebugLayer();
@@ -145,14 +147,19 @@ bool RendererImplD3d12::createFactory()
 				}
 			}
 		}
+#endif
 	}
 
+#ifndef CINDER_SHARED_BUILD
 	msw::ComPtr<IDXGIFactory6> factory;
 	HRESULT					   hr = CreateDXGIFactory2( dxgiFactoryFlags, IID_PPV_ARGS( factory.releaseAndGetAddressOf() ) );
 	if( SUCCEEDED( hr ) )
 		mFactory = factory.detach();
 
 	return SUCCEEDED( hr );
+#else
+	return false;
+#endif
 }
 
 bool RendererImplD3d12::selectAdapter()
@@ -201,6 +208,8 @@ bool RendererImplD3d12::selectAdapter()
 
 bool RendererImplD3d12::createDevice()
 {
+
+#ifndef CINDER_SHARED_BUILD
 	// Build list of feature levels to try, respecting minimum
 	D3D_FEATURE_LEVEL allFeatureLevels[] = { D3D_FEATURE_LEVEL_12_2, D3D_FEATURE_LEVEL_12_1, D3D_FEATURE_LEVEL_12_0, D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
 
@@ -272,6 +281,9 @@ bool RendererImplD3d12::createDevice()
 	}
 
 	return true;
+#else
+	return false;
+#endif
 }
 
 bool RendererImplD3d12::createCommandQueue()
