@@ -863,7 +863,13 @@ void Context::bindBuffer( GLenum target, GLuint id )
 {
 	GLuint prevValue = getBufferBinding( target );
 	if( prevValue != id ) {
-		mBufferBindingStack[target].back() = id;
+		// handle direct bind of bufferobj leading to crash issue
+		if( prevValue == 0 ) {
+			mBufferBindingStack[target].push_back( id );
+		}
+		else
+			mBufferBindingStack[target].back() = id;
+		
 		if( target == GL_ARRAY_BUFFER || target == GL_ELEMENT_ARRAY_BUFFER ) {
 			Vao* vao = getVao();
 			if( vao )
