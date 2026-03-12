@@ -34,6 +34,8 @@
 #define IMGUI_IMPL_OPENGL_ES3
 #endif
 
+#define IMGUI_DEFINE_MATH_OPERATORS 
+
 //---- Define assertion handler. Defaults to calling assert().
 // If your macro uses multiple statements, make sure is enclosed in a 'do { .. } while (0)' block so it can be used as a single statement.
 #define IM_ASSERT(_EXPR)  CI_ASSERT(_EXPR)
