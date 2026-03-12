@@ -38,6 +38,11 @@
 
 #include <vector>
 
+// Forward declaration for D3D12 support
+#if defined( CINDER_MSW )
+struct ID3D12DescriptorHeap;
+#endif
+
 namespace cinder {
 	namespace app {
 		class Window;
@@ -49,7 +54,7 @@ namespace cinder {
 	}
 }
 
-//! Additional convenience initializaiont and overloads for cinder types
+//! Additional convenience initialization and overloads for cinder types
 namespace ImGui {
 	struct CI_API Options {
 		//! Defaults to using the current window, the basic ImGui font and the dark theme
@@ -103,7 +108,24 @@ namespace ImGui {
 	//! By default, automatic rendering into ci::app::getWindow() will be used.
 	//! In a multi-window context, only call ImGui in App::draw() if the active window matches the one
 	//! used here for initialization, or in App::update() only if the this window is still open.
+	//!
+	//! For D3D12 apps: auto-render is not supported since apps manage their own command lists.
+	//! Use GetD3D12SrvHeap() to get the descriptor heap, then call NewFrame(), your GUI code,
+	//! Render(), and ImGui_ImplDX12_RenderDrawData() manually.
 	CI_API bool Initialize( const Options& options = Options() );
+
+	//! Returns true if ImGui is using the D3D12 backend
+	CI_API bool IsUsingD3D12();
+
+	//! Returns true if the current frame should skip ImGui rendering (e.g., during modal dialog).
+	//! D3D12 apps should check this before calling NewFrame()/Render() to avoid assertion failures.
+	CI_API bool ShouldSkipFrame();
+
+#if defined( CINDER_MSW )
+	//! Returns the SRV descriptor heap used by ImGui for D3D12. Returns nullptr if not using D3D12.
+	//! D3D12 apps must set this heap on their command list before calling ImGui_ImplDX12_RenderDrawData().
+	CI_API ID3D12DescriptorHeap* GetD3D12SrvHeap();
+#endif
 
 	CI_API bool DragFloat2( const char* label, glm::vec2* v2, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f", ImGuiSliderFlags flags = 0 );
 	CI_API bool DragFloat3( const char* label, glm::vec3* v2, float v_speed = 1.0f, float v_min = 0.0f, float v_max = 0.0f, const char* format = "%.3f", ImGuiSliderFlags flags = 0 );
