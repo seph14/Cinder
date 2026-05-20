@@ -4772,7 +4772,7 @@ GLAPI PFNGLACTIVESHADERPROGRAMPROC glad_glActiveShaderProgram;
 typedef GLuint (APIENTRYP PFNGLCREATESHADERPROGRAMVPROC)(GLenum type, GLsizei count, const GLchar *const*strings);
 GLAPI PFNGLCREATESHADERPROGRAMVPROC glad_glCreateShaderProgramv;
 #define glCreateShaderProgramv glad_glCreateShaderProgramv
-typedef void (APIENTRYP PFNGLBINDPROGRAMPIPELINEPROC)(GLuint pipeline);
+typedef void (APIENTRYP PFNGLBINDPROGRAMPIPELINEPROC)(GLuint glCreateSemaphorespipeline);
 GLAPI PFNGLBINDPROGRAMPIPELINEPROC glad_glBindProgramPipeline;
 #define glBindProgramPipeline glad_glBindProgramPipeline
 typedef void (APIENTRYP PFNGLDELETEPROGRAMPIPELINESPROC)(GLsizei n, const GLuint *pipelines);

@@ -112,9 +112,9 @@ struct adl_serializer<ci::ColorAT<T>> {
 
 namespace cinder {
 
-Json loadJson( const cinder::fs::path &path, bool stripComments = false );
-Json loadJson( const DataSourceRef &dataSource, bool stripComments = false );
+CI_API Json loadJson( const cinder::fs::path &path, bool stripComments = false );
+CI_API Json loadJson( const DataSourceRef &dataSource, bool stripComments = false );
 //! Convenience method to write a Json instance \a json to a text file at \a path
-void writeJson( const cinder::fs::path &path, const Json &json, int indent = 4 );
+CI_API void writeJson( const cinder::fs::path &path, const Json &json, int indent = 4 );
 
 } // namespace cinder
