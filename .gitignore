@@ -82,3 +82,5 @@ imgui.ini
 .claude/
 AGENTS.md
 GEMINI.md
+/lib/msw/x64/Debug_MD
+/lib/msw/x64/Release_MD

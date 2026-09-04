@@ -58,8 +58,8 @@ using namespace std;
 
 namespace cinder { namespace audio {
 
-std::shared_ptr<Context>		Context::sMasterContext;
-std::unique_ptr<DeviceManager>	Context::sDeviceManager;
+CI_API std::shared_ptr<Context>		Context::sMasterContext;
+CI_API std::unique_ptr<DeviceManager>	Context::sDeviceManager;
 
 bool sIsRegisteredForCleanup = false;
 

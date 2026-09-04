@@ -26,7 +26,7 @@
 
 namespace cinder {
 
-std::mt19937 Rand::sBase( 310u );
-std::uniform_real_distribution<float> Rand::sFloatGen;
+CI_API std::mt19937 Rand::sBase( 310u );
+CI_API std::uniform_real_distribution<float> Rand::sFloatGen;
 
 } // ci

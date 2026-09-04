@@ -41,7 +41,7 @@
 
 #if ! defined( CI_MIN_LOG_LEVEL )
 #if ! defined( NDEBUG )
-#define CI_MIN_LOG_LEVEL 0	// debug mode default is LEVEL_VERBOSE
+#define CI_MIN_LOG_LEVEL 1	// debug mode default is LEVEL_VERBOSE
 #else
 #define CI_MIN_LOG_LEVEL 2	// release mode default is LEVEL_INFO
 #endif
